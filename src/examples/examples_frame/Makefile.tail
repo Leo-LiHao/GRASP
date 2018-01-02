@@ -1,0 +1,102 @@
+#############################################################################
+#  THE REGION ABOVE THIS SPACE IS FILLED IN BY InstallGRASP                 #
+#############################################################################
+
+INCLUDES= -I$(GRASP_I) 
+
+LIBS= $(OPTIMIZED_OBJECTS) -L$(GRASP_HOME)/lib -lgrasp -L$(RECIPES_LIB) -l$(LRECIPES) $(OPTIMIZED_LIBS) -lm
+
+all: animateF animateS animateT locklistF print_ssF calibrateF calibrate_binnedF diagF gwoutputF power_spectrumF transferF seismicF
+
+animateF: animateF.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_FRAME)' = 'true' ]; \
+	then \
+	$(CC) $(CFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include animateF.c -o animateF \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+seismicF: seismicF.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_FRAME)' = 'true' ]; \
+	then \
+	$(CC) $(CFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include seismicF.c -o seismicF \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+animateS: animateS.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_FRAME)' = 'true' ]; \
+	then \
+	$(CC) $(CFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include animateS.c -o animateS \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+animateT: animateT.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_FRAME)' = 'true' ]; \
+	then \
+	$(CC) $(CFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include animateT.c -o animateT \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+locklistF: locklistF.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_FRAME)' = 'true' ]; \
+	then \
+	$(CC) $(CFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include locklistF.c -o locklistF \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+print_ssF: print_ssF.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_FRAME)' = 'true' ]; \
+	then \
+	$(CC) $(CFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include print_ssF.c -o print_ssF \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+calibrateF: calibrateF.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_FRAME)' = 'true' ]; \
+	then \
+	$(CC) $(CFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include calibrateF.c -o calibrateF \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+calibrate_binnedF: calibrate_binnedF.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_FRAME)' = 'true' ]; \
+	then \
+	$(CC) $(CFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include calibrate_binnedF.c -o calibrate_binnedF \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+diagF: diagF.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_FRAME)' = 'true' ]; \
+	then \
+	$(CC) $(CFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include diagF.c -o diagF \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+gwoutputF: gwoutputF.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_FRAME)' = 'true' ]; \
+	then \
+	$(CC) $(CFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include gwoutputF.c -o gwoutputF \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+power_spectrumF: power_spectrumF.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_FRAME)' = 'true' ]; \
+	then \
+	$(CC) $(CFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include power_spectrumF.c -o power_spectrumF \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+transferF: transferF.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_FRAME)' = 'true' ]; \
+	then \
+	$(CC) $(CFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include transferF.c -o transferF \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+# Experimental test of data server
+# animate_server: animate.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+#	if [ '$(BUILD_FRAME)' = 'true' ]; \
+#	then \
+#	$(CC) $(CFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include animate.c -o animate_server \
+#	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame -lsocket -lnsl; \
+#	fi
+

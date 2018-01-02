@@ -1,0 +1,31 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_template\_bank\1make\_grid.c},{19:33},{Feb  3 1998}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}(\K{int}_\V{argc},_\K{char}_\*\*\V{argv})}}
+\L{\LB{\{}}
+\L{\LB{__\K{struct}_\V{cubic\_grid}_\V{grid};}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* Set grid parameters. \*\1\CE{}}}
+\L{\LB{__\V{grid}.\V{n}=13;}}
+\L{\LB{__\V{grid}.\V{m\_mn}=0.8;}}
+\L{\LB{__\V{grid}.\V{m\_mx}=3.2;}}
+\L{\LB{__\V{grid}.\V{match}=0.98;}}
+\L{\LB{__\V{grid}.\V{angle}=0.0;}}
+\L{\LB{__\V{grid}.\V{order}=4;}}
+\L{\LB{__\V{grid}.\V{srate}=50000.0;}}
+\L{\LB{__\V{grid}.\V{flo}=120.0;}}
+\L{\LB{__\V{grid}.\V{ftau}=140.0;}}
+\L{\LB{__\V{grid}.\V{detector}=15;_\C{}\1\* Smooth fit to Caltech 40m prototype. \*\1\CE{}}}
+\L{\LB{__\C{}\1\* grid.detector=8;  Caltech 40m prototype. \*\1\CE{}}}
+\L{\LB{__\C{}\1\* grid.detector=1;  LIGO initial interferometer. \*\1\CE{}}}
+\L{\LB{__\C{}\1\* grid.detector=12; LIGO advanced interferometer. \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* Generate grid of cubic-fit coefficients \*\1\CE{}}}
+\L{\LB{__\V{generate\_cubic}(\V{grid},\S{}\"detectors.dat\"\SE{},}}
+\L{\LB{}\Tab{16}{_\S{}\"cubic\_coef\_40meter\_m=0.8\-3.2.ascii\"\SE{},}}
+\L{\LB{}\Tab{16}{_\S{}\"cubic\_coef\_40meter\_m=0.8\-3.2.log\"\SE{});}}
+\L{\LB{__\K{return}_0;}}
+\L{\LB{\}}}

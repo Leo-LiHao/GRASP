@@ -1,0 +1,41 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_40meter\1gwoutput.c},{17:29},{Feb 27 1998}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}()_\{}}
+\L{\LB{___\K{float}_\V{tstart},\V{time},\V{srate};}}
+\L{\LB{___\K{int}_\V{remain},\V{i},\V{npoint},\V{code};}}
+\L{\LB{___\V{FILE}_\*\V{fp},\*\V{fplock};}}
+\L{\LB{___\K{short}_\*\V{data};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* open the IFO output file and lock file \*\1\CE{}}}
+\L{\LB{___\V{fp}=\V{grasp\_open}(\S{}\"GRASP\_DATAPATH\"\SE{},\S{}\"channel.0\"\SE{},\S{}\"r\"\SE{});}}
+\L{\LB{___\V{fplock}=\V{grasp\_open}(\S{}\"GRASP\_DATAPATH\"\SE{},\S{}\"channel.10\"\SE{},\S{}\"r\"\SE{});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* specify the number of points of output \& allocate array \*\1\CE{}}}
+\L{\LB{___\V{npoint}=100;}}
+\L{\LB{___\V{data}=(\K{short}_\*)\V{malloc}(\K{sizeof}(\K{short})\*\V{npoint});}}
+\L{\LB{}}
+\L{\LB{___\K{while}_(1)_\{}}
+\L{\LB{______\C{}\1\* fill the array with npoint points of data \*\1\CE{}}}
+\L{\LB{______\V{code}=\V{get\_data}(\V{fp},\V{fplock},\&\V{tstart},\V{npoint},\V{data},\&\V{remain},\&\V{srate},0);}}
+\L{\LB{______\C{}\1\* if no data remains, exit loop \*\1\CE{}}}
+\L{\LB{______\K{if}_(\V{code}==0)_\K{break};}}
+\L{\LB{______\C{}\1\* if starting a new locked segment, print banner \*\1\CE{}}}
+\L{\LB{______\K{if}_(\V{code}==1)_\{}}
+\L{\LB{_________\V{printf}(\S{}\"\_\_\_\_\_\_\_\_\_\_\_\__NEW_LOCKED_SEGMENT_\_\_\_\_\_\_\_\_\_\_\_\_\2n\2n\"\SE{});}}
+\L{\LB{_________\V{printf}(\S{}\"__Time_(sec)\2t___IFO_output\2n\"\SE{});}}
+\L{\LB{______\}}}
+\L{\LB{______\C{}\1\* now output the data \*\1\CE{}}}
+\L{\LB{______\K{for}_(\V{i}=0;\V{i}\<\V{npoint};\V{i}++)_\{}}
+\L{\LB{_________\V{time}=\V{tstart}+\V{i}\1\V{srate};}}
+\L{\LB{_________\V{printf}(\S{}\"\%f\2t\%d\2n\"\SE{},\V{time},\V{data}[\V{i}]);}}
+\L{\LB{______\}}}
+\L{\LB{___\}}}
+\L{\LB{___\C{}\1\* close the data files, and return \*\1\CE{}}}
+\L{\LB{___\V{fclose}(\V{fp});}}
+\L{\LB{___\V{fclose}(\V{fplock});}}
+\L{\LB{___\K{return}_0;}}
+\L{\LB{\}}}

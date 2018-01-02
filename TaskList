@@ -1,0 +1,245 @@
+March 31, 1997
+
+This is the TaskList file.  It contains a list of things that need
+to be done with the GRASP package.  These range from small items (an
+hour's work) to large tasks (many months).  I will try to keep this
+file up to date; if you want me to add things to it, please email me.
+I have also tried to indicate the size of the job (this is my very
+subjective view!)  by saying if it is a small, medium or large task,
+followed by a small, medium or large project.  These are in increasing
+order of time/energy/difficulty.
+
+Bruce Allen
+ballen@dirac.phys.uwm.edu
+
+--------------------------------------------------------------------------
+There memory allocation in template_grid() should be cleaned up.
+It would be nice to add an option to only output the mass values, or
+not to output anything (if all that's needed is to count filters).
+--------------------------------------------------------------------------
+The studies that have determined the size and spacing of binary inspiral
+templates in parameter space are largely theoretical.  These studies
+need to be verified ``experimentally".  This can be done by taking
+some clean stretches of data, and injecting chirp signals into them.
+The chirps should be randomly located in parameter space.  The question
+to study is, "are the chirps caught by the nearby templates with about
+the expected likelyhood". [small project]
+--------------------------------------------------------------------------
+The GRASP manual describes a spectral line removal algorithm.  One can
+treat the data with this algorithm, removing the spectral line contamination,
+before doing binary inspiral analysis.  This appears to increase the Signal
+to Noise ratio.  However a systematic study should be done, comparing a
+binary inspiral search on "raw" and "treated" data, to better understand the
+effects of this process. [medium task]
+--------------------------------------------------------------------------
+I have added inline code to speed up the cuberoot function (pow(x,1.0/3.0)
+is VERY slow on most machines).  Similar inline code needs to be added for
+three calls to sqrt() in the  phase_frequency() function in pN_chirp.c,
+because sqrt() is very slow on many machines. [small task]
+--------------------------------------------------------------------------
+The optimal filtering code used for binary inspiral analysis constructs
+an optimal filter based on the noise power spectrum of the detector.
+This is currently evaluated with an exponentially-decaying moving time
+average.  Someone needs to see if the use of the multi-taper spectral
+estimates results in a "better" optimal filter. [small project]
+--------------------------------------------------------------------------
+In a similar vein to the previous project, in inspiral searching the
+correlation between filter and template is currenly being calculated in
+the frequency-domain, by calculating the integral of h*(f) t(f) where
+h and t are the signal and template.  One should be able to do a more
+statistically-sound estimator by evaluating a weighted average of tapered
+strains and templates.  This involves first understanding the theory,
+then implementing the technique, then comparing with the existing method.
+[medium project].
+--------------------------------------------------------------------------
+Many optimized FFT routines use more storage space in the frequency domain
+than the Numerical Recipes routines.  The GRASP code could be modified
+so that there is a #define EXTRASPACE which for example could be set
+to 0, 2, or 4.  Every time that an array is allocated or used for FFT,
+it should then be allocated with
+  array=(float *)malloc(sizeof(float)*(pow_of_two+EXTRASPACE));
+so that by setting EXTRASPACE to the correct value, one leaves the
+necessary storage space for the optimized FFT. [medium task]
+--------------------------------------------------------------------------
+When injecting simulated chirp (or other) signals into the IFO signal
+stream, one needs to take into account the quantization of that signal
+into ADC units.  In real life, if such a signal were present it would be
+dithered by the IFO noise.  Thus, if the chirp signal had an amplitude
+of 1/20 of an ADC count, then about 5% of the time it would cause the
+ADC output to be either one bit higher or lower than in the absence
+of the chirp.  What is needed is (1) a bit of study of the correct way
+to simulate this dithering (does one just flip the bit 5% of the time,
+at random, or does the noise power and amplitude affect the dithering)
+and (2) this needs to be implemented and tested [large task].
+--------------------------------------------------------------------------
+A "make clean" option should be added to the installation scripts to
+remove all object files. [small task]
+--------------------------------------------------------------------------
+A "make bin" option should be added to the installation scripts so that
+links are set up in the GRASP/bin directory pointing to all executables
+in the package. [small task]
+--------------------------------------------------------------------------
+Some additional work could be done to profile and optimize the multifilter
+code, and the template generation code [medium task].
+--------------------------------------------------------------------------
+A systematic study should be done of the correlations between different
+channels in the Nov 1994 data stream.  This could attempt to answer
+several questions: why does the IFO go out of lock (is the ground
+shaking, for example).  Can one explain some of the large glitches in
+the IFO output? [medium project]
+--------------------------------------------------------------------------
+The diag program should be modified so that it makes a moving carpet
+sonagram showing only the past 30 seconds.  It should ideally display
+this for a number of the channels simultaneously, in different colors
+[large task].
+--------------------------------------------------------------------------
+The GRASP code that generates time-domain chirps for testing purposes
+(injecting them into your search code to see if they are found) works
+by convolving the chirp with the response function of the IFO in the
+frequency domain.  One could also try doing this in the time domain, in
+a simple way.  Since the IFO response function tells you the amplitude
+and phase of the IFO response at any given frequency, one could make a
+modified version of the chirp-generation code which incorporates this
+amplitude/phase information correctly into each different harmonic of
+the orbital phase, and makes a time-domain chirp with no frequency-domain
+convolution or FFTs at all. [small project]
+--------------------------------------------------------------------------
+A good display mechanism for the multifilter program (or other binary
+inspiral/template searching code) needs to be invented.  I suggest
+showing points in 3-d space, where one axis is time and the other two
+are template parameters (x0,x1) or (m1,m2) for example.  One would lay
+down dots of different sizes and colors depending upon the SNR at that
+time and template, and the probability that it matches a chirp waveform.
+[small project]
+--------------------------------------------------------------------------
+The multi-taper techniques used to identify and remove spectral lines
+make a statistical test for a pure sinusiod embedded in a continuum
+spectrum.  One should be able to also construct and use a test for an
+exponentially-decaying sinusoid of the form exp(-at)sin(wt).  There is
+some literature on this subject as well.  This should be studied, then
+implemented, then tested on some data [large task].
+--------------------------------------------------------------------------
+GRASP should include an error-handling program, which takes a variable
+number of arguments (like fprintf(stderr,...) and which also prints
+out automatically a bunch of useful information (the rcsid string, the
+version of the code, the line number of the error, etc).  This should
+then be incorporated into the GRASP package.  At the same time, it might
+make sense to let the error handler be a user-definable function, with
+a pre-defined default value.  This lets other people do their own error
+handlers. [medium task]
+--------------------------------------------------------------------------
+The grasp.h include file should be modified with comments that indicate,
+for each prototype function, the nature and meaning of the arguments.
+These can mostly be copied from the manual. [medium task]
+--------------------------------------------------------------------------
+The manual needs to have an index.  This can be done in tex by
+inserting \index{keyword} commands in the different manual sections.
+An index with a few hundred keywords would be very useful.  [medium task]
+--------------------------------------------------------------------------
+The section/subsection titles in the manual should be longer and more
+descriptive.  Instead of just giving the function name, they should a
+several-word description of what the function/example does. [small task]
+--------------------------------------------------------------------------
+The line-tracking code can identify and follow a feature at 582.995
+Hz (a wire resonance = violin mode) but it is not well modeled by
+exp(-at)sin(wt).  This may be because it is the sum of ~16 different
+resonance all very close together in frequency space.  One ought to study
+this by injecting such a sum of signals then seeing if the line-tracker's
+response is closer to what is observed with a real data stream. [medium task]
+--------------------------------------------------------------------------
+Someone should experiment with PCA (principal component analysis) and ICA
+(independent component analysis) of the data stream.
+--------------------------------------------------------------------------
+Pinto has shown some interesting results using a Wigner-Ville wavelet
+basis.  It would be nice to try his code on some of the 40 meter data and
+compare the results to matched filtering.  [small project]
+--------------------------------------------------------------------------
+The simulated data produced in the stochastic background code could
+be easily hooked into the binary inspiral code as a simulated source.
+[medium task].
+--------------------------------------------------------------------------
+Scott Koranda (koranda@wolfram.com) created a nice numerical simulation
+of a harmonic oscillator in equilibrium (or coming into equilbrium)
+with a heat bath at temp T.  This should be incorporated into GRASP as
+a routine, then some testing should be done to see how the spectral line
+identification routines work on this simulated data.
+--------------------------------------------------------------------------
+One might be able to do a better job of spectral estimation by whitening
+the data set with a time-domain digital filter, then doing the spectral
+estimate, then dividing by the response function (calculated analytically)
+of the filter. [large task]
+--------------------------------------------------------------------------
+The routine get_data() which reads old-format data was not written with
+the idea of reading multiple channels.  It would be nice to have a version
+of this routine that is handed a list of channels and simultaneously
+returns all of the signals in that channel.  This may also however
+be obsoleted by a good FRAME interface.  [large task]
+--------------------------------------------------------------------------
+The structure functions F+ and Fx for binary inspiral should be included
+in the GRASP package.  This way one can easily generate strains for arbitrary
+orientations of the binary systems. [small task].
+--------------------------------------------------------------------------
+Someone should spend a few hours listening to some of the different
+channels (especially the seismometer/magnetometer) but speeded up by
+a significant amount (say a factor of 10->100) to shift the frequency
+into a range that one can easily hear. [small project]
+--------------------------------------------------------------------------
+The audio() and sound() functions should be modified to handle different
+sample rates.  The simplest thing is to simply pick the closest sample
+rate to the one that you want.  Right now the sample rate is hardwired
+to 9600 Hz. [small task]
+--------------------------------------------------------------------------
+Someone should experiment with time-domain decimation filtering of the
+data stream.  Can one reduce the sample rates significantly and still
+catch binary inspiral chirps sucessfully?  [small project]
+--------------------------------------------------------------------------
+It would be nice to have a pretty cover for the GRASP manual.  Any ideas?
+--------------------------------------------------------------------------
+The units should be put in to the area program (seconds squared)
+[tiny task].
+--------------------------------------------------------------------------
+The plot_template() routine currently outputs very inefficient postscript.
+The entire template map is on each page; however the magnification,
+scaling and offset are set differently for each page so that it displays
+a different region.  This routine should be modified so that each page
+only contains the templates that are being displayed on that page,
+plus a bit beyond the clipping boundary of the page. [medium task]
+--------------------------------------------------------------------------
+A section needs to be added to the GRASP manual, showing the effects of
+errors in the response function.  [This has already been written by
+Allen and will be done by him soon].
+--------------------------------------------------------------------------
+It is shown in the manual that one loses a factor of sqrt(2) in the
+search over 0-degree and 90-degree phase waveforms, in comparison
+to the search over just a single phase.  Could ideas from quantum
+non-demolition measurements be used to win back this factor of sqrt(2)
+in the data analysis?  In other words, we don't really care about the
+linear combination of phases; if we dispose of the phase information
+can we detect the amplitude with higher SNR?  [unpredictable project]
+--------------------------------------------------------------------------
+The GRASP package contains no wavelet techniques.  Someone should try these
+on the 40 meter data set.  [large project]
+--------------------------------------------------------------------------
+The GRASP package contains no pulsar search code.  [large project]
+--------------------------------------------------------------------------
+The GRASP package contains no transient event search code.  Would wavelet
+techniques work well? [large project]
+--------------------------------------------------------------------------
+The future of LIGO data analysis will probably be C++ rather than C.
+Once the various objects and classes are defined, are there any volunteers
+for the task of putting the GRASP code into the correct wrappers and
+turning it into a C++ package?  [medium project]
+--------------------------------------------------------------------------
+The is_gaussian() should probably be replaced with something a bit
+more general and carefully thought out.  [medium task]
+--------------------------------------------------------------------------
+The optimized sections of the chirp generation routines currently
+contain fast versions of sin(x)/cos(x) which are intended for machines
+that don't do these functions in hardware.  This inline versions are
+currently written as 6'th order in x^2 contant min/max error power series,
+with -pi<x<pi.  These could probably be done to lower order, and/or more
+accurately.  It might also be smart to consider range-reducing -pi/2 <
+x < pi/2.  The cost of the extra comparison/branching might be more or
+less than the cost of the extra terms in the power series.
+--------------------------------------------------------------------------
+

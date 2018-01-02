@@ -1,0 +1,125 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_stochastic\1omega\_min.c},{17:51},{Sep  8 1999}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\C{}\1\* main program to calculate the minimum detectable omega\_0 \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{_}}
+\L{\LB{\K{\#define}_\V{DETECTORS\_FILE}_\S{}\"detectors.dat\"\SE{}_\C{}\1\* file containing detector info \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{SITE1\_CHOICE}_1________\C{}\1\* 1=LIGO-Hanford site \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{SITE2\_CHOICE}_2________\C{}\1\* 2=LIGO-Livingston site \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{SNR}_1.65______________\C{}\1\* 1.65=SNR for 95\% confidence \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{F\_LOW}_3.0_____________\C{}\1\* minimum frequency (in Hz) \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{F\_HIGH}_(1.0e+4)_______\C{}\1\* maximum frequency (in Hz) \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{T}_(1.0e+7)____________\C{}\1\* total observation time (in sec) \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{N}_40000_______________\C{}\1\* number of frequency points \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{DELTA\_F}_0.25__________\C{}\1\* frequency spacing (in Hz) \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{PLOT\_WANTED}_0}}
+\L{\LB{}}
+\L{\LB{\K{\#if}_\V{PLOT\_WANTED}}}
+\L{\LB{\V{FILE}_\*\V{fp};}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}(\K{int}_\V{argc},\K{char}_\*\*\V{argv})}}
+\L{\LB{\{}}
+\L{\LB{__\K{int}____\V{i};}}
+\L{\LB{__\K{float}__\V{f};}}
+\L{\LB{}}
+\L{\LB{__\K{double}_\V{factor},\V{f3},\V{f6},\V{f9},\V{f12},\V{p1},\V{p2},\V{g2};}}
+\L{\LB{__\K{double}_\V{int1},\V{int2},\V{int3},\V{int4};}}
+\L{\LB{__\K{double}_\V{a},\V{b},\V{c},\V{omega\_0};}}
+\L{\LB{__\K{int}_\V{site1\_choice}=\V{SITE1\_CHOICE},\V{site2\_choice}=\V{SITE2\_CHOICE};}}
+\L{\LB{}}
+\L{\LB{__\K{float}__\V{site1\_parameters}[9],\V{site2\_parameters}[9];}}
+\L{\LB{__\K{char}___\V{site1\_name}[100],\V{noise1\_file}[100],\V{whiten1\_file}[100];}}
+\L{\LB{__\K{char}___\V{site2\_name}[100],\V{noise2\_file}[100],\V{whiten2\_file}[100];}}
+\L{\LB{}}
+\L{\LB{__\K{double}_\*\V{power1},\*\V{power2};}}
+\L{\LB{__\K{double}_\*\V{gamma12};}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* ALLOCATE MEMORY \*\1\CE{}}}
+\L{\LB{__\V{power1}=(\K{double}_\*)\V{malloc}(\V{N}\*\K{sizeof}(\K{double}));}}
+\L{\LB{__\V{power2}=(\K{double}_\*)\V{malloc}(\V{N}\*\K{sizeof}(\K{double}));}}
+\L{\LB{__\V{gamma12}=(\K{double}_\*)\V{malloc}(\V{N}\*\K{sizeof}(\K{double}));}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* Use detector sites specified on command line \*\1\CE{}}}
+\L{\LB{__\K{if}_(\V{argc}==3)_\{}}
+\L{\LB{}\Tab{8}{\V{site1\_choice}=\V{atoi}(\V{argv}[1]);}}
+\L{\LB{}\Tab{8}{\V{site2\_choice}=\V{atoi}(\V{argv}[2]);}}
+\L{\LB{__\}}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* CALL DETECTOR\_SITE() TO GET SITE PARAMETER INFORMATION \*\1\CE{}}}
+\L{\LB{__\V{detector\_site}(\V{DETECTORS\_FILE},\V{site1\_choice},\V{site1\_parameters},\V{site1\_name},}}
+\L{\LB{}\Tab{16}{\V{noise1\_file},\V{whiten1\_file});}}
+\L{\LB{__\V{detector\_site}(\V{DETECTORS\_FILE},\V{site2\_choice},\V{site2\_parameters},\V{site2\_name},}}
+\L{\LB{}\Tab{16}{\V{noise2\_file},\V{whiten2\_file});}}
+\L{\LB{}}
+\L{\LB{\K{\#if}_\V{PLOT\_WANTED}}}
+\L{\LB{__\C{}\1\* output file of integrand if needed \*\1\CE{}}}
+\L{\LB{__\V{fp}=\V{fopen}(\V{site1\_name},\S{}\"w\"\SE{});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* CALL NOISE\_POWER() AND OVERLAP() \*\1\CE{}}}
+\L{\LB{__\V{noise\_power}(\V{noise1\_file},\V{N},\V{DELTA\_F},\V{power1});}}
+\L{\LB{__\V{noise\_power}(\V{noise2\_file},\V{N},\V{DELTA\_F},\V{power2});}}
+\L{\LB{__\V{overlap}(\V{site1\_parameters},\V{site2\_parameters},\V{N},\V{DELTA\_F},\V{gamma12});}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* CALCULATE INTEGRALS FOR VARIANCE \*\1\CE{}}}
+\L{\LB{__\V{int1}=\V{int2}=\V{int3}=\V{int4}=0.0;}}
+\L{\LB{}}
+\L{\LB{__\K{for}_(\V{i}=1;\V{i}\<\V{N};\V{i}++)_\{_\C{}\1\* start sum at i=1 to avoid possible division \*\1\CE{}}}
+\L{\LB{______________________\C{}\1\* by 0 (e.g., if f\_low=0) \*\1\CE{}}}
+\L{\LB{____\V{f}=\V{i}\*\V{DELTA\_F};}}
+\L{\LB{____\K{if}_(\V{F\_LOW}\<=\V{f}_\&\&_\V{f}\<=\V{F\_HIGH})_\{}}
+\L{\LB{______\V{f3}=\V{f}\*\V{f}\*\V{f};}}
+\L{\LB{______\V{f6}=\V{f3}\*\V{f3};}}
+\L{\LB{______\V{f9}=\V{f6}\*\V{f3};}}
+\L{\LB{______\V{f12}=\V{f9}\*\V{f3};}}
+\L{\LB{______\V{g2}=\V{gamma12}[\V{i}]\*\V{gamma12}[\V{i}];}}
+\L{\LB{______\V{p1}=\V{power1}[\V{i}];}}
+\L{\LB{______\V{p2}=\V{power2}[\V{i}];}}
+\L{\LB{}}
+\L{\LB{\K{\#if}_\V{PLOT\_WANTED}}}
+\L{\LB{\V{fprintf}(\V{fp},\S{}\"\%e\2t\%e\2n\"\SE{},\V{f},1.e\-80\*\V{g2}\1(\V{f6}\*\V{p1}\*\V{p2}));}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}}
+\L{\LB{______\V{int1}+=\V{DELTA\_F}\*\V{g2}\1(\V{f6}\*\V{p1}\*\V{p2});}}
+\L{\LB{______\V{int2}+=\V{DELTA\_F}\*\V{g2}\1(\V{f9}\*\V{p1}\*\V{p1}\*\V{p2});}}
+\L{\LB{______\V{int3}+=\V{DELTA\_F}\*\V{g2}\1(\V{f9}\*\V{p1}\*\V{p2}\*\V{p2});}}
+\L{\LB{______\V{int4}+=\V{DELTA\_F}\*\V{g2}\*(1.0+\V{g2})\1(\V{f12}\*\V{p1}\*\V{p1}\*\V{p2}\*\V{p2});}}
+\L{\LB{____\}}}
+\L{\LB{__\}}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* CALCULATE COEFFICIENTS OF QUADRATIC EQUATION \*\1\CE{}_}}
+\L{\LB{__\V{factor}=10.0\*\V{M\_PI}\*\V{M\_PI}\1(3.0\*\V{HUBBLE}\*\V{HUBBLE});}}
+\L{\LB{}}
+\L{\LB{__\V{a}=(\V{int4}\1\V{int1}\-2.0\*\V{T}\*\V{int1}\1(\V{SNR}\*\V{SNR}))\1(\V{factor}\*\V{factor});}}
+\L{\LB{__\V{b}=(\V{int2}+\V{int3})\1(\V{int1}\*\V{factor});}}
+\L{\LB{__\V{c}=1.0;}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* SOLVE THE QUADRATIC \*\1\CE{}}}
+\L{\LB{__\V{omega\_0}=0.5\*(\-\V{b}\-\V{sqrt}(\V{b}\*\V{b}\-4\*\V{a}\*\V{c}))\1\V{a};}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* DISPLAY RESULTS \*\1\CE{}}}
+\L{\LB{__\V{printf}(\S{}\"\2n\"\SE{});}}
+\L{\LB{__\V{printf}(\S{}\"Detector_site_1_=_\%s\2n\"\SE{},\V{site1\_name});}}
+\L{\LB{__\V{printf}(\S{}\"Detector_site_2_=_\%s\2n\"\SE{},\V{site2\_name});}}
+\L{\LB{__\V{printf}(\S{}\"S\1N_ratio_=_\%e\2n\"\SE{},\V{SNR});}}
+\L{\LB{__\V{printf}(\S{}\"f\_low__=_\%e_Hz\2n\"\SE{},\V{F\_LOW});}}
+\L{\LB{__\V{printf}(\S{}\"f\_high_=_\%e_Hz\2n\"\SE{},\V{F\_HIGH});}}
+\L{\LB{__\V{printf}(\S{}\"Observation_time_T_=_\%e_sec\2n\"\SE{},\V{T});}}
+\L{\LB{__\V{printf}(\S{}\"Minumum_Omega\_0_h\_100\^2_=_\%e\2n\"\SE{},\V{omega\_0});}}
+\L{\LB{__\V{printf}(\S{}\"(This_corresponds_to_false_alarm_rate_5\%\%_and_false_dismissal_rate_50\%\%.)\2n\"\SE{});}}
+\L{\LB{__\V{printf}(\S{}\"With_a_5\%\%_false_alarm_rate_and_a_5\%\%_false_dismissal_rate:\2n\"\SE{});}}
+\L{\LB{__\V{printf}(\S{}\"minumum_Omega\_0_h\_100\^2_=_\%e\2n\"\SE{},2.0\*\V{omega\_0});}}
+\L{\LB{__\V{printf}(\S{}\"See_Allen_\&_Romano,_PRD59_(1999)_102001_eqn_(4.38)_for_details.\2n\"\SE{});}}
+\L{\LB{__\V{printf}(\S{}\"\2n\"\SE{});}}
+\L{\LB{}}
+\L{\LB{\K{\#if}_\V{PLOT\_WANTED}}}
+\L{\LB{__\V{fclose}(\V{fp});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}}
+\L{\LB{__\K{return}_0;}}
+\L{\LB{\}}}

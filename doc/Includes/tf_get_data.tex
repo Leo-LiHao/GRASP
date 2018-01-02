@@ -1,0 +1,94 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_timefreq\1tf\_get\_data.c},{11:34},{Jun 28 1999}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{\K{\#include}_\S{}\"tfmain.h\"\SE{}}}
+\L{\LB{}}
+\L{\LB{\K{float}_\*\V{twice\_inv\_noise},\*\V{ch0},\*\V{ch1},\*\V{buff},\*\V{shf},\*\V{shf\_root},\V{deltaf};}}
+\L{\LB{\K{extern}_\K{float}_\*\V{htilde},\V{srate};}}
+\L{\LB{\K{extern}_\K{int}_\V{npoint};}}
+\L{\LB{\K{extern}_\K{long}_\V{longn};}}
+\L{\LB{\K{extern}_\V{struct\_tfparam}_\V{tfparam};}}
+\L{\LB{\K{extern}_\V{struct\_signalparameters}_\V{snpar};}}
+\L{\LB{\K{long}_\V{idummy}=\-89473884;______\C{}\1\* initialized to a random seed\*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{get\_time\_series\_data}()}}
+\L{\LB{\{}}
+\L{\LB{____\K{return}_\V{gethtilde}();}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{gethtilde}()}}
+\L{\LB{\{}}
+\L{\LB{____\K{int}_\V{i},\V{order}=1,\V{err\_cd\_sprs}=4000,\V{filled};}}
+\L{\LB{____\K{static}_\K{int}_\V{first}=1;}}
+\L{\LB{____\K{float}_\V{t\_coal},\V{tempfloat};}}
+\L{\LB{____\V{FILE}_\*\V{randfp};}}
+\L{\LB{____}}
+\L{\LB{____\K{if}(\V{first})\{}}
+\L{\LB{________\V{first}_=_0;}}
+\L{\LB{____________\C{}\1\* read in the random number seed \*\1\CE{}}}
+\L{\LB{________\K{if}((\V{randfp}_=_\V{fopen}(\S{}\"randomseeds\"\SE{},\S{}\"r\"\SE{}))==\V{NULL})\{}}
+\L{\LB{____________\V{printf}(\S{}\"the_randomseeds_file_is_not_present\2n\"\SE{});}}
+\L{\LB{____________\V{printf}(\S{}\"Please_create_a_file_called_randomseeds_which_contains\2n\"\SE{});}}
+\L{\LB{____________\V{printf}(\S{}\"a_column_of_negative_random_numbers_seeds_\2n\"\SE{});}}
+\L{\LB{____________\V{exit}(\-1);}}
+\L{\LB{________\}}}
+\L{\LB{________\K{for}(\V{i}=0;\V{i}\<\V{tfparam}.\V{run\_number};\V{i}++)}}
+\L{\LB{____________\K{if}(\V{fscanf}(\V{randfp},\S{}\"\%ld\2n\"\SE{},\&\V{idummy})\<0)\{}}
+\L{\LB{________________\V{printf}(\S{}\"the_randomseeds_file_does_not_contain_enough_random_numbers\2n\"\SE{});}}
+\L{\LB{________________\V{exit}(\-1);}}
+\L{\LB{____________\}}}
+\L{\LB{________\V{fclose}(\V{randfp});}}
+\L{\LB{____________\C{}\1\* allocate memory for the inverse power spectrum, signal arrays and buffers\*\1\CE{}}}
+\L{\LB{________\V{twice\_inv\_noise}_=_(\K{float}_\*)_\V{malloc}(\K{sizeof}(\K{float})\*(\V{npoint}\12_+_1));}}
+\L{\LB{________\V{ch0}_=_(\K{float}_\*)_\V{malloc}(\K{sizeof}(\K{float})\*\V{npoint});}}
+\L{\LB{________\V{ch1}_=_(\K{float}_\*)_\V{malloc}(\K{sizeof}(\K{float})\*\V{npoint});}}
+\L{\LB{________\V{buff}_=_(\K{float}_\*)_\V{malloc}(\K{sizeof}(\K{float})\*\V{npoint});}}
+\L{\LB{________\V{shf}_=_(\K{float}_\*)\V{malloc}_(\K{sizeof}(\K{float})\*(\V{npoint}\12+1));}}
+\L{\LB{________\V{shf\_root}_=_(\K{float}_\*)\V{malloc}_(\K{sizeof}(\K{float})\*(\V{npoint}\12+1));}}
+\L{\LB{____________\C{}\1\* initialize the signal arrays to zero \*\1\CE{}}}
+\L{\LB{________\K{for}(\V{i}=0;\V{i}\<\V{npoint};\V{i}++)_\V{ch0}[\V{i}]=\V{ch1}[\V{i}]=0.0;}}
+\L{\LB{____________\C{}\1\* switch between the signal types \*\1\CE{}}}
+\L{\LB{________\K{switch}(\V{snpar}.\V{signaltype})\{}}
+\L{\LB{____________\K{case}_\V{INSERT\_QUAS\_PER}:}}
+\L{\LB{________________\V{gen\_quasiperiodic\_signal}(\V{ch1},\V{NDIM},\V{tfparam}.\V{f\_lower},\V{srate},\V{snpar}.\V{pind},_\V{snpar}.\V{ampind},\V{snpar}.\V{timfrac},}}
+\L{\LB{_________________________________________\V{snpar}.\V{freqfrac},\&\V{filled});}}
+\L{\LB{________________\K{break};}}
+\L{\LB{____________\K{case}_\V{INSERT\_INSPIRAL}:}}
+\L{\LB{________________\V{make\_filters}(\V{snpar}.\V{m1},\V{snpar}.\V{m2},\V{ch0},\V{ch1},\V{tfparam}.\V{f\_lower},\V{npoint},}}
+\L{\LB{_____________________________\V{srate},\&\V{filled},\&\V{t\_coal},_\V{err\_cd\_sprs},_\V{order});}}
+\L{\LB{________________\K{break};}}
+\L{\LB{____________\K{case}_\V{INSERT\_COALESCENCE}:}}
+\L{\LB{________________\V{get\_coalescence}(\V{ch1},\V{npoint},\V{tfparam}.\V{f\_lower},\V{srate},\&\V{filled});}}
+\L{\LB{________________\K{break};}}
+\L{\LB{________\}}}
+\L{\LB{____________\C{}\1\* offset the signal to the right by tfparam.signaloffset points \*\1\CE{}}}
+\L{\LB{________\K{for}(\V{i}=\V{filled}\-1;\V{i}\>=0;\V{i}\-\-)_\V{ch1}[\V{i}+\V{snpar}.\V{signaloffset}]_=_\V{ch1}[\V{i}];}}
+\L{\LB{________\K{for}(\V{i}=0;\V{i}\<\V{snpar}.\V{signaloffset};\V{i}++)_\V{ch1}[\V{i}]_=_0.0;}}
+\L{\LB{____________\C{}\1\* copy ch1 to ch0 \*\1\CE{}}}
+\L{\LB{________\K{for}(\V{i}=0;\V{i}\<\V{npoint};\V{i}++)}}
+\L{\LB{____________\V{ch0}[\V{i}]_=_\V{ch1}[\V{i}];}}
+\L{\LB{____________\C{}\1\* take the Fourier transform of the signal\*\1\CE{}}}
+\L{\LB{________\V{realft}(\V{ch0}\-1,\V{longn},1);}}
+\L{\LB{____________\C{}\1\* get the power spectrum for noise \*\1\CE{}}}
+\L{\LB{________\V{deltaf}_=_\V{srate}\1\V{npoint};}}
+\L{\LB{________\V{getshf}(\V{npoint}\12+1,\V{shf},\V{deltaf});}}
+\L{\LB{________\K{for}(\V{i}=0;\V{i}\<=\V{npoint}\12;\V{i}++)_\V{twice\_inv\_noise}[\V{i}]_=_1.\1\V{shf}[\V{i}];}}
+\L{\LB{________\K{for}(\V{i}=0;\V{i}\<=\V{npoint}\12;\V{i}++)_\V{shf\_root}[\V{i}]_=_\V{sqrt}(\V{shf}[\V{i}]);}}
+\L{\LB{____________\C{}\1\* normalize the signal to a particular SNR\*\1\CE{}}}
+\L{\LB{________\V{correlate}(\V{buff},\V{ch0},\V{ch0},\V{twice\_inv\_noise},\V{npoint});}}
+\L{\LB{________\V{tempfloat}_=_\V{snpar}.\V{snr}\1\V{sqrt}(\V{buff}[0]);}}
+\L{\LB{________\V{fill\_data\_with\_signal}(\V{npoint},\V{ch1},\V{ch0},\V{tempfloat});}}
+\L{\LB{________\V{realft}(\V{ch0}\-1,\V{longn},1);}}
+\L{\LB{____\}}}
+\L{\LB{____\V{noise\_gau\_col\_fr}(\&\V{idummy},_\V{npoint},_\V{htilde},_\V{shf\_root});}}
+\L{\LB{________\C{}\1\* add the signal to the noise \*\1\CE{}}}
+\L{\LB{____\K{if}(\V{snpar}.\V{addsignal})}}
+\L{\LB{________\K{for}(\V{i}=0;\V{i}\<\V{npoint};\V{i}++)_\V{htilde}[\V{i}]_+=_\V{ch0}[\V{i}];}}
+\L{\LB{____\V{over\_whiten\_filter}(\V{htilde},\V{npoint},\V{twice\_inv\_noise});}}
+\L{\LB{________\C{}\1\* zero out the higher frequency to avoid aliasing \*\1\CE{}}}
+\L{\LB{____\K{if}((\V{tfparam}.\V{transformtype}==\V{WIGNERTF})\|\,\|(\V{tfparam}.\V{transformtype}==\V{CHOIWILLIAMS}))}}
+\L{\LB{________\K{for}(\V{i}=\V{npoint}\12;\V{i}\<\V{npoint};\V{i}++)_\V{htilde}[\V{i}]_=_0.0;}}
+\L{\LB{____\V{realft}(\V{htilde}_\-_1,_\V{longn},_\-1);}}
+\L{\LB{____\K{return}_\V{DATADIM};}}
+\L{\LB{\}}}

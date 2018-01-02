@@ -1,0 +1,55 @@
+This directory contains code routines to optimize GRASP execution running
+on different hardware platforms.
+
+The prototypical example is this:
+
+You have an optimized FFT routine available in a library, but it does
+not take it's input/output in the same format at the Numerical Recipes
+(NR) routines function realft().  So you write a block of code that:
+(1) takes the arguments, and moves them from the NR format
+    assumed by realft() into the format that your optimized FFT needs.
+
+(2) does the optimized FFT
+
+(3) takes the output of that optimized FFT and puts it back into NR format
+    again.
+
+You then compile this block of code into a .o file, and link it in with
+the GRASP package, BEFORE you link the NR library.
+
+The different directories below this directory typically contain glue
+routines for particular machine types.  We are distributing the .o
+files with GRASP but you may need to re-build these glue object files.
+If so, edit the makefile in the particular directory, and type "make".
+
+Generally, these directories contain following files:
+makefile ............... The makefile to build the optimized glue routine.
+
+printvec.c ............. Routine to print out arrays.  Should require no
+                         modification for a new machine or FFT.
+realft.c ............... Test program, prints out a Numerical Recipes
+                         forward/back FFT, and the optimized lib FFT for
+		         comparison.  Helps to understand packing convention.
+realft_machine.c ....... Contains glue routine that makes machine-specific
+                         optimized FFT obey Numerical Recipes syntax.
+realft_machine.o ....... Object file that previous .c file compiles into.
+                         Should be linked to code that uses realft().
+realft_machine_test.c .. A routine to test the optimzed FFT.
+realft_machine_test1 ... Previous .c file, linked to Numerical Recipes.
+realft_machine_test2 ... Previous .c file, linked to optimized FFT
+
+To test the optimzed FFT, use a set of commands like:
+
+realft_machine_test1 >! numer_rec_test.out
+realft_machine_test2 >! optimized_test.out
+paste numer_rec_test.out optimized_test.out | more
+
+When you do this, the left hand side of the screen will show the
+output of the test program realft_machine_test.c when linked with
+numerical recipes.  The right hand side of the screen should show the
+output of the same test program realft_machine_test.c, but now linked
+with the optimized FFT.  The left and right columns should agree, up
+to possible rounding errors.
+
+
+

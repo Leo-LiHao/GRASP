@@ -1,0 +1,23 @@
+#############################################################################
+#  THE REGION ABOVE THIS SPACE IS FILLED IN BY InstallGRASP                 #
+#############################################################################
+
+INCLUDES= -I$(GRASP_I)
+LIBS= $(OPTIMIZED_OBJECTS) -L$(GRASP_HOME)/lib -lgrasp -L$(RECIPES_LIB) -l$(LRECIPES) $(OPTIMIZED_LIBS) -lm
+
+all:  lorenz tmwave plot_ambig
+	
+tmwave: tmwave.c $(GRASP_HOME)/lib/libgrasp.a
+	$(CC) $(CFLAGS) $(INCLUDES) -o tmwave tmwave.c $(LIBS) 
+	
+lorenz: lorenz.c $(GRASP_HOME)/lib/libgrasp.a
+	$(CC) $(CFLAGS) $(INCLUDES) -o lorenz lorenz.c $(LIBS) 
+	
+plot_ambig: plot_ambig.c $(GRASP_HOME)/lib/libgrasp.a
+	$(CC) $(CFLAGS) $(INCLUDES) -o plot_ambig plot_ambig.c $(LIBS) 
+
+clean:
+	rm -f *.o tmwave lorenz plot_ambig
+
+tidy: clean 
+	rm -f *.dat

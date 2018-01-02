@@ -1,0 +1,39 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_ringdown\1spheroid.c},{11:59},{Jan 23 1998}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{}}
+\L{\LB{\K{\#define}_\V{SPIN}_0.98_\C{}\1\* the dimensionless angular momentum parameter \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}(\K{int}_\V{argc},_\K{char}_\*\V{argv}[\,])}}
+\L{\LB{\{}}
+\L{\LB{__\K{float}_\V{re},\V{im},\V{mu}=0,\V{dmu}=0.02,\V{a}=\V{SPIN};}}
+\L{\LB{__\K{float}_\V{eigenvalues}[4];}}
+\L{\LB{__\K{int}_\V{s},\V{l},\V{m};}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* process arguments \*\1\CE{}}}
+\L{\LB{__\K{if}_(\V{argc}==4)_\{_\C{}\1\* correct number of arguments \*\1\CE{}}}
+\L{\LB{____\V{s}_=_\V{atoi}(\V{argv}[1]);}}
+\L{\LB{____\V{l}_=_\V{atoi}(\V{argv}[2]);}}
+\L{\LB{____\V{m}_=_\V{atoi}(\V{argv}[3]);}}
+\L{\LB{__\}_\K{else}_\{_\C{}\1\* incorrect number of arguments \*\1\CE{}}}
+\L{\LB{____\V{fprintf}(\V{stderr},\S{}\"usage:_spheroid_s_l_m\2n\"\SE{});}}
+\L{\LB{____\K{return}_1;}}
+\L{\LB{__\}}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* get the eigenvalues for the appropriate quasinormal mode \*\1\CE{}}}
+\L{\LB{__\V{qn\_eigenvalues}(\V{eigenvalues},\V{a},\V{s},\V{l},\V{m});}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* reset the normalization \*\1\CE{}}}
+\L{\LB{__\V{sw\_spheroid}(\&\V{re},\&\V{im},\V{mu},1,\V{a},\V{s},\V{l},\V{m},\V{eigenvalues});}}
+\L{\LB{}}
+\L{\LB{__\K{for}_(\V{mu}=\-1+0.5\*\V{dmu};\V{mu}\<1;\V{mu}+=\V{dmu})_\{}}
+\L{\LB{____\C{}\1\* compute the spin-weighted spheroidal harmonic \*\1\CE{}}}
+\L{\LB{____\V{sw\_spheroid}(\&\V{re},\&\V{im},\V{mu},0,0.0,\V{s},\V{l},\V{m},\V{eigenvalues});}}
+\L{\LB{____\C{}\1\* print results \*\1\CE{}}}
+\L{\LB{____\V{printf}(\S{}\"\%e\2t\%e\2t\%e\2n\"\SE{},\V{mu},\V{re},\V{im});}}
+\L{\LB{__\}}}
+\L{\LB{}}
+\L{\LB{__\K{return}_0;}}
+\L{\LB{\}}}

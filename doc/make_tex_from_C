@@ -1,0 +1,114 @@
+#
+# This is a script which takes as input a bunch of *.c and *.h files,
+# runs them through the "lgrind" program, and produces as output a bunch
+# of neatly-formatted *.tex files, containing "LaTeX versions" of the
+# original *.c and *.h source files.
+
+# Build the lgrind program.
+pushd grinder
+touch *.c
+make
+popd
+
+# source code from 40-meter examples
+echo "Building TeX sources from 40-meter examples"
+grinder/lgrind -i -lc ../src/examples/examples_40meter/calibrate.c >! Includes/calibrate.tex
+grinder/lgrind -i -lc ../src/examples/examples_40meter/power_spectrum.c >! Includes/power_spectrum.tex
+grinder/lgrind -i -lc ../src/examples/examples_40meter/print_ss.c >! Includes/print_ss.tex
+grinder/lgrind -i -lc ../src/examples/examples_40meter/reader.c >! Includes/reader.tex
+grinder/lgrind -i -lc ../src/examples/examples_40meter/locklist.c >! Includes/locklist.tex
+grinder/lgrind -i -lc ../src/examples/examples_40meter/gwoutput.c >! Includes/gwoutput.tex
+grinder/lgrind -i -lc ../src/examples/examples_40meter/animate.c >! Includes/animate.tex
+grinder/lgrind -i -lc ../src/examples/examples_40meter/transfer.c >! Includes/transfer.tex
+
+# source code from utility examples
+echo "Building TeX sources from utility examples"
+grinder/lgrind -i -lc ../src/examples/examples_utility/river.c >! Includes/river.tex
+grinder/lgrind -i -lc ../src/examples/examples_utility/ifo_clean.c >! Includes/ifo_clean.tex
+grinder/lgrind -i -lc ../src/examples/examples_utility/translate.c >! Includes/translate.tex
+grinder/lgrind -i -lc ../src/examples/examples_utility/trackerF.c >! Includes/trackerF.tex
+grinder/lgrind -i -lc ../src/examples/examples_utility/makesounds.c >! Includes/makesounds.tex
+
+# source code from stochastic background examples
+echo "Building TeX sources from stochastic background examples"
+grinder/lgrind -i -lc ../src/examples/examples_stochastic/monte_carlo.c >! Includes/monte_carlo.tex
+grinder/lgrind -i -lc ../src/examples/examples_stochastic/omega_min.c >! Includes/omega_min.tex
+grinder/lgrind -i -lc ../src/examples/examples_stochastic/optimal_filter.c >! Includes/optimal_filter.tex
+grinder/lgrind -i -lc ../src/examples/examples_stochastic/overlap.c >! Includes/overlap.tex
+grinder/lgrind -i -lc ../src/examples/examples_stochastic/signal_noise.c >! Includes/signal_noise.tex
+grinder/lgrind -i -lc ../src/examples/examples_stochastic/simulation.c >! Includes/simulation.tex
+grinder/lgrind -i -lc ../src/examples/examples_stochastic/snr.c >! Includes/snr.tex
+
+# source code from frame examples
+echo "Building TeX sources from frame examples"
+grinder/lgrind -i -lc ../src/examples/examples_frame/animateF.c >! Includes/animateF.tex
+grinder/lgrind -i -lc ../src/examples/examples_frame/calibrateF.c >! Includes/calibrateF.tex
+grinder/lgrind -i -lc ../src/examples/examples_frame/calibrate_binnedF.c >! Includes/calibrate_binnedF.tex
+grinder/lgrind -i -lc ../src/examples/examples_frame/diagF.c >! Includes/diagF.tex
+grinder/lgrind -i -lc ../src/examples/examples_frame/gwoutputF.c >! Includes/gwoutputF.tex
+grinder/lgrind -i -lc ../src/examples/examples_frame/locklistF.c >! Includes/locklistF.tex
+grinder/lgrind -i -lc ../src/examples/examples_frame/power_spectrumF.c >! Includes/power_spectrumF.tex
+grinder/lgrind -i -lc ../src/examples/examples_frame/print_ssF.c >! Includes/print_ssF.tex
+grinder/lgrind -i -lc ../src/examples/examples_frame/transferF.c >! Includes/transferF.tex
+
+# source code from ringdown examples
+echo "Building TeX sources from ringdown examples"
+grinder/lgrind -i -lc ../src/examples/examples_ringdown/eigenvalues.c >! Includes/eigenvalues.tex
+grinder/lgrind -i -lc ../src/examples/examples_ringdown/qn_optimal.c >! Includes/qn_optimal.tex
+grinder/lgrind -i -lc ../src/examples/examples_ringdown/qn_optimalF.c >! Includes/qn_optimalF.tex
+grinder/lgrind -i -lc ../src/examples/examples_ringdown/ringdown.c >! Includes/ringdown.tex
+grinder/lgrind -i -lc ../src/examples/examples_ringdown/spherical.c >! Includes/spherical.tex
+grinder/lgrind -i -lc ../src/examples/examples_ringdown/spheroid.c >! Includes/spheroid.tex
+grinder/lgrind -i -lc ../src/examples/examples_ringdown/ring-corr.c >! Includes/ring-corr.tex
+
+# source code from inspiral examples
+echo "Building TeX sources from inspiral examples"
+grinder/lgrind -i -lc ../src/examples/examples_inspiral/phase_evoltn.c >! Includes/phase_evoltn.tex
+grinder/lgrind -i -lc ../src/examples/examples_inspiral/compare_chirps.c >! Includes/compare_chirps.tex
+grinder/lgrind -i -lc ../src/examples/examples_inspiral/filters.c >! Includes/filters.tex
+grinder/lgrind -i -lc ../src/examples/examples_inspiral/optimal.c >! Includes/optimal.tex
+grinder/lgrind -i -lc ../src/examples/examples_inspiral/compute_dist.c >! Includes/compute_dist.tex
+
+# source code from template examples
+echo "Building TeX sources from template examples"
+grinder/lgrind -i -lc ../src/examples/examples_template_bank/template.c >! Includes/template.tex
+grinder/lgrind -i -lc ../src/examples/examples_template_bank/area.c >! Includes/area.tex
+grinder/lgrind -i -lc ../src/examples/examples_template_bank/multifilter.c >! Includes/multifilter.tex
+grinder/lgrind -i -lc ../src/examples/examples_template_bank/match_fit.c >! Includes/match_fit.tex
+grinder/lgrind -i -lc ../src/examples/examples_template_bank/make_grid.c >! Includes/make_grid.tex
+grinder/lgrind -i -lc ../src/examples/examples_template_bank/make_mesh.c >! Includes/make_mesh.tex
+
+#source code from galaxy examples
+echo "Building TeX sources from galaxy examples"
+grinder/lgrind -i -lc ../src/examples/examples_galaxy/inject.c >! Includes/inject.tex
+grinder/lgrind -i -lc ../src/examples/examples_galaxy/caltech_lst.c >! Includes/caltech_lst.tex
+grinder/lgrind -i -lc ../src/examples/examples_galaxy/galactic2equatorial.c >! Includes/galactic2equatorial.tex
+
+#source code from binary-search
+echo "Building TeX sources from binary-search examples"
+grinder/lgrind -i -lc ../src/examples/examples_binary-search/binary_params.h >! Includes/binary_params.tex
+grinder/lgrind -i -lc ../src/examples/examples_binary-search/binary_search.c >! Includes/binary_search.tex
+grinder/lgrind -i -lc ../src/examples/examples_binary-search/binary_get_data.c >! Includes/binary_get_data.tex
+grinder/lgrind -i -lc ../src/examples/examples_binary-search/mainscript.noinject >! Includes/mainscript1.tex
+grinder/lgrind -i -lc ../src/examples/examples_binary-search/mainscript.inject >! Includes/mainscript2.tex
+
+# source code from transient examples
+echo "Building TeX sources from transient source examples"
+grinder/lgrind -i -lc ../src/examples/examples_transient/LS_filter.c >! Includes/LS_filter.tex
+
+# source code from testmass examples
+echo "Building TeX sources from testmass limit examples"
+grinder/lgrind -i -lc ../src/examples/examples_testmass/lorenz.c >! Includes/lorenz.tex
+grinder/lgrind -i -lc ../src/examples/examples_testmass/plot_ambig.c >! Includes/plot_ambig.tex
+grinder/lgrind -i -lc ../src/examples/examples_testmass/tmwave.c >! Includes/tmwave.tex
+
+# source code from timefrequency examples
+echo "Building TeX sources from timefrequency examples"
+grinder/lgrind -i -lc ../src/examples/examples_timefreq/tfmain.h >! Includes/tfmainh.tex
+grinder/lgrind -i -lc ../src/examples/examples_timefreq/tfmain.c >! Includes/tfmain.tex
+grinder/lgrind -i -lc ../src/examples/examples_timefreq/tf_get_data.c >! Includes/tf_get_data.tex
+
+# source code from correlation examples
+echo "Building TeX sources from correlation examples"
+grinder/lgrind -i -lc ../src/examples/examples_correlation/corr_init.c >! Includes/corr_init.tex
+grinder/lgrind -i -lc ../src/examples/examples_correlation/env_corr.c >! Includes/env_corr.tex

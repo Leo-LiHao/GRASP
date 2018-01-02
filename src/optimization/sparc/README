@@ -1,0 +1,24 @@
+This contains functions that replace the Numerical Recipes realft()
+function.  These functions use the optimized FFT's from the Sun
+Performance Library.
+
+The executable realft constructs a short input sequence, then does a
+forward Numerical Recipes realft() and prints out the resulting array.
+It then takes an identical input array, and does a forward transform
+using the Sun Performance Library routine.  The comparison between the
+two outputs lets you easily see the difference in packing order.
+
+The module realft_sparc.c/o contains a replacement for the Numerical
+Recipes realft() routine which takes identical arguments and internally
+makes use of the Sun Performance Library to do the fft.  On first entry,
+and anytime that the size of the array changes, it prints a notification
+message to standard error.
+
+The executables realft_sparc_test1 and realft_sparc_test2 are identical
+source code, but the first is linked with the Numerical Recipes library
+and the second is linked with the realft_sparc.o routine.  By comparing
+the outputs of these programs (which do one forward and one inverse FFT),
+which are identical except for rounding error, you can verify that the
+replacement for the realft() routine is working correctly.
+
+

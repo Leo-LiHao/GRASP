@@ -1,0 +1,1881 @@
+%!PS-Adobe-2.0 EPSF-2.0
+%%BoundingBox: 72 72 540 720
+%%Creator: Mathematica
+%%CreationDate: Tue Jul 22 13:06:58 PDT 1997
+%%EndComments
+% Start of procedure set
+userdict /Mathdict 100 dict dup begin put
+% The externally visible functions are:
+%	MathPictureStart- start page.
+%	MathPictureEnd	- finish off page.
+%	MathSubStart	- start a sub-page.
+%	MathSubEnd	- finish off a sub-page.
+%	Mdot		- draw a dot.
+%	Mtetra		- draw a filled tetragon.
+%	Metetra		- draw a filled tetragon with black edges.
+%	Mistroke	- intermediate stroke of multi-stroke line/curve.
+%	Mfstroke	- final stroke of multi-stroke line/curve.
+%	Msboxa		- compute coordinates of text bounding box.
+%	Mshowa		- plot characters.
+%	MathScale	- compute scaling info to contain array of points.
+%start of ISOLatin1 stuff
+/ISOLatin1Encoding dup where
+{ pop pop }
+{
+[
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef
+/space /exclam /quotedbl /numbersign /dollar /percent /ampersand /quoteright
+/parenleft /parenright /asterisk /plus /comma /minus /period /slash
+/zero /one /two /three /four /five /six /seven
+/eight /nine /colon /semicolon /less /equal /greater /question
+/at /A /B /C /D /E /F /G
+/H /I /J /K /L /M /N /O
+/P /Q /R /S /T /U /V /W
+/X /Y /Z /bracketleft /backslash /bracketright /asciicircum /underscore
+/quoteleft /a /b /c /d /e /f /g
+/h /i /j /k /l /m /n /o
+/p /q /r /s /t /u /v /w
+/x /y /z /braceleft /bar /braceright /asciitilde /.notdef
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef
+/dotlessi /grave /acute /circumflex /tilde /macron /breve /dotaccent
+/dieresis /.notdef /ring /cedilla /.notdef /hungarumlaut /ogonek /caron
+/space /exclamdown /cent /sterling /currency /yen /brokenbar /section
+/dieresis /copyright /ordfeminine /guillemotleft
+/logicalnot /hyphen /registered /macron
+/degree /plusminus /twosuperior /threesuperior
+/acute /mu /paragraph /periodcentered
+/cedilla /onesuperior /ordmasculine /guillemotright
+/onequarter /onehalf /threequarters /questiondown
+/Agrave /Aacute /Acircumflex /Atilde /Adieresis /Aring /AE /Ccedilla
+/Egrave /Eacute /Ecircumflex /Edieresis /Igrave /Iacute /Icircumflex /Idieresis
+/Eth /Ntilde /Ograve /Oacute /Ocircumflex /Otilde /Odieresis /multiply
+/Oslash /Ugrave /Uacute /Ucircumflex /Udieresis /Yacute /Thorn /germandbls
+/agrave /aacute /acircumflex /atilde /adieresis /aring /ae /ccedilla
+/egrave /eacute /ecircumflex /edieresis /igrave /iacute /icircumflex /idieresis
+/eth /ntilde /ograve /oacute /ocircumflex /otilde /odieresis /divide
+/oslash /ugrave /uacute /ucircumflex /udieresis /yacute /thorn /ydieresis
+] def
+} ifelse
+/MFontDict 50 dict def
+/MStrCat
+{
+exch
+dup length
+2 index length add
+string
+dup 3 1 roll
+copy
+length
+exch dup
+4 2 roll exch
+putinterval
+} bind def
+/MCreateEncoding
+{
+1 index
+255 string cvs
+(-) MStrCat
+1 index MStrCat
+cvn exch
+(Encoding) MStrCat
+cvn dup where
+{
+exch get
+}
+{
+pop
+StandardEncoding
+} ifelse
+3 1 roll
+dup MFontDict exch known not
+{
+1 index findfont
+dup length dict
+begin
+{1 index /FID ne
+{def}
+{pop pop}
+ifelse} forall
+/Encoding 3 index
+def
+currentdict
+end
+1 index exch definefont pop
+MFontDict 1 index
+null put
+}
+if
+exch pop
+exch pop
+} bind def
+/ISOLatin1 { (ISOLatin1) MCreateEncoding } bind def
+%end of ISOLatin1 stuff
+% Set up for the start of a page.
+/MathPictureStart {
+/Msaveobj save def
+/findresource where
+{ pop /WRI-Mathematica-prolog /ProcSet findresource begin }
+{ Mathdict begin }
+ifelse
+userdict begin
+/MathPictureStartHook where {
+/MathPictureStartHook get exec
+} if
+Mtransform
+Mlmarg
+Mbmarg
+translate
+Mwidth
+Mlmarg Mrmarg add
+sub
+/Mwidth exch def
+Mheight
+Mbmarg Mtmarg add
+sub
+/Mheight exch def
+/Mtmatrix
+matrix currentmatrix
+def
+/Mgmatrix
+matrix currentmatrix
+def
+/MathDPSFlag where {
+pop
+clientsync
+} if
+} def
+% Finish off a page.
+/MathPictureEnd {
+end
+end
+Msaveobj restore
+/MathDPSFlag where { pop } { showpage } ifelse
+} def
+%MFill fills the drawing area with the current color.
+/MFill {
+0 0 		moveto
+Mwidth 0 	lineto
+Mwidth Mheight 	lineto
+0 Mheight 	lineto
+fill
+} def
+%New device-specific optimizing operators
+/Mfill /.devicefill where
+{ pop /.devicefill load def }
+{ /fill load def }
+ifelse
+/Mstroke /.devicestroke where
+{ pop /.devicestroke load def }
+{ /stroke load def }
+ifelse
+% xmin xmax ymin ymax MPlotRegion alters the origin, Mwidth and Mheight 
+% so that the picture fills the altered region
+/MPlotRegion {
+3 index
+Mwidth mul
+2 index
+Mheight mul
+translate
+exch sub
+Mheight mul
+/Mheight
+exch def
+exch sub
+Mwidth mul
+/Mwidth
+exch def
+} def
+% Given a rectangle, set it up as a sub-picture.
+/MathSubStart {
+Momatrix
+Mgmatrix Mtmatrix
+Mwidth Mheight
+7 -2 roll
+moveto
+Mtmatrix setmatrix
+currentpoint
+Mgmatrix setmatrix
+9 -2 roll
+moveto
+Mtmatrix setmatrix
+currentpoint
+2 copy translate
+/Mtmatrix matrix currentmatrix def
+3 -1 roll
+exch sub
+/Mheight exch def
+sub
+/Mwidth exch def
+} def
+% Restore the saved state left by the matching MathSubStart.
+% Note, we also leave with the new Mgmatrix as the current matrix.
+/MathSubEnd {
+/Mheight exch def
+/Mwidth exch def
+/Mtmatrix exch def
+dup setmatrix
+/Mgmatrix exch def
+/Momatrix exch def
+} def
+% Given a point, draw a dot.
+/Mdot {
+newpath
+currentlinewidth 2 div
+0 360
+arc fill
+} bind def
+% Given 4 points, draw the corresponding filled tetragon.
+/Mtetra {
+moveto
+lineto
+lineto
+lineto
+Mfill
+} bind def
+% Given 4 points, draw the corresponding filled tetragon with black edges.
+% Note, this leaves the gray level at 0 (for compatibility with the old
+% C code.
+/Metetra {
+moveto
+lineto
+lineto
+lineto
+closepath
+gsave
+Mfill
+grestore
+0 setgray
+Mstroke
+} bind def
+% Mistroke is called to stroke intermediate parts of a path.  It makes
+% sure to resynchronize the dashing pattern and to leave the current point
+% as the final point of the path.
+/Mistroke {
+flattenpath
+0 0 0
+{
+4 2 roll
+pop pop
+}
+{
+4 -1 roll
+2 index
+sub dup mul
+4 -1 roll
+2 index
+sub dup mul
+add sqrt
+4 -1 roll
+add
+3 1 roll
+}
+{
+stop
+}
+{
+stop
+}
+pathforall
+pop pop
+currentpoint
+Mstroke
+moveto
+currentdash
+3 -1 roll
+add
+setdash
+} bind def
+% Mfstroke is called to stroke the final parts of a path.  It resets
+% the dashing pattern to compensate for any adjustments made by Mistroke.
+/Mfstroke {
+Mstroke
+currentdash
+pop 0
+setdash
+} bind def
+% Mrotsboxa is the same as Msboxa except that it takes an angle 
+% from the stack and the box is calculated for text rendered at this  angle.  
+% It gsaves in case we are starting a MathSubStart
+% save Mrot so that Msboxa can convert bouding box back to the non-rotated
+% coordinate system
+% call Mrotcheck to alter the offsets into the rotated system
+% converts Mtmatrix to render in the rotated system
+% the calls Msboxa which does all the work
+% at the end  Mtmatrix is restored and Mrot is reset to 0 
+/Mrotsboxa {
+gsave
+dup
+/Mrot
+exch def
+Mrotcheck
+Mtmatrix
+dup
+setmatrix
+7 1 roll
+4 index
+4 index
+translate
+rotate
+3 index
+-1 mul
+3 index
+-1 mul
+translate
+/Mtmatrix
+matrix
+currentmatrix
+def
+grestore
+Msboxa
+3  -1 roll
+/Mtmatrix
+exch def
+/Mrot
+0 def
+} bind def
+% Given an array of strings ([str...]), which represent consecutive lines
+% of text, a position in graphics coordinates (gx,gy) and a position in
+% the bounding box coordinates (sx,sy), compute the low and high coordinates
+% of the resulting text, in the [gx gy tx ty] form, which corresponds to
+% the point (gx,gy) (in graphics coordinates) plus the offset (tx,ty) (in
+% text coordinates).
+% Note, Msboxa assumes that the current matrix is the text matrix.
+% Mboxout is called in case we are in Mouter to make the box bigger
+% Mboxrot adjusts the box to account for a rotation to convert the box
+% into a nonrotated coordinate system
+%
+/Msboxa {
+newpath
+5 -1 roll
+Mvboxa
+pop
+Mboxout
+6 -1 roll
+5 -1 roll
+4 -1 roll
+Msboxa1
+5 -3 roll
+Msboxa1
+Mboxrot
+[
+7 -2 roll
+2 copy
+[
+3 1 roll
+10 -1 roll
+9 -1 roll
+]
+6 1 roll
+5 -2 roll
+]
+} bind def
+% Msboxa1 is an internal function which, given a bounding box coordinate
+% (sz), and the bounding box limits (blz and bhz), computes the actual
+% offsets (tlz = (blz-bhz)(sz+1)/2, thz = (blz-bhz)(sz-1)/2).
+/Msboxa1 {
+sub
+2 div
+dup
+2 index
+1 add
+mul
+3 -1 roll
+-1 add
+3 -1 roll
+mul
+} bind def
+% Given a (non-empty) array of strings ([str...]) which represent consecutive
+% lines of text, compute the total bounding box assuming that we start at
+% (0,0) and the array of y offsets to place the lines correctly.
+% Note, Mvboxa assumes that the current matrix is the text matrix.
+% Note, Mvboxa does not alter the current path.
+% The vertical spacing is set so that the bounding boxes of adjacent lines
+% are .3 times the width of an `m' apart.
+/Mvboxa {
+gsave
+newpath
+[ true
+3 -1 roll
+{
+Mbbox
+5 -1 roll
+{
+0
+5 1 roll
+}
+{
+7 -1 roll
+exch sub
+(m) stringwidth pop
+.3 mul
+sub
+7 1 roll
+6 -1 roll
+4 -1 roll
+Mmin
+3 -1 roll
+5 index
+add
+5 -1 roll
+4 -1 roll
+Mmax
+4 -1 roll
+}
+ifelse
+false
+}
+forall
+{ stop } if
+counttomark
+1 add
+4 roll
+]
+grestore
+} bind def
+% Given a string, compute the bounding box assuming that we start at (0,0).
+% Note, the path is assumed to be empty, and we are assumed to be in text
+% coordinates.  Allows for long strings.
+/Mbbox {
+1 dict begin
+0 0 moveto
+/temp (T) def
+{	gsave
+currentpoint newpath moveto
+temp 0 3 -1 roll put temp
+false charpath flattenpath currentpoint
+pathbbox
+grestore moveto lineto moveto} forall
+pathbbox
+newpath
+end
+} bind def
+% Compute the minimum of two numbers.
+/Mmin {
+2 copy
+gt
+{ exch } if
+pop
+} bind def
+% Compute the maximum of two numbers.
+/Mmax {
+2 copy
+lt
+{ exch } if
+pop
+} bind def
+%
+% Mrotwork saves Mrot (not really needed but saved anyway)
+% calls Mrotcheck to adjust the offsets into the rotated coordinate system
+% converts Mtmatrix to render in the rotated system
+%
+/Mrotwork {
+dup
+/Mrot
+exch def
+Mrotcheck
+Mtmatrix
+dup
+setmatrix
+7 1 roll
+4 index
+4 index
+translate
+rotate
+3 index
+-1 mul
+3 index
+-1 mul
+translate
+/Mtmatrix
+matrix
+currentmatrix
+def
+Mgmatrix setmatrix
+} def
+%
+% Mrotshowa is the same as Mshowa except that it takes an angle
+% from the stack and the text is rendered at this angle.
+% It call Mrotwork to do all the rotation work.
+% Then it calls Mshowa which does all the drawing work.
+% At the end Mtmatrix is restored and Mrot is reset to zero.
+%
+/Mrotshowa {
+Mrotwork
+Mshowa
+/Mtmatrix
+exch def
+/Mrot 0 def
+} def
+%
+% Draws rotated text with a background.
+%
+/Mrotback {
+7 1 roll
+dup
+8 1 roll
+Mrotwork
+8 -2 roll
+Mshowback
+/Mtmatrix
+exch def
+/Mrot 0 def
+} def
+%
+% Given an array of strings ([str...]), which represent consecutive lines
+% of text, a position in graphics coordinates (gx,gy) and a position in
+% the bounding box coordinates (sx,sy), display the strings.
+% Mboxout is called in case we are in Mouter
+%
+/Mshowa {
+4 -2 roll
+moveto
+2 index
+Mtmatrix setmatrix
+Mvboxa
+7 1 roll
+Mboxout
+6 -1 roll
+5 -1 roll
+4 -1 roll
+Mshowa1
+4 1 roll
+Mshowa1
+rmoveto
+currentpoint
+Mshowax
+pop pop pop pop
+Mgmatrix setmatrix
+} def
+%
+% The background box of text is increased by the
+% size of an "m"
+%
+/Madjust	{
+(m)
+stringwidth
+pop
+mul
+dup
+4 -1 roll
+add
+3 1 roll
+add
+} def
+%
+%
+%
+/Mbuildcoord {
+7 index
+7 index
+4 -1 roll
+4 -1 roll
+index
+exch
+index
+Mabsadd
+} def
+%
+% If the text is rotated then translate to the drawing point.
+% Rotate then translate back.  Do not do this if the angle
+% of rotation is 0.
+%
+/Mrotate {
+8 index
+0 ne
+{
+13 copy
+4 -2 roll
+pop pop
+6 -2 roll
+pop pop
+4 -1 roll
+3 -1 roll
+sub
+6 -1 roll
+mul
+3 1 roll
+sub
+4 -1 roll
+mul
+3 -1 roll
+5 1 roll
+Mabsadd
+2 copy
+translate
+3 -1 roll
+rotate
+exch -1 mul
+exch -1 mul
+translate
+} if
+9 -1 roll
+pop
+} def
+%
+% Draw text but into a box with a certain color.
+% Uses Msboxa to build the box.
+%
+/Mshowback {
+gsave
+exec
+6 copy pop
+Msboxa
+aload pop
+0.5 Madjust
+5 -1 roll
+aload pop
+Mrotate
+-0.5
+Madjust
+4 -1 roll
+pop
+3 -1 roll
+pop
+3 4
+Mbuildcoord
+moveto
+3 4
+Mbuildcoord
+lineto
+3 6
+Mbuildcoord
+lineto
+5 6
+Mbuildcoord
+lineto
+5 4
+Mbuildcoord
+lineto
+pop pop pop
+pop pop pop
+fill		
+grestore
+Mshowa
+} def
+% This is used for fixedwidth fonts
+% It simply shows each string and advances the y direction by the offset
+%
+/Mshowax {	
+0 1
+4 index length
+-1 add
+{
+2 index
+4 index
+2 index
+get
+3 index
+add
+moveto
+4 index
+exch get
+Mfixdash
+{
+Mfixdashp		
+}
+if
+show
+} for
+} def
+% Fix if all dashes and length > 1
+/Mfixdashp {
+dup
+length
+1
+gt
+1 index
+true exch
+{
+45
+eq
+and
+} forall
+and
+{
+gsave
+(--)		
+stringwidth pop
+(-)
+stringwidth pop
+sub
+2 div
+0 rmoveto
+dup
+length
+1 sub
+{
+(-)
+show
+}
+repeat
+grestore
+}
+if
+} bind def	
+% Mshowa1 is an internal routine which, given a bounding box coordinate
+% (sz), and the bounding box limits if we started drawing at 0 (tlz and thz),
+% computes the offset at which to start drawing
+% (relz = (sz-1)tlz/2 - (sz+1)thz/2 = sz(tlz-thz)/2-(tlz+thz)/2).
+/Mshowa1 {
+2 copy
+add
+4 1 roll
+sub
+mul
+sub
+-2 div
+} bind def
+% Given the x and y scaling to user coordinates and an array of points to
+% fit (xbias xscale ybias yscale [pnts]), set up the scaling.  The array
+% must contain atleast two points, and the last two must be of the form
+% [gxlow gylow 0 0] and [gxhigh gyhigh 0 0].
+% Note, MathScale assumes that we are already scaled so that the active area
+% is the rectangle [0,Mwidth-Mlmarg-Mrmarg]x[0,Mheight-Mbmarg-Mtmarg].
+% also keep bias and scale info for PostScript commands
+/MathScale {
+Mwidth
+Mheight
+Mlp
+/MathScaleHook where {
+/MathScaleHook get exec
+} if
+translate
+scale
+pop pop pop pop
+pop pop pop pop
+/yscale exch def
+/ybias exch def
+/xscale exch def
+/xbias exch def
+/Momatrix
+xscale yscale matrix scale
+xbias ybias matrix translate
+matrix concatmatrix def
+/Mgmatrix
+matrix currentmatrix
+def
+} def
+% Given a non-empty array of points to fit ([p]) and a maximum width (sx)
+% and height (sy) find the largest scale (Ax and Ay) and offsets (Bx and By)
+% such that the transformation
+%	[gx gy tx ty] -> (Ax gx + tx + bx, Ay gy + ty + By)
+% maps the points into the rectangle [0,sx]x[0,sy]
+/Mlp {
+3 copy
+Mlpfirst
+{
+Mnodistort
+{
+Mmin
+dup
+} if
+4 index
+2 index
+2 index
+Mlprun
+16 -8 roll
+21 8 roll
+11 index
+11 -1 roll
+10 -4 roll
+Mlp1
+8 index
+9 -5 roll
+Mlp1
+4 -1 roll
+and
+{ exit } if
+15 -8 roll
+pop pop pop pop
+pop pop pop pop
+3 -1 roll
+pop pop
+} loop
+exch
+3 1 roll
+7 -3 roll
+pop pop pop
+} def
+% Given an array of points in the [gx gy tx ty] form, with the last two
+% being [gxlow gylow 0 0] and [gxhigh gyhigh 0 0], and the width and height
+% (sx and sy) in which to fit them, compute the maximum scaling (Ax and Ay).
+/Mlpfirst {
+3 -1 roll
+dup length
+2 copy
+-2 add
+get
+aload
+pop pop pop
+4 -2 roll
+-1 add
+get
+aload
+pop pop pop
+6 -1 roll
+3 -1 roll
+5 -1 roll
+sub
+div
+4 1 roll
+exch sub
+div
+} bind def
+% Given a non-empty array of points to fit ([pnts]) and scale factors
+% for graphics->text (Ax and Ay), compute the limiting points.
+/Mlprun {
+2 copy
+4 index
+0 get
+dup
+4 1 roll
+Mlprun1
+3 copy
+8 -2 roll
+9 -1 roll
+{
+3 copy
+Mlprun1
+3 copy
+11 -3 roll
+/gt Mlpminmax
+8 3 roll
+11 -3 roll
+/lt Mlpminmax
+8 3 roll
+} forall
+pop pop pop pop
+3 1 roll
+pop pop
+aload pop
+5 -1 roll
+aload pop
+8 copy
+exch
+6 -1 roll
+Mlprun2
+8 2 roll
+4 -1 roll
+Mlprun2
+6 2 roll
+3 -1 roll
+Mlprun2
+4 2 roll
+exch
+Mlprun2
+6 2 roll
+} bind def
+% Given scale factors for graphics->text (Ax and Ay) and a point in the
+% [gx gy tx ty] form, return the text x and y coordinate that results.
+/Mlprun1 {
+aload pop
+exch
+6 -1 roll
+5 -1 roll
+mul add
+4 -2 roll
+mul
+3 -1 roll
+add
+} bind def
+% Given a low and high coordinate, compute the center and width.
+/Mlprun2 {
+2 copy
+add 2 div
+3 1 roll
+exch sub
+} bind def
+% Given two points stored as [gx gy tx ty] followed by the scaled
+% result (rx, ry), and a comparison function (lt or gt) leave the
+% point which is the minimum (or maximum) in each dimension.
+/Mlpminmax {
+cvx
+2 index
+6 index
+2 index
+exec
+{
+7 -3 roll
+4 -1 roll
+} if
+1 index
+5 index
+3 -1 roll
+exec
+{
+4 1 roll
+pop
+5 -1 roll
+aload
+pop pop
+4 -1 roll
+aload pop
+[
+8 -2 roll
+pop
+5 -2 roll
+pop
+6 -2 roll
+pop
+5 -1 roll
+]
+4 1 roll
+pop
+}
+{
+pop pop pop
+} ifelse
+} bind def
+% Given a size (s), graphics->text scale (A), text center (ct), text
+% width (wt), graphics center (cg) and graphics width (wg), compute
+% a new graphics->text scale (Anew) and offset (B) and whether or not
+% we are done.
+% Note, the mysterious .99999 is magic juju which is supposed to ward
+% off the possibility that floating point errors would cause this
+% routine to return the old A and yet claim not-done.
+/Mlp1 {
+5 index
+3 index	sub
+5 index
+2 index mul
+1 index
+le
+1 index
+0 le
+or
+dup
+not
+{
+1 index
+3 index	div
+.99999 mul
+8 -1 roll
+pop
+7 1 roll
+}
+if
+8 -1 roll
+2 div
+7 -2 roll
+pop sub
+5 index
+6 -3 roll
+pop pop
+mul sub
+exch
+} bind def
+% The following are the workings of the tick, axes and plot labels.
+% NOTE a possible source of confusion is that for xticks ie tickmarks on
+% the x axis we keep y information and vice versa for yticks
+%
+%	When Minner is found then
+%
+% assumes that box starts at zero on the left lower side
+%
+%		0)	if outflag = 1 then intop = 0, inrht = 0 outflag = 0
+%		1)	Save intop 	largest top of box 
+%		2)	Save inrht 	largest rht of box
+%		3)	set inflag	notifies that inner marks are present
+%
+%	When Mouter is found then
+%
+%	if inflag is set then
+%		1)	get vecx and vecy off the stack (points in direcn to move)
+%		2)	vecx < 1 xadrht = inrht*abs(vecx)
+%		3)	vecx > 1 xadlft = inrht*abs(vecx)
+%		4)	vecy < 1 yadtop = intop*abs(vecy)
+%		5)	vecy > 1 yadbot = intop*abs(vecy)
+%		6)	set outflag = 1
+%		7)	clear inflag, inrht, intop
+%	guaranteed to be zero if no inner is present??
+%
+%
+%	These all have effects in Mrotsboxa and Mrotshowa
+%		check inflag and if set
+%
+%		1) increase top of bbox by yadtop
+%		2) decrease bot of bbox by yadbot
+%		3) increase rht of bbox by xadrht
+%		4) increase lft of bbox by xadlft
+%		5) clear outflag, yadtop, yadbot,
+%			         xadrht, xadlft
+%
+% 
+% This saves the top right corner of the bounding box as a side effect
+% This is to allow the adjustment of text placed with Mouter so that
+% it misses the Minner text.  It is assumed that the ang is 0
+% in the same way it is assumed that the text of Mouter is 0 or 90
+%
+/Minner {
+outflag
+1
+eq
+{
+/outflag 0 def
+/intop 0 def
+/inrht 0 def
+} if		
+5 index
+gsave
+Mtmatrix setmatrix
+Mvboxa pop
+grestore
+3 -1 roll
+pop
+dup
+intop
+gt
+{
+/intop
+exch def
+}
+{ pop }
+ifelse
+dup
+inrht
+gt
+{
+/inrht
+exch def
+}
+{ pop }
+ifelse
+pop
+/inflag
+1 def
+} def
+% This takes two number off the stack and uses them as a vector in graphics
+% coordinates which points in the direction in which the Mouter text is to move
+% it calculates the bouding box adjustments yadtop yadbot xadrht and xadlft
+% these are in Mboxout to adjust the bounding box to compensate.
+/Mouter {
+/xadrht 0 def
+/xadlft 0 def
+/yadtop 0 def
+/yadbot 0 def
+inflag
+1 eq
+{
+dup
+0 lt
+{
+dup
+intop
+mul
+neg
+/yadtop
+exch def
+} if
+dup
+0 gt
+{
+dup
+intop
+mul
+/yadbot
+exch def
+}
+if
+pop
+dup
+0 lt
+{
+dup
+inrht
+mul
+neg
+/xadrht
+exch def
+} if
+dup
+0 gt
+{
+dup
+inrht
+mul
+/xadlft
+exch def
+} if
+pop
+/outflag 1 def
+}
+{ pop pop}
+ifelse
+/inflag 0 def
+/inrht 0 def
+/intop 0 def
+} def	
+%
+% This adjusts the bounding box to account for adjacent text
+% This allows the two text strings to avoid each other 
+% current matrix is the text matrix
+/Mboxout {
+outflag
+1
+eq
+{
+4 -1
+roll
+xadlft
+leadjust
+add
+sub
+4 1 roll
+3 -1
+roll
+yadbot
+leadjust
+add
+sub
+3 1
+roll
+exch
+xadrht
+leadjust
+add
+add
+exch
+yadtop
+leadjust
+add
+add
+/outflag 0 def
+/xadlft 0 def
+/yadbot 0 def
+/xadrht 0 def
+/yadtop 0 def
+} if
+} def
+/leadjust {
+(m) stringwidth pop
+.5 mul
+} bind def
+% The offsets sx and sy refer to the graphics coordinate system 
+% thus they must be altered if a rotation has taken place.
+% We must also change the bounding box computations for Minner
+%
+/Mrotcheck {
+dup
+90
+eq
+{
+%
+% Mouter only applies to strings which are either at 0 or 90
+% sort out the box adjust factors
+%
+%	xadrht -> yadbot
+%	xadlft -> yadtop
+%	yadtop -> xadrht
+%	yadbot -> xadlft
+yadbot
+/yadbot
+xadrht
+def	
+/xadrht
+yadtop
+def
+/yadtop
+xadlft
+def
+/xadlft
+exch
+def
+}
+if
+dup
+cos
+1 index
+sin
+Checkaux
+dup
+cos
+1 index
+sin neg
+exch
+Checkaux
+3 1 roll
+pop pop
+} def
+%
+% Checkaux is an auxilliary function for Mrotcheck it multiplies a 
+% row vector by a column vector
+% 
+/Checkaux {
+4 index
+exch
+4 index
+mul
+3 1 roll
+mul add
+4 1 roll
+} bind def
+%
+% Mboxrot converts the bounding box back from the rotated coordinate
+% system to the Mgmatrix system to compensate for a rotation
+% It has the opposite functionality of Mrotcheck
+% This is not the most neatest or most efficient implementation but it works
+%
+/Mboxrot {
+Mrot
+90 eq
+{
+% old		 tlx  thx  tly  thy
+% new		-thy -tly  tlx  thx
+%
+brotaux
+4 2
+roll
+}
+if
+Mrot
+180 eq
+{
+% old		 tlx  thx  tly  thy
+% new		-thx -tlx -thx -tly
+%
+4 2
+roll
+brotaux
+4 2
+roll
+brotaux
+}	
+if
+Mrot
+270 eq
+{
+% old		 tlx  thx  tly  thy
+% new		 tly  thy -thx -tlx
+%
+4 2
+roll
+brotaux
+}
+if
+} def
+%
+% auxilliary function negate and reverse
+/brotaux {
+neg
+exch
+neg
+} bind def
+%
+% Mabsproc takes a measurement in the default user units and converts
+% it to the present units.   This allows absolute thickness and dashing
+% to work.  It works by using a {0, x} vector and using the RMS of the result.
+/Mabsproc {
+0
+matrix defaultmatrix
+dtransform idtransform
+dup mul exch
+dup mul
+add sqrt
+} bind def
+%
+% Mabswid allows the linewidth to be specified in absolute coordinates
+% It does this by recording the graphics transformation matrix at the
+% begining of the plot.
+% This will break if the scaling in the x and y directions is
+% different.  This is the case if Mnodistort is false
+%
+/Mabswid {
+Mabsproc
+setlinewidth	
+} bind def
+% Mabsdash allows the dashing pattern to be specified in absolute coordinates
+% It does this by recording the graphics transformation matrix at the
+% begining of the plot.
+% This will break if the scaling in the x and y directions is
+% different.  This is the case if Mnodistort is false
+%
+/Mabsdash {
+exch
+[
+exch
+{
+Mabsproc
+}
+forall
+]
+exch
+setdash
+} bind def
+%
+% Mabs takes a pair of coordinates in points
+% and converts them into a pair of coordinates in
+% the current drawing scheme
+%
+/Mabs {
+Mgmatrix idtransform
+Mtmatrix dtransform
+} bind def
+%
+% Mabs takes a pair of numbers in drawing coordinates
+% and a pair in points.  It converts the points to
+% drawing coordinates and adds them to the first pair.
+%
+/Mabsadd {
+Mabs
+3 -1 roll add
+3 1 roll add
+exch 
+} bind def
+%
+% These two procedures are for using Offset coordinates
+% with MathScale computations
+%
+/Mabsfix1 {
+3 -1 roll
+/ar exch 
+def
+ar 2 get
+3 -1 roll
+add exch
+ar 3 get
+add
+ar 3
+3 -1 roll
+put
+ar 2
+3 -1 roll
+put
+ar
+} bind def
+/Mabsfix {
+2 copy
+6 -1 roll
+3 1 roll
+Mabsfix1
+4 1 roll
+Mabsfix1
+} bind def
+%MBeginOrig start coordinates in user coordinates
+/MBeginOrig { Momatrix concat} bind def
+%MEndOrig start coordinates in user coordinates
+/MEndOrig { Mgmatrix setmatrix} bind def
+/sampledsound where
+{ pop }
+{ /MathDPSFlag where
+{ pop /sampledsound { clientsync } def }
+{ /sampledsound {
+exch pop
+exch 5 1 roll
+mul
+4 idiv
+mul
+2 idiv
+exch pop
+exch
+/Mtempproc exch def
+{ Mtempproc pop }
+repeat
+} def
+} ifelse
+} ifelse
+% Define setrgbcolor for those ancient PostScript devices lacking it
+/setrgbcolor dup where
+{ pop pop }
+{ { .114 mul exch .587 mul add exch .299 mul add setgray } bind def }
+ifelse
+%
+% now simple conversion of cmykcolor to rgbcolor
+% subtract k and then take complements
+/setcmykcolor where
+{ pop}
+{ /setcmykcolor {
+4 1
+roll
+[
+4 1 
+roll
+]
+{
+1 index
+sub
+1
+sub neg
+dup
+0
+lt
+{
+pop
+0
+}
+if
+dup
+1
+gt
+{
+pop
+1
+}
+if
+exch
+} forall
+pop
+setrgbcolor
+} bind def
+} ifelse
+% Here are the short operators
+/g /setgray load def
+/k /setcmykcolor load def
+/m /moveto load def
+/p /gsave load def
+/r /setrgbcolor load def
+/w /setlinewidth load def
+/C /curveto load def
+/F /Mfill load def
+/L /lineto load def
+/P /grestore load def
+/s /Mstroke load def
+/Mcharproc
+{
+currentfile
+(x)
+readhexstring
+pop
+0 get
+exch
+div
+} bind def
+/Mshadeproc
+{
+dup
+3 1
+roll
+{
+dup
+Mcharproc
+3 1
+roll
+} repeat
+1 eq
+{
+setgray
+}
+{
+3 eq
+{
+setrgbcolor
+}
+{
+setcmykcolor
+} ifelse
+} ifelse
+} bind def
+/Mrectproc
+{
+3 index
+2 index
+moveto
+2 index
+3 -1
+roll
+lineto
+dup
+3 1
+roll
+lineto
+lineto
+Mfill
+} bind def
+/Mcolorimage
+{
+7 1
+roll
+pop
+pop
+matrix
+invertmatrix
+concat
+2 exch exp
+1 sub
+3 1 roll
+1 1
+2 index
+{
+1 1
+4 index
+{
+dup
+1 sub
+exch
+2 index
+dup
+1 sub
+exch
+7 index
+9 index
+Mshadeproc
+Mrectproc
+} for
+pop
+} for
+pop pop pop pop
+} bind def
+/Mimage
+{
+pop
+matrix
+invertmatrix
+concat
+2 exch exp
+1 sub
+3 1 roll
+1 1
+2 index
+{
+1 1
+4 index
+{
+dup
+1 sub
+exch
+2 index
+dup
+1 sub
+exch
+7 index
+Mcharproc
+setgray
+Mrectproc
+} for
+pop
+} for
+pop pop pop
+} bind def
+% Default values for variables
+/Mlmarg		1.0 72 mul def
+/Mrmarg		1.0 72 mul def
+/Mbmarg		1.0 72 mul def
+/Mtmarg		1.0 72 mul def
+/Mwidth		8.5 72 mul def
+/Mheight	11 72 mul def
+/Mtransform	{  } bind def
+/Mnodistort	true def	
+/Mfixdash	false def	
+/Mrot		0	def	
+/intop 0 def
+/inrht 0 def
+/inflag 0 def
+/outflag 0 def
+/xadrht 0 def
+/xadlft 0 def
+/yadtop 0 def
+/yadbot 0 def
+/defineresource where
+{ pop /WRI-Mathematica-prolog currentdict /ProcSet defineresource pop }
+if
+end
+%KLUDGE until Mathematica output uses resources directly
+userdict /MathPictureStart {
+	/findresource where
+	{ pop /WRI-Mathematica-prolog /ProcSet findresource }
+	{ Mathdict }
+	ifelse
+	/MathPictureStart get exec
+} put
+%%AspectRatio: 1 
+MathPictureStart
+/Mabs {
+Mgmatrix idtransform
+Mtmatrix dtransform
+} bind def
+/Mabsadd { Mabs
+3 -1 roll add
+3 1 roll add
+exch } bind def
+%% Graphics
+/Courier findfont 30  scalefont  setfont
+% Scaling calculations
+0.0238095 0.31746 0.0238095 0.31746 [
+[.18254 .01131 -27 -27 ]
+[.18254 .01131 27 0 ]
+[.34127 .01131 -9 -27 ]
+[.34127 .01131 9 0 ]
+[.5 .01131 -27 -27 ]
+[.5 .01131 27 0 ]
+[.65873 .01131 -9 -27 ]
+[.65873 .01131 9 0 ]
+[.81746 .01131 -27 -27 ]
+[.81746 .01131 27 0 ]
+[.97619 .01131 -9 -27 ]
+[.97619 .01131 9 0 ]
+[1.025 .02381 0 -13.5 ]
+[1.025 .02381 36 13.5 ]
+[.01131 .18254 -54 -13.5 ]
+[.01131 .18254 0 13.5 ]
+[.01131 .34127 -18 -13.5 ]
+[.01131 .34127 0 13.5 ]
+[.01131 .5 -54 -13.5 ]
+[.01131 .5 0 13.5 ]
+[.01131 .65873 -18 -13.5 ]
+[.01131 .65873 0 13.5 ]
+[.01131 .81746 -54 -13.5 ]
+[.01131 .81746 0 13.5 ]
+[.01131 .97619 -18 -13.5 ]
+[.01131 .97619 0 13.5 ]
+[.02381 1.025 -18 0 ]
+[.02381 1.025 18 27 ]
+[ 0 0 0 0 ]
+[ 1 1 0 0 ]
+] MathScale
+% Start of Graphics
+1 setlinecap
+1 setlinejoin
+newpath
+0 g
+.25 Mabswid
+[ ] 0 setdash
+.18254 .02381 m
+.18254 .03006 L
+s
+[(0.5)] .18254 .01131 0 1 Mshowa
+.34127 .02381 m
+.34127 .03006 L
+s
+[(1)] .34127 .01131 0 1 Mshowa
+.5 .02381 m
+.5 .03006 L
+s
+[(1.5)] .5 .01131 0 1 Mshowa
+.65873 .02381 m
+.65873 .03006 L
+s
+[(2)] .65873 .01131 0 1 Mshowa
+.81746 .02381 m
+.81746 .03006 L
+s
+[(2.5)] .81746 .01131 0 1 Mshowa
+.97619 .02381 m
+.97619 .03006 L
+s
+[(3)] .97619 .01131 0 1 Mshowa
+.125 Mabswid
+.05556 .02381 m
+.05556 .02756 L
+s
+.0873 .02381 m
+.0873 .02756 L
+s
+.11905 .02381 m
+.11905 .02756 L
+s
+.15079 .02381 m
+.15079 .02756 L
+s
+.21429 .02381 m
+.21429 .02756 L
+s
+.24603 .02381 m
+.24603 .02756 L
+s
+.27778 .02381 m
+.27778 .02756 L
+s
+.30952 .02381 m
+.30952 .02756 L
+s
+.37302 .02381 m
+.37302 .02756 L
+s
+.40476 .02381 m
+.40476 .02756 L
+s
+.43651 .02381 m
+.43651 .02756 L
+s
+.46825 .02381 m
+.46825 .02756 L
+s
+.53175 .02381 m
+.53175 .02756 L
+s
+.56349 .02381 m
+.56349 .02756 L
+s
+.59524 .02381 m
+.59524 .02756 L
+s
+.62698 .02381 m
+.62698 .02756 L
+s
+.69048 .02381 m
+.69048 .02756 L
+s
+.72222 .02381 m
+.72222 .02756 L
+s
+.75397 .02381 m
+.75397 .02756 L
+s
+.78571 .02381 m
+.78571 .02756 L
+s
+.84921 .02381 m
+.84921 .02756 L
+s
+.88095 .02381 m
+.88095 .02756 L
+s
+.9127 .02381 m
+.9127 .02756 L
+s
+.94444 .02381 m
+.94444 .02756 L
+s
+.25 Mabswid
+0 .02381 m
+1 .02381 L
+s
+[(m1)] 1.025 .02381 -1 0 Mshowa
+.02381 .18254 m
+.03006 .18254 L
+s
+[(0.5)] .01131 .18254 1 0 Mshowa
+.02381 .34127 m
+.03006 .34127 L
+s
+[(1)] .01131 .34127 1 0 Mshowa
+.02381 .5 m
+.03006 .5 L
+s
+[(1.5)] .01131 .5 1 0 Mshowa
+.02381 .65873 m
+.03006 .65873 L
+s
+[(2)] .01131 .65873 1 0 Mshowa
+.02381 .81746 m
+.03006 .81746 L
+s
+[(2.5)] .01131 .81746 1 0 Mshowa
+.02381 .97619 m
+.03006 .97619 L
+s
+[(3)] .01131 .97619 1 0 Mshowa
+.125 Mabswid
+.02381 .05556 m
+.02756 .05556 L
+s
+.02381 .0873 m
+.02756 .0873 L
+s
+.02381 .11905 m
+.02756 .11905 L
+s
+.02381 .15079 m
+.02756 .15079 L
+s
+.02381 .21429 m
+.02756 .21429 L
+s
+.02381 .24603 m
+.02756 .24603 L
+s
+.02381 .27778 m
+.02756 .27778 L
+s
+.02381 .30952 m
+.02756 .30952 L
+s
+.02381 .37302 m
+.02756 .37302 L
+s
+.02381 .40476 m
+.02756 .40476 L
+s
+.02381 .43651 m
+.02756 .43651 L
+s
+.02381 .46825 m
+.02756 .46825 L
+s
+.02381 .53175 m
+.02756 .53175 L
+s
+.02381 .56349 m
+.02756 .56349 L
+s
+.02381 .59524 m
+.02756 .59524 L
+s
+.02381 .62698 m
+.02756 .62698 L
+s
+.02381 .69048 m
+.02756 .69048 L
+s
+.02381 .72222 m
+.02756 .72222 L
+s
+.02381 .75397 m
+.02756 .75397 L
+s
+.02381 .78571 m
+.02756 .78571 L
+s
+.02381 .84921 m
+.02756 .84921 L
+s
+.02381 .88095 m
+.02756 .88095 L
+s
+.02381 .9127 m
+.02756 .9127 L
+s
+.02381 .94444 m
+.02756 .94444 L
+s
+.25 Mabswid
+.02381 0 m
+.02381 1 L
+s
+[(m2)] .02381 1.025 0 -1 Mshowa
+.5 Mabswid
+.18254 .18254 m
+.21474 .21474 L
+.24985 .24985 L
+.28282 .28282 L
+.31454 .31454 L
+.3483 .3483 L
+.38079 .38079 L
+.41533 .41533 L
+.4486 .4486 L
+.48061 .48061 L
+.51467 .51467 L
+.54746 .54746 L
+.57899 .57899 L
+.61256 .61256 L
+.64487 .64487 L
+.67923 .67923 L
+.71232 .71232 L
+.74415 .74415 L
+.77802 .77802 L
+.81063 .81063 L
+.84528 .84528 L
+.87867 .87867 L
+.91079 .91079 L
+.94496 .94496 L
+.97619 .97619 L
+s
+.008 w
+.02381 .02381 Mdot
+.5 Mabswid
+.18254 .18254 m
+.18254 .97619 L
+.97619 .97619 L
+s
+0 0 m
+1 0 L
+1 1 L
+0 1 L
+closepath
+clip
+newpath
+% End of Graphics
+MathPictureEnd

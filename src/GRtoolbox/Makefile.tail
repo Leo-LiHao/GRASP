@@ -1,0 +1,218 @@
+#############################################################################
+#  THE REGION ABOVE THIS SPACE IS FILLED IN BY InstallGRASP                 #
+#############################################################################
+
+INCLUDES= -I$(GRASP_I) 
+
+LIBS= $(OPTIMIZED_OBJECTS) -L$(GRASP_HOME)/lib -lgrasp -L$(RECIPES_LIB) -l$(LRECIPES) $(OPTIMIZED_LIBS)
+
+all: frextract.mex$(EXT) inspfilt.mex$(EXT) mxFget_ch.mex$(EXT) mxMake_filters.mex$(EXT) \
+mxSplitup.mex$(EXT) mxFind_chirp.mex$(EXT)  mxMatch_cubic.mex$(EXT)  mxSplitup_freq.mex$(EXT) \
+getfri.mex$(EXT)  mxFind_chirp.mex$(EXT)  mxMatch_cubic.mex$(EXT)  mxSplitup_freq2.mex$(EXT) \
+mxMatch_parab.mex$(EXT)  mxTau_of_mass.mex$(EXT)  mxAvg_inv_spec.mex$(EXT)  mxGRcalibrate.mex$(EXT) \
+mxPhase_frequency.mex$(EXT)  mxChirp_filters.mex$(EXT)  mxGRnormalize.mex$(EXT)  mxCompute_match.mex$(EXT) \
+mxTime_inject_chirp.mex$(EXT)  mxCorrelate.mex$(EXT)  mxDetector_site.mex$(EXT)  mxM_and_eta.mex$(EXT) \
+mxSp_filters.mex$(EXT)  mxUrlopen.mex$(EXT) CountFrames.mex$(EXT)
+
+# Note: next line should read frextract.mex$(EXT): $(FRAME_DIR)/matlab/frextract.c
+# but this causes problems if NOT installing GRtool library
+frextract.mex$(EXT):
+	if [ '$(BUILD_GRTOOLBOX)' = 'true' ]; \
+	then \
+	$(MEX) $(FRAME_DIR)/matlab/frextract.c $(FRAME_DIR)/lib/libFrame.a -I$(FRAME_DIR)/src; \
+	fi
+
+CountFrames.mex$(EXT): mexfiles/CountFrames.c
+	if [ '$(BUILD_GRTOOLBOX)' = 'true' ]; \
+	then \
+	$(MEX) mexfiles/CountFrames.c $(FRAME_DIR)/lib/libFrame.a -I$(FRAME_DIR)/include; \
+	fi
+
+mxFind_chirp.mex$(EXT): mexfiles/mxFind_chirp.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_GRTOOLBOX)' = 'true' ]; \
+	then \
+	$(MEX) $(MEXFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include mexfiles/mxFind_chirp.c \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+mxMatch_cubic.mex$(EXT): mexfiles/mxMatch_cubic.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_GRTOOLBOX)' = 'true' ]; \
+	then \
+	$(MEX) $(MEXFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include mexfiles/mxMatch_cubic.c \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+mxSplitup_freq.mex$(EXT): mexfiles/mxSplitup_freq.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_GRTOOLBOX)' = 'true' ]; \
+	then \
+	$(MEX) $(MEXFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include mexfiles/mxSplitup_freq.c \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+mxMatch_parab.mex$(EXT): mexfiles/mxMatch_parab.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_GRTOOLBOX)' = 'true' ]; \
+	then \
+	$(MEX) $(MEXFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include mexfiles/mxMatch_parab.c \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+mxSplitup_freq2.mex$(EXT): mexfiles/mxSplitup_freq2.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_GRTOOLBOX)' = 'true' ]; \
+	then \
+	$(MEX) $(MEXFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include mexfiles/mxSplitup_freq2.c \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+mxFreq_inject_chirp.mex$(EXT): mexfiles/mxFreq_inject_chirp.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_GRTOOLBOX)' = 'true' ]; \
+	then \
+	$(MEX) $(MEXFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include mexfiles/mxFreq_inject_chirp.c \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+mxOrthonormalize.mex$(EXT): mexfiles/mxOrthonormalize.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_GRTOOLBOX)' = 'true' ]; \
+	then \
+	$(MEX) $(MEXFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include mexfiles/mxOrthonormalize.c \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+mxTau_of_mass.mex$(EXT): mexfiles/mxTau_of_mass.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_GRTOOLBOX)' = 'true' ]; \
+	then \
+	$(MEX) $(MEXFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include mexfiles/mxTau_of_mass.c \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+getfri.mex$(EXT): mexfiles/getfri.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_GRTOOLBOX)' = 'true' ]; \
+	then \
+	$(MEX) $(MEXFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include mexfiles/getfri.c \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+mxGRcalibrate.mex$(EXT): mexfiles/mxGRcalibrate.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_GRTOOLBOX)' = 'true' ]; \
+	then \
+	$(MEX) $(MEXFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include mexfiles/mxGRcalibrate.c \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+mxPhase_frequency.mex$(EXT): mexfiles/mxPhase_frequency.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_GRTOOLBOX)' = 'true' ]; \
+	then \
+	$(MEX) $(MEXFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include mexfiles/mxPhase_frequency.c \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+mxTemplate_area.mex$(EXT): mexfiles/mxTemplate_area.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_GRTOOLBOX)' = 'true' ]; \
+	then \
+	$(MEX) $(MEXFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include mexfiles/mxTemplate_area.c \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+inspfilt.mex$(EXT): mexfiles/inspfilt.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_GRTOOLBOX)' = 'true' ]; \
+	then \
+	$(MEX) $(MEXFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include mexfiles/inspfilt.c \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+mxGRnormalize.mex$(EXT): mexfiles/mxGRnormalize.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_GRTOOLBOX)' = 'true' ]; \
+	then \
+	$(MEX) $(MEXFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include mexfiles/mxGRnormalize.c \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+mxAvg_inv_spec.mex$(EXT): mexfiles/mxAvg_inv_spec.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_GRTOOLBOX)' = 'true' ]; \
+	then \
+	$(MEX) $(MEXFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include mexfiles/mxAvg_inv_spec.c \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+mxChirp_filters.mex$(EXT): mexfiles/mxChirp_filters.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_GRTOOLBOX)' = 'true' ]; \
+	then \
+	$(MEX) $(MEXFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include mexfiles/mxChirp_filters.c \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+mxTime_inject_chirp.mex$(EXT): mexfiles/mxTime_inject_chirp.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_GRTOOLBOX)' = 'true' ]; \
+	then \
+	$(MEX) $(MEXFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include mexfiles/mxTime_inject_chirp.c \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+mxCompute_match.mex$(EXT): mexfiles/mxCompute_match.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_GRTOOLBOX)' = 'true' ]; \
+	then \
+	$(MEX) $(MEXFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include mexfiles/mxCompute_match.c \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+mxUrlopen.mex$(EXT): mexfiles/mxUrlopen.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_GRTOOLBOX)' = 'true' ]; \
+	then \
+	$(MEX) $(MEXFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include mexfiles/mxUrlopen.c \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+mxCorrelate.mex$(EXT): mexfiles/mxCorrelate.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_GRTOOLBOX)' = 'true' ]; \
+	then \
+	$(MEX) $(MEXFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include mexfiles/mxCorrelate.c \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+mxGet_cubic.mex$(EXT): mexfiles/mxGet_cubic.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_GRTOOLBOX)' = 'true' ]; \
+	then \
+	$(MEX) $(MEXFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include mexfiles/mxGet_cubic.c \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+mxDetector_site.mex$(EXT): mexfiles/mxDetector_site.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_GRTOOLBOX)' = 'true' ]; \
+	then \
+	$(MEX) $(MEXFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include mexfiles/mxDetector_site.c \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+mxM_and_eta.mex$(EXT): mexfiles/mxM_and_eta.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_GRTOOLBOX)' = 'true' ]; \
+	then \
+	$(MEX) $(MEXFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include mexfiles/mxM_and_eta.c \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+mxSp_filters.mex$(EXT): mexfiles/mxSp_filters.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_GRTOOLBOX)' = 'true' ]; \
+	then \
+	$(MEX) $(MEXFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include mexfiles/mxSp_filters.c \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+mxFget_ch.mex$(EXT): mexfiles/mxFget_ch.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_GRTOOLBOX)' = 'true' ]; \
+	then \
+	$(MEX) $(MEXFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include mexfiles/mxFget_ch.c \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+mxMake_filters.mex$(EXT): mexfiles/mxMake_filters.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_GRTOOLBOX)' = 'true' ]; \
+	then \
+	$(MEX) $(MEXFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include mexfiles/mxMake_filters.c \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+mxSplitup.mex$(EXT): mexfiles/mxSplitup.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_GRTOOLBOX)' = 'true' ]; \
+	then \
+	$(MEX) $(MEXFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include mexfiles/mxSplitup.c \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi

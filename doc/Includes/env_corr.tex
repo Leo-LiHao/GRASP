@@ -1,0 +1,455 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_correlation\1env\_corr.c},{11:18},{Jun  8 1999}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{\K{static}_\K{char}_\*\V{rcsid}=\S{}\"Development_code\"\SE{};}}
+\L{\LB{\K{\#if}_\V{defined}_(\V{CLAPACK})}}
+\L{\LB{\K{\#include}_\S{}\"f2c.h\"\SE{}}}
+\L{\LB{\K{extern}_\K{int}_\V{chan\_clean}(\K{int},\K{int},\K{float},\K{float}_\*,\K{float}_\*,\K{float}_\*,\K{int},\K{float}_\*\*,\K{float}_\*\*,\K{float}_\*,\K{float}_\*,}}
+\L{\LB{}\Tab{16}{_\V{complex}_\*,\V{complex}_\*,\K{float},\V{complex}_\*,\V{complex}_\*,\V{integer},\V{integer}_\*);__}}
+\L{\LB{\K{\#else}}}
+\L{\LB{\K{typedef}_\K{float}_\V{real};____________________\C{}\1\* from f2c.h \*\1\CE{}}}
+\L{\LB{\K{typedef}_\K{struct}_\{_\V{real}_\V{r},_\V{i};_\}_\V{complex};_\C{}\1\* from f2c.h \*\1\CE{}}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}}
+\L{\LB{\K{\#define}_\V{MIN}(\V{x},\V{y})_((\V{x})_\<_(\V{y})_?_(\V{x})_:_(\V{y})_)_}}
+\L{\LB{\K{\#define}_\V{MIN\_BANDWIDTH}_128}}
+\L{\LB{\K{\#define}_\V{MAX\_BANDWIDTH}_128}}
+\L{\LB{}}
+\L{\LB{\K{void}_\V{fopen\_check}(\V{FILE}_\*\V{fp},\K{char}_\*\V{fname});}}
+\L{\LB{\K{char}_\V{fft\_dir}[256],\V{signal\_name}[256];}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}(\K{int}_\V{argc},_\K{char}_\*\V{argv}[\,])}}
+\L{\LB{\{}}
+\L{\LB{__\K{int}_\V{calc\_rho}(\K{int},\K{int},\K{float},\K{float}_\*,\K{float}_\*,\K{int},\K{float}_\*\*,\K{float}_\*\*,\K{float}_\*,}}
+\L{\LB{}\Tab{8}{_______\V{complex}_\*,\V{complex}_\*,\K{float}_\*);}}
+\L{\LB{__\K{void}_\V{read\_binary\_fft}(\K{char}_\*\V{fname},\K{int}_\V{length},\K{float}_\*\V{rp\_fft},\K{float}_\*\V{ip\_fft},\K{float}_\*\V{delta\_f});}}
+\L{\LB{__\K{void}_\V{write\_fft}(\K{char}_\*\V{fname},\K{int}_\V{length},\K{float}_\*\V{rp\_fft},\K{float}_\*\V{ip\_fft},\K{float}_\V{delta\_f});}}
+\L{\LB{__\K{void}_\V{write\_rho2}(\V{FILE}_\*\V{fp},\K{float}_\V{freq},\K{float}_\V{rho2},\K{int}_\V{nenv\_chan},\K{float}_\*\V{rho2\_pairwise});}}
+\L{\LB{__\K{void}_\*\V{errmalloc}(\K{char}_\*\V{arrayname},\V{size\_t}_\V{bytes});}}
+\L{\LB{__\K{void}_\V{xmgr\_files}(\K{int}_\V{nenv\_chan},\K{char}_\*\*\V{chnames},\K{int}_\V{correlation\_width});}}
+\L{\LB{__\V{FILE}_\*\V{fp},\*\V{fp\_rho2};}}
+\L{\LB{__\K{char}_\V{fname}[256],\V{rho2\_fname}[256],\V{detector}[256],\V{cmd}[256],\*\*\V{chnames},\V{temp};}}
+\L{\LB{__\V{complex}_\*\V{A}=\V{NULL},_\*\V{B}=\V{NULL};_}}
+\L{\LB{__\K{float}_\*\*\V{rp\_env},\*\*\V{ip\_env};}}
+\L{\LB{__\K{float}_\*\V{rp\_signal},\*\V{ip\_signal},\*\V{rho2\_pairwise},\*\V{rp\_clean},\*\V{ip\_clean};}}
+\L{\LB{__\K{float}_\V{threshold},\V{rho2},\V{modx2sum},\V{delta\_f},\V{freq};}}
+\L{\LB{__\K{int}_\*\V{chpts};}}
+\L{\LB{__\K{int}_\V{i},\V{clean},\V{offset},\V{correlation\_width},\V{chan},\V{n\_chan},\V{nenv\_chan},\V{length},\V{check};}}
+\L{\LB{\K{\#if}_\V{defined}_(\V{CLAPACK})}}
+\L{\LB{__\V{complex}_\*\V{R}=\V{NULL},\*\V{work}=\V{NULL};}}
+\L{\LB{__\V{integer}_\V{lwork},\*\V{ipivot}=\V{NULL};}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{__\C{}\1\*                       Read the configuration file                                 \*\1\CE{}}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{_}}
+\L{\LB{__\K{if}_(_\V{argc}_!=_2)_\{}}
+\L{\LB{____\V{printf}(\S{}\"Usage:_\%s_configuration\-file\-name\2n\"\SE{},\V{argv}[0]);}}
+\L{\LB{____\V{exit}(1);}}
+\L{\LB{__\}}}
+\L{\LB{}}
+\L{\LB{__\V{fp}=\V{fopen}(\V{argv}[1],\S{}\"r\"\SE{});}}
+\L{\LB{__\V{fopen\_check}(\V{fp},\V{argv}[1]);}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\*                       Comments start with a \#   -                                  \*\1\CE{}}}
+\L{\LB{__\C{}\1\*    the first line after any comments should contain the detector name              \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{__\K{while}_(1)_\{}}
+\L{\LB{____\V{fgets}(\V{detector},\K{sizeof}(\V{detector}),\V{fp});}}
+\L{\LB{____\K{if}_(\V{detector}[0]_!=_\S{}\'\#\'\SE{})_\K{break};}}
+\L{\LB{__\}__}}
+\L{\LB{__\V{detector}[\V{strlen}(\V{detector})\-1]=\S{}\'\20\'\SE{};_}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\*    the next line gives the total number of channels including the {`}signal\'         \*\1\CE{}_}}
+\L{\LB{__\V{check}=\V{fscanf}(\V{fp},\S{}\"\%d\"\SE{},\&\V{n\_chan});}}
+\L{\LB{__\K{if}_(\V{check}_!=_1)_\{}}
+\L{\LB{______\V{fprintf}(\V{stderr},\S{}\"Problems_reading_number_of_channels_from_\%s\2n\"\SE{},\V{argv}[1]);_}}
+\L{\LB{______\V{exit}(1);___}}
+\L{\LB{____\}}}
+\L{\LB{}}
+\L{\LB{__\V{chnames}=(\K{char}_\*\*)\V{errmalloc}(\S{}\"chnames\"\SE{},\V{n\_chan}\*\K{sizeof}(\K{char}_\*));}}
+\L{\LB{__\K{for}_(\V{i}=0;\V{i}\<\V{n\_chan};\V{i}++)___}}
+\L{\LB{_____\V{chnames}[\V{i}]=(\K{char}_\*)\V{malloc}(256\*\K{sizeof}(\K{char}));}}
+\L{\LB{__\V{chpts}=(\K{int}_\*)\V{errmalloc}(\S{}\"ip\_signal\"\SE{},\V{n\_chan}\*\K{sizeof}(\K{int}));}}
+\L{\LB{}}
+\L{\LB{__\K{for}_(\V{i}=0;\V{i}\<\V{n\_chan};\V{i}++)_\{}}
+\L{\LB{____\V{check}=\V{fscanf}(\V{fp},\S{}\"\%s_\%c_\%d\"\SE{},\V{chnames}[\V{i}],\&\V{temp},\&\V{chpts}[\V{i}]);}}
+\L{\LB{____\C{}\1\* the next n\_chan lines of the configuration file should contain 3 columns         \*\1\CE{}}}
+\L{\LB{____\C{}\1\*                  - if not print an error message                                 \*\1\CE{}}}
+\L{\LB{____\C{}\1\*   the 3 columns are the channel name,the data type and the number of points      \*\1\CE{}}}
+\L{\LB{____\C{}\1\*     the data type is important for corr\_init but is irrelevant here              \*\1\CE{}}}
+\L{\LB{____\K{if}_(\V{check}_!=_3)_\{}}
+\L{\LB{______\V{fprintf}(\V{stderr},\S{}\"Problems_reading_3\-columns:_channel\-name_data\-type_number\-of\-samples_from_\%s\2n\"\SE{},\V{argv}[1]);_}}
+\L{\LB{______\V{exit}(1);___}}
+\L{\LB{____\}}}
+\L{\LB{__\}}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\*          do we want to calculate (the fft of) the {`}cleaned\' signal                 \*\1\CE{}_}}
+\L{\LB{__\C{}\1\*    clean should be set to 1 if we want to calculate the cleaned signal             \*\1\CE{}}}
+\L{\LB{__\V{check}=\V{fscanf}(\V{fp},\S{}\"\%d\"\SE{},\&\V{clean});}}
+\L{\LB{__\K{if}_(\V{check}_!=_1)_\{}}
+\L{\LB{______\V{fprintf}(\V{stderr},\S{}\"Problems_reading_{`}clean\'_bit_from_\%s\2n\"\SE{},\V{argv}[1]);_}}
+\L{\LB{______\V{exit}(1);___}}
+\L{\LB{____\}}}
+\L{\LB{}}
+\L{\LB{__\V{fclose}(\V{fp});}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{__\C{}\1\*           Determine the number of frequency bins we will use                      \*\1\CE{}_}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{__\V{length}=\V{chpts}[0];}}
+\L{\LB{__\K{for}(\V{i}=1;\V{i}\<\V{n\_chan};\V{i}++)_}}
+\L{\LB{_____\K{if}_(\V{chpts}[\V{i}]\<\V{length})_\V{length}=\V{chpts}[\V{i}];}}
+\L{\LB{}}
+\L{\LB{__\V{length}\1=2;___________\C{}\1\* Because length is the length of the complex FFT array \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{__\K{if}_((\V{length}\%\V{MAX\_BANDWIDTH})_!=0)_\{}}
+\L{\LB{______\V{length}\-=\V{length}\%\V{MAX\_BANDWIDTH};}}
+\L{\LB{______\V{fprintf}(\V{stderr},\S{}\"Using_\%d_FFT_values_(MAX\_BANDWIDTH_=_\%d)\2n\"\SE{},\V{length},\V{MAX\_BANDWIDTH});}}
+\L{\LB{__\}}}
+\L{\LB{}}
+\L{\LB{__\V{strcpy}(\V{signal\_name},\V{chnames}[0]);}}
+\L{\LB{__\V{nenv\_chan}=\V{n\_chan}\-1;___\C{}\1\* because the configuration file includes the signal channel \*\1\CE{}_}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{__\C{}\1\*                               Allocate memory                                     \*\1\CE{}}\Tab{104}{_}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* Allocate memory for \|x\_i\|\^2,\|y\_i\|\^2 and x\_i y\_i\*   \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{__\V{rp\_signal}=(\K{float}_\*)\V{errmalloc}(\S{}\"rp\_signal\"\SE{},\V{length}\*\K{sizeof}(\K{float}));}}
+\L{\LB{__\V{ip\_signal}=(\K{float}_\*)\V{errmalloc}(\S{}\"ip\_signal\"\SE{},\V{length}\*\K{sizeof}(\K{float}));}}
+\L{\LB{__\V{rp\_env}=(\K{float}_\*\*)\V{errmalloc}(\S{}\"rows_of_rp\_env\"\SE{},\V{nenv\_chan}\*\K{sizeof}(\K{float}_\*));}}
+\L{\LB{__\V{rp\_env}[0]=(\K{float}_\*)\V{errmalloc}(\S{}\"rows_of_rp\_env[0]\"\SE{},\V{nenv\_chan}\*\V{length}\*\K{sizeof}(\K{float}));}}
+\L{\LB{__\K{for}_(\V{i}=1;\V{i}\<\V{nenv\_chan};\V{i}++)}}
+\L{\LB{____\V{rp\_env}[\V{i}]=\V{rp\_env}[\V{i}\-1]+\V{length};}}
+\L{\LB{}}
+\L{\LB{__\V{ip\_env}=(\K{float}_\*\*)\V{errmalloc}(\S{}\"rows_of_ip\_env\"\SE{},\V{nenv\_chan}\*\K{sizeof}(\K{float}_\*));}}
+\L{\LB{__\V{ip\_env}[0]=(\K{float}_\*)\V{errmalloc}(\S{}\"rows_of_ip\_env[0]\"\SE{},\V{nenv\_chan}\*\V{length}\*\K{sizeof}(\K{float}));}}
+\L{\LB{__\K{for}_(\V{i}=1;\V{i}\<\V{nenv\_chan};\V{i}++)}}
+\L{\LB{____\V{ip\_env}[\V{i}]=\V{ip\_env}[\V{i}\-1]+\V{length};}}
+\L{\LB{}}
+\L{\LB{__\K{if}_(\V{clean})_\{_}}
+\L{\LB{____\V{rp\_clean}=(\K{float}_\*)\V{errmalloc}(\S{}\"rp\_clean\"\SE{},\V{length}\*\K{sizeof}(\K{float}));}}
+\L{\LB{____\V{ip\_clean}=(\K{float}_\*)\V{errmalloc}(\S{}\"ip\_clean\"\SE{},\V{length}\*\K{sizeof}(\K{float}));}}
+\L{\LB{__\}}}
+\L{\LB{}}
+\L{\LB{__\V{rho2\_pairwise}=(\K{float}_\*)\V{errmalloc}(\S{}\"rho2\_pairwise\"\SE{},\V{nenv\_chan}\*\K{sizeof}(\K{float}));}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{__\C{}\1\*                      Allocate memory for lapack arrays                            \*\1\CE{}}\Tab{104}{_}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{__\V{A}=(\V{complex}_\*)\V{errmalloc}(\S{}\"A\"\SE{},\V{nenv\_chan}\*\V{nenv\_chan}\*\K{sizeof}(\V{complex}));}}
+\L{\LB{__\V{B}=(\V{complex}_\*)\V{errmalloc}(\S{}\"B\"\SE{},\V{nenv\_chan}\*\K{sizeof}(\V{complex}));}}
+\L{\LB{__\K{if}_(\V{clean})_\{}}
+\L{\LB{\K{\#if}_\V{defined}_(\V{CLAPACK})}}
+\L{\LB{____\V{lwork}=(\V{integer})_\V{nenv\_chan};}}
+\L{\LB{____\V{R}=(\V{complex}_\*)\V{errmalloc}(\S{}\"R\"\SE{},\V{nenv\_chan}\*\K{sizeof}(\V{complex}));}}
+\L{\LB{____\V{work}=(\V{complex}_\*)\V{errmalloc}(\S{}\"work\"\SE{},\V{lwork}\*\K{sizeof}(\V{complex}));__}}
+\L{\LB{____\V{ipivot}=(\V{integer}_\*)\V{errmalloc}(\S{}\"ipivot\"\SE{},\V{nenv\_chan}\*\K{sizeof}(\V{integer}));}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{__\}_}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{__\C{}\1\*                            Read data from file                                    \*\1\CE{}}\Tab{104}{_}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{__\C{}\1\*                       Determine name of data directory                        \*\1\CE{}}\Tab{96}{_}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{__\K{for}_(\V{i}=0;\V{i}\<256;\V{i}++)_\{}}
+\L{\LB{____\K{if}_(\V{argv}[1][\V{i}]_==_\S{}\'\20\'\SE{}_\|\,\|_\V{argv}[1][\V{i}]_==_\S{}\'.\'\SE{})_\{}}
+\L{\LB{______\V{fft\_dir}[\V{i}]_=_\S{}\'\20\'\SE{};}}
+\L{\LB{______\K{break};}}
+\L{\LB{____\}}}
+\L{\LB{____\V{fft\_dir}[\V{i}]=\V{argv}[1][\V{i}];}}
+\L{\LB{__\}}}
+\L{\LB{__\V{strcat}(\V{fft\_dir},\S{}\"\_fft\"\SE{});}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{__\C{}\1\*                       Read data from signal channel                           \*\1\CE{}}\Tab{96}{_}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{__\V{sprintf}(\V{fname},\S{}\"\%s\1\%s\-\%s\_fft.b\"\SE{},\V{fft\_dir},\V{detector},\V{chnames}[0]);}}
+\L{\LB{__\V{read\_binary\_fft}(\V{fname},\V{length},\V{rp\_signal},\V{ip\_signal},\&\V{delta\_f});}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{__\C{}\1\*                 Read data from environmental channels                         \*\1\CE{}}\Tab{96}{_}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{__\K{for}_(\V{chan}=0;\V{chan}\<\V{nenv\_chan};\V{chan}++)_\{_}}
+\L{\LB{____\V{sprintf}(\V{fname},\S{}\"\%s\1\%s\-\%s\_fft.b\"\SE{},\V{fft\_dir},\V{detector},\V{chnames}[\V{chan}+1]);}}
+\L{\LB{____\V{read\_binary\_fft}(\V{fname},\V{length},\V{rp\_env}[\V{chan}],\V{ip\_env}[\V{chan}],\&\V{delta\_f});}}
+\L{\LB{__\}_}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{__\C{}\1\*                   Cycle through range of bandwidths                               \*\1\CE{}}\Tab{104}{_}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{__\K{for}_(\V{correlation\_width}=\V{MIN\_BANDWIDTH};\V{correlation\_width}\<=\V{MAX\_BANDWIDTH};\V{correlation\_width}\*=2)_\{_}}
+\L{\LB{__}}
+\L{\LB{____\V{threshold}=\V{MIN}(0.1,5.0\1\V{correlation\_width});_\C{}\1\* see discussion in Hua et al. \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{____\V{sprintf}(\V{rho2\_fname},\S{}\"\%s\1rho2\_\%s\_\%d.dat\"\SE{},\V{fft\_dir},\V{signal\_name},\V{correlation\_width});}}
+\L{\LB{____\V{fp\_rho2}_=_\V{fopen}(\V{rho2\_fname},\S{}\"w\"\SE{});__}}
+\L{\LB{____\V{fopen\_check}(\V{fp\_rho2},\V{rho2\_fname});}}
+\L{\LB{____\V{fprintf}(\V{stderr},\S{}\"Writing_\%s\2n\"\SE{},\V{rho2\_fname});_}}
+\L{\LB{}}
+\L{\LB{____\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{____\C{}\1\*                  Step through the range of offsets and call the                   \*\1\CE{}}}
+\L{\LB{____\C{}\1\*             function calc\_rho where the major calculation is done                 \*\1\CE{}______}\Tab{104}{_}}
+\L{\LB{____\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{____\K{for}_(\V{offset}=0;\V{offset}\<\V{length};\V{offset}+=\V{correlation\_width})_\{_}}
+\L{\LB{}}
+\L{\LB{______\V{calc\_rho}(\V{offset},\V{correlation\_width},\V{threshold},\V{rp\_signal},\V{ip\_signal},\V{nenv\_chan},}}
+\L{\LB{}\Tab{8}{_______\V{rp\_env},\V{ip\_env},\V{rho2\_pairwise},\V{A},\V{B},\&\V{modx2sum});}}
+\L{\LB{}}
+\L{\LB{_____\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{_____\C{}\1\*                     Calculate the {`}cleaned\' signal                                \*\1\CE{}}\Tab{96}{}}
+\L{\LB{_____\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{______\V{rho2}=0.0;___________________\C{}\1\* set rho2=0.0 if we don\'t clean \*\1\CE{}}}
+\L{\LB{______\K{if}_(\V{clean})_\{}}
+\L{\LB{\K{\#if}_\V{defined}_(\V{CLAPACK})}}
+\L{\LB{}\Tab{8}{\V{chan\_clean}(\V{offset},\V{correlation\_width},\V{threshold},\&\V{rho2},\V{rp\_signal},\V{ip\_signal},\V{nenv\_chan},}}
+\L{\LB{}\Tab{8}{_}\Tab{16}{___\V{rp\_env},\V{ip\_env},\V{rp\_clean},\V{ip\_clean},\V{A},\V{B},\V{modx2sum},\V{R},\V{work},\V{lwork},\V{ipivot});}\Tab{88}{}}
+\L{\LB{\K{\#else}}}
+\L{\LB{}\Tab{8}{\V{fprintf}(\V{stderr},\S{}\"Sorry_cannot_calculate_cleaned_channel_without_clapack_installed\2n\"\SE{});_}}
+\L{\LB{}\Tab{8}{\V{clean}=0;}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{______\}_}}
+\L{\LB{}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{__\C{}\1\*    Print out \|rho\|\^2 and the level of \*pairwise\* correlation between              \*\1\CE{}}}
+\L{\LB{__\C{}\1\*             the signal and each environmental channel in turn                     \*\1\CE{}_______}\Tab{112}{_}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{_____\V{freq}=(\V{offset}+0.5\*\V{correlation\_width})\*\V{delta\_f};}}
+\L{\LB{_____\V{write\_rho2}(\V{fp\_rho2},\V{freq},\V{rho2},\V{nenv\_chan},\V{rho2\_pairwise});}}
+\L{\LB{___}}
+\L{\LB{_____}}
+\L{\LB{____\}____\C{}\1\* end of offset loop \*\1\CE{}}}
+\L{\LB{_}}
+\L{\LB{____\K{if}_(\V{clean})_\{}}
+\L{\LB{______\V{sprintf}(\V{fname},\S{}\"\%s\1fftclean\_\%s\_\%d.dat\"\SE{},\V{fft\_dir},\V{signal\_name},\V{correlation\_width});}}
+\L{\LB{______\V{write\_fft}(\V{fname},\V{length},\V{rp\_clean},\V{ip\_clean},\V{delta\_f});}}
+\L{\LB{____\}}}
+\L{\LB{}}
+\L{\LB{____\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{____\C{}\1\*                     Write xmgr parameter and shell files                          \*\1\CE{}}\Tab{104}{_}}
+\L{\LB{____\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{____\V{xmgr\_files}(\V{nenv\_chan},\V{chnames},\V{correlation\_width});}}
+\L{\LB{____\V{sprintf}(\V{cmd},\S{}\"chmod_+x_corr\_view\%d\"\SE{},\V{correlation\_width});}}
+\L{\LB{____\V{system}(\V{cmd});}}
+\L{\LB{____\V{sprintf}(\V{cmd},\S{}\"corr\_view\%d_\&\"\SE{},\V{correlation\_width});}}
+\L{\LB{____\V{system}(\V{cmd});}}
+\L{\LB{}}
+\L{\LB{}}
+\L{\LB{__\}_\C{}\1\* end of correlation\_width loop \*\1\CE{}}}
+\L{\LB{_}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{__\C{}\1\*                               Free memory                                         \*\1\CE{}}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{__\V{free}(\V{rp\_signal});}}
+\L{\LB{__\V{free}(\V{ip\_signal});}}
+\L{\LB{__\V{free}(\V{rp\_env}[0]);}}
+\L{\LB{__\V{free}(\V{rp\_env});}}
+\L{\LB{__\V{free}(\V{ip\_env}[0]);}}
+\L{\LB{__\V{free}(\V{ip\_env});}}
+\L{\LB{__\V{free}(\V{rp\_clean});}}
+\L{\LB{__\V{free}(\V{ip\_clean});}}
+\L{\LB{__\V{free}(\V{rho2\_pairwise});}}
+\L{\LB{__\C{}\1\* free lapack arrays \*\1\CE{}}}
+\L{\LB{__\V{free}(\V{A});}}
+\L{\LB{__\V{free}(\V{B});}}
+\L{\LB{\K{\#if}_\V{defined}_(\V{CLAPACK})}}
+\L{\LB{__\V{free}(\V{R});}}
+\L{\LB{__\V{free}(\V{work});}}
+\L{\LB{__\V{free}(\V{ipivot});_}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}}
+\L{\LB{__\K{return}(0);}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{}}
+\L{\LB{\K{void}_\V{read\_binary\_fft}(\K{char}_\*\V{fname},\K{int}_\V{length},\K{float}_\*\V{rp\_fft},\K{float}_\*\V{ip\_fft},\K{float}_\*\V{delta\_f})}}
+\L{\LB{\{}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{__\C{}\1\*    Read fft data from binary file: the first line contains the  frequency spacing \*\1\CE{}}\Tab{104}{_}}
+\L{\LB{__\C{}\1\*         then follow lines containing the real and imaginary part                  \*\1\CE{}}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{__\V{FILE}_\*\V{fp};}}
+\L{\LB{__\K{int}_\V{i},\V{check1},\V{check2};}}
+\L{\LB{}}
+\L{\LB{__\V{fp}_=_\V{fopen}(\V{fname},\S{}\"rb\"\SE{});_}}
+\L{\LB{__\V{fopen\_check}(\V{fp},\V{fname});}}
+\L{\LB{__\V{fprintf}(\V{stderr},\S{}\"Reading_\%s\2n\"\SE{},\V{fname});_}}
+\L{\LB{_}}
+\L{\LB{__\C{}\1\* first read  the frequency spacing \*\1\CE{}}}
+\L{\LB{__\V{check1}=\V{fread}(\V{delta\_f},\K{sizeof}(\K{float}),1,\V{fp});}}
+\L{\LB{____\K{if}_(\V{check1}_!=_1)_\{}}
+\L{\LB{______\V{fprintf}(\V{stderr},\S{}\"Problems_reading_delta\_f_from_\%s\2n\"\SE{},\V{fname});_}}
+\L{\LB{______\V{exit}(1);___}}
+\L{\LB{____\}__}}
+\L{\LB{__\K{for}_(\V{i}=0;\V{i}\<\V{length};\V{i}++)_\{}}
+\L{\LB{____\V{check1}=\V{fread}((\V{rp\_fft}+\V{i}),\K{sizeof}(\K{float}),1,\V{fp});}}
+\L{\LB{____\V{check2}=\V{fread}((\V{ip\_fft}+\V{i}),\K{sizeof}(\K{float}),1,\V{fp});}}
+\L{\LB{___\K{if}_((\V{check1}_!=_1)_\|\,\|_(\V{check2}_!=_1))_\{}}
+\L{\LB{______\V{fprintf}(\V{stderr},\S{}\"Problems_reading_delta\_f_from_\%s\2n\"\SE{},\V{fname});_}}
+\L{\LB{______\V{exit}(1);___}}
+\L{\LB{____\}__}}
+\L{\LB{__\}}}
+\L{\LB{}}
+\L{\LB{__\V{fclose}(\V{fp});_}}
+\L{\LB{__\V{rp\_fft}[0]=\V{ip\_fft}[0]=0.0;_\C{}\1\* set dc signal to 0 \*\1\CE{}__}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{}}
+\L{\LB{\K{void}_\V{write\_fft}(\K{char}_\*\V{fname},\K{int}_\V{length},\K{float}_\*\V{rp\_fft},\K{float}_\*\V{ip\_fft},\K{float}_\V{delta\_f})}}
+\L{\LB{\{}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{__\C{}\1\* Write fft data to an ascii file: the first line contains the  frequency spacing   \*\1\CE{}}\Tab{104}{_}}
+\L{\LB{__\C{}\1\*         then follow lines containing the real and imaginary part                  \*\1\CE{}}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}__}}
+\L{\LB{__\V{FILE}_\*\V{fp};}}
+\L{\LB{__\K{int}_\V{i};}}
+\L{\LB{}}
+\L{\LB{__\V{fp}_=_\V{fopen}(\V{fname},\S{}\"w\"\SE{});_}}
+\L{\LB{__\V{fopen\_check}(\V{fp},\V{fname});}}
+\L{\LB{__\V{fprintf}(\V{stderr},\S{}\"Writing_\%s\2n\"\SE{},\V{fname});}}
+\L{\LB{}}
+\L{\LB{__\V{fprintf}(\V{fp},\S{}\"\%f\2n\"\SE{},\V{delta\_f});}}
+\L{\LB{__\C{}\1\* We fill the DC component with data from the first frequency bin so that }}
+\L{\LB{_____we can do lin-log plots in xmgr without complaints.}}
+\L{\LB{_____Note that the DC component is never used and is set to zero }}
+\L{\LB{_____by read\_fft - still there should be a better way of doing this!  \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{__\V{fprintf}(\V{fp},\S{}\"\%f\2t\%f\2n\"\SE{},\V{rp\_fft}[1],\V{ip\_fft}[1]);}}
+\L{\LB{}}
+\L{\LB{__\K{for}_(\V{i}=1;\V{i}\<\V{length};\V{i}++)_\{}}
+\L{\LB{____\V{fprintf}(\V{fp},\S{}\"\%f\2t\%f\2n\"\SE{},\V{rp\_fft}[\V{i}],\V{ip\_fft}[\V{i}]);}}
+\L{\LB{__\}}}
+\L{\LB{__\V{fclose}(\V{fp});}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{}}
+\L{\LB{\K{void}_\V{write\_rho2}(\V{FILE}_\*\V{fp},\K{float}_\V{freq},\K{float}_\V{rho2},\K{int}_\V{nenv\_chan},\K{float}_\*\V{rho2\_pairwise})}}
+\L{\LB{\{}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{__\C{}\1\*                     Write the list of rho values to file                          \*\1\CE{}}\Tab{104}{_}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{__\K{int}_\V{chan};}}
+\L{\LB{}}
+\L{\LB{__\V{fprintf}(\V{fp},\S{}\"\%.3f\2t\2t\%.3f\2t\2t\"\SE{},\V{freq},\V{rho2});_}}
+\L{\LB{__\K{for}_(\V{chan}=0;\V{chan}\<\V{nenv\_chan};\V{chan}++)_\{_}}
+\L{\LB{____\V{fprintf}(\V{fp},\S{}\"\%.3f_\"\SE{},\V{rho2\_pairwise}[\V{chan}]);_}}
+\L{\LB{__\}}}
+\L{\LB{__\V{fprintf}(\V{fp},\S{}\"\2n\"\SE{});_}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{}}
+\L{\LB{\K{void}_\V{fopen\_check}(\V{FILE}_\*\V{fp},\K{char}_\*\V{fname})_}}
+\L{\LB{\{}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{__\C{}\1\*            Checks to see if a file has been opened properly                       \*\1\CE{}}}
+\L{\LB{__\C{}\1\*             and if not write an appropriate error message                         \*\1\CE{}}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{__\K{if}_(_\V{fp}_==_\V{NULL}_)_\{}}
+\L{\LB{____\V{fprintf}(\V{stderr},\S{}\"Problems_opening_\%s\2n\"\SE{},\V{fname});}}
+\L{\LB{____\V{exit}(1);____}}
+\L{\LB{__\}____}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{}}
+\L{\LB{\K{void}_\*\V{errmalloc}(\K{char}_\*\V{arrayname},\V{size\_t}_\V{bytes})_}}
+\L{\LB{\{}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{__\C{}\1\*            Allocate memory and print an error message if unsucessful              \*\1\CE{}}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}_}}
+\L{\LB{__\K{void}_\*\V{pointer};}}
+\L{\LB{__\V{pointer}=\V{malloc}(\V{bytes});}}
+\L{\LB{__\K{if}_(\V{pointer}==\V{NULL})_\{}}
+\L{\LB{____\V{fprintf}(\V{stderr},\S{}\"Cannot_allocate_\%d_bytes_of_memory_for_\%s\2n\"\SE{},(\K{int})_\V{bytes},\V{arrayname});}}
+\L{\LB{____\V{exit}(1);}}
+\L{\LB{__\}}}
+\L{\LB{__\K{return}_\V{pointer};}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{\K{void}_\V{xmgr\_files}(\K{int}_\V{nenv\_chan},\K{char}_\*\*\V{chnames},\K{int}_\V{correlation\_width})}}
+\L{\LB{\{}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{__\C{}\1\*                     Write the xmgr parameter files                                \*\1\CE{}}\Tab{104}{_}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}__}}
+\L{\LB{__\V{FILE}_\*\V{fp};}}
+\L{\LB{__\K{char}_\V{param\_fname}[256],\V{view\_fname}[256];}}
+\L{\LB{__\K{int}_\V{i};}}
+\L{\LB{}}
+\L{\LB{__\K{for}_(\V{i}=0;\V{i}\<\V{nenv\_chan};\V{i}++)_\{_}}
+\L{\LB{__\V{sprintf}(\V{param\_fname},\S{}\"xmgr.param\%d\_\%d\"\SE{},\V{correlation\_width},\V{i});}}
+\L{\LB{}}
+\L{\LB{__\V{fp}_=_\V{fopen}(\V{param\_fname},\S{}\"w\"\SE{});_}}
+\L{\LB{__\V{fopen\_check}(\V{fp},\V{param\_fname});}}
+\L{\LB{__\V{fprintf}(\V{stderr},\S{}\"Writing_\%s\2n\"\SE{},\V{param\_fname});}}
+\L{\LB{}}
+\L{\LB{__\V{fprintf}(\V{fp},\S{}\"focus_g\%d\2n\"\SE{},\V{i});}}
+\L{\LB{__\V{fprintf}(\V{fp},\S{}\"autoscale\2n\"\SE{});}}
+\L{\LB{__\K{if}_(\V{i}_==_0)_\{}}
+\L{\LB{____\V{fprintf}(\V{fp},\S{}\"xaxis_label_\2\"Correlations_with_\%s:_Frequency_(Hz)\2\"\2n\"\SE{},}}
+\L{\LB{}\Tab{8}{____\V{chnames}[0]);}}
+\L{\LB{____\V{fprintf}(\V{fp},\S{}\"xaxis__tick_out\2n\"\SE{});}}
+\L{\LB{____\V{fprintf}(\V{fp},\S{}\"xaxis__tick_op_bottom\2n\"\SE{});}}
+\L{\LB{__\}}}
+\L{\LB{__\K{else}_\{}}
+\L{\LB{____\V{fprintf}(\V{fp},\S{}\"xaxis__tick_major_off\2n\"\SE{});}}
+\L{\LB{____\V{fprintf}(\V{fp},\S{}\"xaxis__tick_minor_off\2n\"\SE{});}}
+\L{\LB{____\V{fprintf}(\V{fp},\S{}\"xaxis__ticklabel_off\2n\"\SE{});}}
+\L{\LB{____\V{fprintf}(\V{fp},\S{}\"yaxis__ticklabel_start_type_spec\2n\"\SE{});}}
+\L{\LB{____\V{fprintf}(\V{fp},\S{}\"yaxis__ticklabel_start_0.5\2n\"\SE{});}}
+\L{\LB{__\}}}
+\L{\LB{__\V{fprintf}(\V{fp},\S{}\"yaxis__label_layout_perp\2n\"\SE{});}}
+\L{\LB{__\V{fprintf}(\V{fp},\S{}\"yaxis__label_char_size_0.9\2n\"\SE{});}}
+\L{\LB{__\V{fprintf}(\V{fp},\S{}\"yaxis__label_place_spec\2n\"\SE{});}}
+\L{\LB{__\V{fprintf}(\V{fp},\S{}\"yaxis__label_place_\-0.84,_0\2n\"\SE{});}}
+\L{\LB{__\V{fprintf}(\V{fp},\S{}\"yaxis__ticklabel_op_right\2n\"\SE{});}}
+\L{\LB{}}
+\L{\LB{__\V{fprintf}(\V{fp},\S{}\"yaxis_label_\2\"\%s\2\"\2n\"\SE{},\V{chnames}[\V{i}+1]);__}}
+\L{\LB{__\V{fprintf}(\V{fp},\S{}\"yaxis__tick_major_0.5\2n\"\SE{});}}
+\L{\LB{__\V{fprintf}(\V{fp},\S{}\"yaxis__tick_minor_0.25\2n\"\SE{});}}
+\L{\LB{__\V{fprintf}(\V{fp},\S{}\"view_ymin_\%f\2n\"\SE{},0.1+0.88\*\V{i}\1\V{nenv\_chan});}}
+\L{\LB{__\V{fprintf}(\V{fp},\S{}\"view_ymax_\%f\2n\"\SE{},0.1+0.88\*(\V{i}+1)\1\V{nenv\_chan});____}}
+\L{\LB{__\V{fprintf}(\V{fp},\S{}\"world_ymin_0\2n\"\SE{});}}
+\L{\LB{__\V{fprintf}(\V{fp},\S{}\"world_ymax_1\2n\"\SE{});_}}
+\L{\LB{}}
+\L{\LB{__\V{fprintf}(\V{fp},\S{}\"s0_color_\%d\2n\"\SE{},\V{i}+2);}}
+\L{\LB{__\V{fprintf}(\V{fp},\S{}\"\2n\"\SE{});}}
+\L{\LB{__\V{fclose}(\V{fp});}}
+\L{\LB{_\}}}
+\L{\LB{}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{__\C{}\1\*                     Write the xmgr shell files                                    \*\1\CE{}}\Tab{104}{_}}
+\L{\LB{__\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{__\V{sprintf}(\V{view\_fname},\S{}\"corr\_view\%d\"\SE{},\V{correlation\_width});}}
+\L{\LB{__\V{fp}_=_\V{fopen}(\V{view\_fname},\S{}\"w\"\SE{});_}}
+\L{\LB{__\V{fopen\_check}(\V{fp},\V{view\_fname});}}
+\L{\LB{__\V{fprintf}(\V{stderr},\S{}\"Writing_\%s\2n\"\SE{},\V{view\_fname});}}
+\L{\LB{}}
+\L{\LB{__\V{fprintf}(\V{fp},\S{}\"xmgr_\-block_\%s\1rho2\_\%s\_\%d.dat_\"\SE{},}}
+\L{\LB{}\Tab{8}{________\V{fft\_dir},\V{signal\_name},\V{correlation\_width});}}
+\L{\LB{____}}
+\L{\LB{__\K{for}_(\V{i}=0;\V{i}\<\V{nenv\_chan};\V{i}++)_\{_}}
+\L{\LB{____\V{sprintf}(\V{param\_fname},\S{}\"xmgr.param\%d\_\%d\"\SE{},\V{correlation\_width},\V{i});}}
+\L{\LB{____\V{fprintf}(\V{fp},\S{}\"\-graph_\%d_\-bxy_1:\%d_\-param_\%s_\"\SE{},\V{i},\V{i}+3,\V{param\_fname});}}
+\L{\LB{__\}}}
+\L{\LB{__\V{fprintf}(\V{fp},\S{}\"\&\2n\"\SE{});}}
+\L{\LB{____}}
+\L{\LB{__\V{fclose}(\V{fp});}}
+\L{\LB{\}}}

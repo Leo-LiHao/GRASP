@@ -1,0 +1,35 @@
+#############################################################################
+#  THE REGION ABOVE THIS SPACE IS FILLED IN BY InstallGRASP                 #
+#############################################################################
+
+INCLUDES= -I$(GRASP_I) 
+
+LIBS= $(OPTIMIZED_OBJECTS) -L$(GRASP_HOME)/lib -lgrasp -L$(RECIPES_LIB) -l$(LRECIPES) $(OPTIMIZED_LIBS) -lm
+
+all: eigenvalues qn_optimal qn_optimalF ringdown spherical spheroid ring-corr
+
+qn_optimal: qn_optimal.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) qn_optimal.c -o qn_optimal $(LIBS)
+
+qn_optimalF: qn_optimalF.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_FRAME)' = 'true' ]; \
+	then \
+	$(CC) $(CFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include qn_optimalF.c -o qn_optimalF \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+eigenvalues: eigenvalues.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) eigenvalues.c -o eigenvalues $(LIBS)
+
+ringdown: ringdown.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) ringdown.c -o ringdown $(LIBS)
+
+spherical: spherical.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) spherical.c -o spherical $(LIBS)
+
+spheroid: spheroid.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) spheroid.c -o spheroid $(LIBS)
+
+ring-corr: ring-corr.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) ring-corr.c -o ring-corr $(LIBS)
+

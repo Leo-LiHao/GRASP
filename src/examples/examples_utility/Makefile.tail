@@ -1,0 +1,59 @@
+#############################################################################
+#  THE REGION ABOVE THIS SPACE IS FILLED IN BY InstallGRASP                 #
+#############################################################################
+
+INCLUDES= -I$(GRASP_I) 
+
+LIBS= $(OPTIMIZED_OBJECTS) -L$(GRASP_HOME)/lib -lgrasp -L$(RECIPES_LIB) -l$(LRECIPES) $(OPTIMIZED_LIBS) -lm
+
+all: translate river ifo_clean tracker trackerF ifo_cleanF makesounds testutctime wave2sound
+
+# The nasty-looking awk script here sets a variable called
+# FRAMELIB_VERSION_INT equal to 100 times the value of the macro
+# FRAMELIB_VERSION in FrameL.h .  So for example if FRAMELIB_VERSION is
+# set to 2.37 then FRAMELIB_VERSION_INT=237.  This integer variable is
+# then used in conditional compilation statements in the code.  If there
+# is an easier way, please tell me (ballen@dirac.phys.uwm.edu)!  You
+# can not used floating point conditionals in the C-preprocessor.
+translate: translate.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_FRAME)' = 'true' ]; \
+	then \
+	FRAMELIB_VERSION_INT=`cat $(FRAME_DIR)/include/FrameL.h | head | \
+	awk '{ if ($$0~/define FRAMELIB_VERSION/) print (100 * $$3 )}'`;\
+	echo FRAMELIB_VERSION_INT set to $$FRAMELIB_VERSION_INT;\
+	$(CC) -DFRAMELIB_VERSION_INT=$$FRAMELIB_VERSION_INT $(CFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include translate.c -o translate \
+	$(LIBS) -L$(FRAME_DIR)/lib -lFrame ;\
+	fi
+
+river: river.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) river.c -o river $(LIBS) 
+
+ifo_clean: ifo_clean.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) ifo_clean.c -o ifo_clean $(LIBS)
+
+tracker: tracker.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) tracker.c -o tracker $(LIBS) 
+
+trackerF: trackerF.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_FRAME)' = 'true' ]; \
+	then \
+	$(CC) $(CFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include trackerF.c -o trackerF \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+ifo_cleanF: ifo_cleanF.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_FRAME)' = 'true' ]; \
+	then \
+	$(CC) $(CFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include ifo_cleanF.c -o ifo_cleanF \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+makesounds: makesounds.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) makesounds.c -o makesounds $(LIBS)
+
+wave2sound: wave2sound.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) wave2sound.c -o wave2sound $(LIBS) 
+
+testutctime: testutctime.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) testutctime.c -o testutctime $(LIBS) 
+

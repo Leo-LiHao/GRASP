@@ -1,0 +1,59 @@
+This directory should contain links to the directories
+containing data sets from different IFO runs.
+
+Instructions on how to get data may be found on the LIGO Scientific
+Collaboration Web Page:
+
+http://www.ligo.caltech.edu/LIGO_web/lsc/lsc.html
+
+**************************************************************************
+FRAME FORMAT DATA
+
+After using tar to read the data off magnetic tape, you will
+have a collection of directories with names like:
+
+14nov94.1.frame/ 14nov94.2.frame/ 18nov94.1.frame/ 18nov94.2.frame/
+19nov94.1.frame/ 19nov94.2.frame/ 19nov94.3.frame/ 19nov94.4.frame/
+20nov94.1.frame/ 20nov94.2.frame/ 20nov94.3.frame/
+
+Our advice: set up links to the files in these directories as follows.
+Assume that GRASP is installed in /usr/local/GRASP, so that what you
+are currently reading is the file /usr/local/GRASP/data/README.
+In other words you are now in the directory /usr/local/GRASP/data/.
+Suppose that the actual data is directories under /bigdisk, i.e. in
+/bigdisk/14nov94.1.frame/C1-*  /bigdisk/14nov94.2.frame/C1-* and so on.
+Then use the following commands:
+
+tcsh
+cd /usr/local/GRASP/data/
+foreach i (/bigdisk/*.frame/C1-*)
+ln -s $i
+echo "done linking file " $i
+end
+exit
+
+This will create links in this data directory to all the frame files.
+
+**************************************************************************
+OLD FORMAT DATA:
+Suppose that GRASP is installed in /usr/local/GRASP
+
+Suppose that the 40 meter data is in a directory
+called /data.  So for example:
+ls /data
+14nov94.1/   14nov94.2/   19nov94.1/   19nov94.2/   19nov94.3/ 19nov94.4/
+18nov94.1/   18nov94.2/   20nov94.1/   20nov94.2/   20nov94.3/
+lost+found/
+
+You can establish these links by typing:
+foreach i (/data/*)
+? ln -s $i /usr/local/GRASP/data
+? end
+
+(Note that you must specify complete (not relative) paths!
+
+After setting up these links, all of your users can locate the
+data in /usr/local/GRASP/data.  Be sure to write protect it!
+
+**************************************************************************
+

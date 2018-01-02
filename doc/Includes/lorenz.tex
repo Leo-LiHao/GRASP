@@ -1,0 +1,80 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_testmass\1lorenz.c},{20:16},{Aug  4 1998}
+\L{\LB{\C{}\1\* Example lorenz}}
+\L{\LB{___Solve the Lorenz equations:}}
+\L{\LB{___}}
+\L{\LB{___dx\1dt = s \* (y - x),}}
+\L{\LB{___dy\1dt = (r \* x - y - xz),}}
+\L{\LB{___dz\1dt = -b\*z + xy,}}
+\L{\LB{___starting at the point (0.0, 1.0, 1.0 ).}}
+\L{\LB{___Try eg. lorenz 11.0 28.0 2.6666 2000 test.dat}}
+\L{\LB{___Author: S. Droz}}
+\L{\LB{___For more info see for example}}
+\L{\LB{___http:\1\1pineapple.apmaths.uwo.ca\1\~blair\1lorenzintro.html}}
+\L{\LB{___Note that these equations are chaotic, and thus extremely}}
+\L{\LB{___susceptible towards numerical errors over long time spans.}}
+\L{\LB{___If you change the accuracy (eps below) by a factor of 10 }}
+\L{\LB{___you might get a rather different looking picture.}}
+\L{\LB{\*\1\CE{}_}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{}}
+\L{\LB{\K{float}_\V{s},\V{r},\V{b};}}
+\L{\LB{}}
+\L{\LB{}}
+\L{\LB{\K{void}_\V{lorenz}(\K{float}_\V{x},_\K{float}_\V{y}[\,],_\K{float}_\V{dy}[\,])}}
+\L{\LB{\C{}\1\* Set up the system of ordinary DE. Since we use the NR }}
+\L{\LB{___integrator we use arrays going from 1.\,.3, rather than from }}
+\L{\LB{___0.\,.2. \*\1\CE{}}}
+\L{\LB{\{}}
+\L{\LB{___\V{dy}[1]_=_\V{s}_\*_(\V{y}[2]_\-_\V{y}[1]);}}
+\L{\LB{___\V{dy}[2]_=_(\V{r}_\-_\V{y}[3])_\*_\V{y}[1]_\-_\V{y}[2];}}
+\L{\LB{___\V{dy}[3]_=_\V{y}[1]_\*_\V{y}[2]_\-_\V{b}\*\V{y}[3];}}
+\L{\LB{___}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}(\K{int}_\V{argc},_\K{char}_\*\V{argv}[\,])}}
+\L{\LB{\{}}
+\L{\LB{__\K{int}_\V{NoPo},\V{i};}}
+\L{\LB{__\K{int}_\V{error}_=_0;___________________\C{}\1\* No errors yet \*\1\CE{}}}
+\L{\LB{__\K{float}_\V{y}[3]__=_\{_0,_1.0,_1.0_\};___\C{}\1\* Initial point \*\1\CE{}}}
+\L{\LB{__\K{float}_\V{t}_=_0.0;___________________\C{}\1\* Time always starts at 0 \*\1\CE{}}}
+\L{\LB{__\K{float}_\V{dt}_=_0.02;_________________\C{}\1\* The time step used \*\1\CE{}}}
+\L{\LB{__\V{FILE}_\*\V{fp};________________________}}
+\L{\LB{__}}
+\L{\LB{__\K{if}_(\V{argc}_!=_6)__\C{}\1\* Do we have enough command line arguments? \*\1\CE{}_}}
+\L{\LB{__\{}}
+\L{\LB{_____\V{fprintf}(\V{stderr},\S{}\"Usage:_\%s_s_r_b_number\_of\_Points_filename\2n\"\SE{}_,\V{argv}[0]);}}
+\L{\LB{}\Tab{8}{_\V{fprintf}(\V{stderr},\S{}\"E.g._\%s__11.0_28.0_2.6666_2000_test.dat\2n\"\SE{}_,\V{argv}[0]);}}
+\L{\LB{}\Tab{8}{_\V{fprintf}(\V{stderr},\S{}\"The_numbers_s,_r_and_b_are_parameters_of_the_Lorenz_equations\2n\"\SE{});}}
+\L{\LB{}\Tab{8}{_\V{fprintf}(\V{stderr},\S{}\"See_e.g._http:\1\1pineapple.apmaths.uwo.ca\1\~blair\1lorenzintro.html_for_mor_info\2n\"\SE{});}}
+\L{\LB{}\Tab{8}{_\K{return}_1;}}
+\L{\LB{__\}}}
+\L{\LB{__\C{}\1\* get the command line arguments \*\1\CE{}}}
+\L{\LB{__\V{s}_=_\V{atof}(\V{argv}[1]);}}
+\L{\LB{__\V{r}_=_\V{atof}(\V{argv}[2]);}}
+\L{\LB{__\V{b}_=_\V{atof}(\V{argv}[3]);}}
+\L{\LB{__}}
+\L{\LB{__\V{NoPo}_=_\V{atoi}(\V{argv}[4]);}}
+\L{\LB{__\V{fp}_=_\V{fopen}(\V{argv}[5],\S{}\"w\"\SE{});}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* Open the output file \*\1\CE{}}}
+\L{\LB{__\K{if}_(!_\V{fp}_)_\{__\V{printf}(\S{}\"File_error.\2n\"\SE{});__\V{exit}(1);_\}}}
+\L{\LB{__\V{fprintf}(\V{fp},_\S{}\"\%10.8e_\%10.8e_\%10.8e\2n\"\SE{},\V{y}[0],\V{y}[1],\V{y}[2]);}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* Now we start at t=0 and integrate for NoPo-1 time steps: \*\1\CE{}}}
+\L{\LB{__\K{for}_(_\V{i}_=_1;_\V{i}\<_\V{NoPo};_\V{i}++)}}
+\L{\LB{__\{__}}
+\L{\LB{_____\C{}\1\* So starting at t integrate y to t+dt, using the}}
+\L{\LB{}\Tab{8}{____equations implemented in the function lorenz. }}
+\L{\LB{}\Tab{16}{We start with an initial step of dt\110 and go}}
+\L{\LB{}\Tab{16}{as low as dt\*10\^\{-10\}. We require an accuracy of at least 10\^\{-6\},}}
+\L{\LB{}\Tab{16}{See the NR for a detailed explanation of what all these numbers mean. \*\1\CE{}}}
+\L{\LB{_____\V{error}_=_\V{integrateODE}(\V{y}\-1,_3_,_\&\V{t},_\V{t}+\V{dt},_1.0e\-6,_\V{dt}\110.0,_\V{dt}\*1.0e\-10,}}
+\L{\LB{}\Tab{8}{_\&\V{lorenz});}}
+\L{\LB{_____\K{if}_(\V{error})_\K{break};_\C{}\1\* We chicken out if something goes wrong. \*\1\CE{}}}
+\L{\LB{}\Tab{8}{_\V{fprintf}(\V{fp},_\S{}\"\%10.8e_\%10.8e_\%10.8e\2n\"\SE{},\V{y}[0],\V{y}[1],\V{y}[2]);}}
+\L{\LB{__\}}}
+\L{\LB{__\V{fclose}(\V{fp});}}
+\L{\LB{__\K{return}_\V{error};_\C{}\1\* Good bye \*\1\CE{}}}
+\L{\LB{\}__}\Tab{8}{__________}}

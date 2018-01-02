@@ -1,0 +1,75 @@
+#!/bin/csh -f
+# This is the file InstallGRASP.  It is a C-shell script.
+# You should not need to make any changes to it!
+#
+# Installation instructions may be found in the GRASP USERS MANUAL.  A
+# postscript version of the manual may be found in the doc/
+# subdirectory of this file, in manual.ps
+#
+# First, edit the file SiteSpecific
+# then, run this shell script by typing ./InstallGrasp
+#
+#
+# Set the "on interupt" error message:
+#
+onintr errormessage
+
+# test to see if we have the right number of arguments:
+#
+if ( $#argv != 1 ) then
+    echo "You MUST provide a file-name as an argument to InstallGRASP."
+    echo "Usage:"
+    echo "    InstallGRASP SiteSpecific"
+    echo "where SiteSpecific is the name of the file containing"
+    echo "your site-specific installation details."
+    echo "examples of SiteSpecific files for different machines and sites"
+    echo "may be found in the directory: Examples_SiteSpecific/"
+    goto errormessage
+else
+    echo "Using Site Information from file: " $1
+endif
+
+# test to see if running on SGI (IRIX) machine, and if so,
+# set the shell variable explicitly for the make command
+#
+# if ($OS) then
+#     if ($OS == 'IRIX' || $OS == 'IRIX64') setenv SHELL bash
+# else if ($?OSTYPE) then
+#     if ($OSTYPE == 'IRIX' || $OSTYPE == 'IRIX64') setenv SHELL bash
+# else if ("`uname`" == 'IRIX' || "`uname`" == 'IRIX64') setenv SHELL bash
+# endif
+
+grep -v '##' $1 >! .SiteSpecific
+foreach i src/40-meter src/correlation src/galaxy src/inspiral src/ringdown src/stochastic src/template_bank src/timefreq src/transient src/testmass src/utility src/GRtoolbox src/examples/examples_*
+onintr break
+echo Creating $i/Makefile using contents of file: $1
+cat .SiteSpecific $i/Makefile.tail >! $i/Makefile
+echo Successfully created $i/Makefile!
+pushd $i >! /dev/null
+echo Now in directory $i, running "make"
+make
+if ($status) goto errormessage
+echo Sucessfully ran "make" in directory $i!
+echo " "
+popd >! /dev/null
+end
+
+rm -f .SiteSpecific
+if ($status) goto errormessage2
+
+# create executable links in the bin directory:
+echo CREATING EXECUTABLE LINKS IN `pwd`/bin DIRECTORY:
+set a=`pwd`
+# find files that have execute bit set for user and are regular files
+find $a/src -perm -100 -type f -exec ln -s \{\} bin \;
+echo "GRASP completed installation sucessfully"
+exit 0
+
+
+errormessage2:
+echo "Unable to remove file .SiteSpecific from current directory"
+
+errormessage:
+echo "GRASP did NOT complete installation sucessfully"
+exit 1
+

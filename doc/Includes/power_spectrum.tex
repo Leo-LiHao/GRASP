@@ -1,0 +1,55 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_40meter\1power\_spectrum.c},{13:52},{Jun 30 1999}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{\K{\#define}_\V{NPOINT}_65536}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}()_\{}}
+\L{\LB{___\K{void}_\V{realft}(\K{float}\*,\K{unsigned}_\K{long},\K{int});}}
+\L{\LB{___\K{float}_\V{response}[\V{NPOINT}+2],\V{data}[\V{NPOINT}],\V{tstart},\V{freq};}}
+\L{\LB{___\K{float}_\V{res\_real},\V{res\_imag},\V{dl\_real},\V{dl\_imag},\V{c0\_real},\V{c0\_imag},\V{spectrum},\V{srate},\V{factor};}}
+\L{\LB{___\V{FILE}_\*\V{fpifo},\*\V{fplock},\*\V{fpss};}}
+\L{\LB{___\K{int}_\V{i},\V{npoint},\V{remain};}}
+\L{\LB{___\K{short}_\V{datas}[\V{NPOINT}];}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* open the IFO output file, lock file, and swept-sine file \*\1\CE{}}}
+\L{\LB{___\V{fpifo}=\V{grasp\_open}(\S{}\"GRASP\_DATAPATH\"\SE{},\S{}\"channel.0\"\SE{},\S{}\"r\"\SE{});}}
+\L{\LB{___\V{fplock}=\V{grasp\_open}(\S{}\"GRASP\_DATAPATH\"\SE{},\S{}\"channel.10\"\SE{},\S{}\"r\"\SE{});}}
+\L{\LB{___\V{fpss}=\V{grasp\_open}(\S{}\"GRASP\_DATAPATH\"\SE{},\S{}\"swept\-sine.ascii\"\SE{},\S{}\"r\"\SE{});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* number of points to sample and fft (power of 2) \*\1\CE{}}}
+\L{\LB{___\V{npoint}=\V{NPOINT};}}
+\L{\LB{___\C{}\1\* skip 200 seconds into locked region (seek=1) \*\1\CE{}}}
+\L{\LB{___\K{while}_(\V{tstart}\<200.0)}}
+\L{\LB{______\V{get\_data}(\V{fpifo},\V{fplock},\&\V{tstart},\V{npoint},\V{datas},\&\V{remain},\&\V{srate},1);}}
+\L{\LB{___\C{}\1\* and get next stretch of data from TTL locked file (seek=0) \*\1\CE{}}}
+\L{\LB{___\V{get\_data}(\V{fpifo},\V{fplock},\&\V{tstart},\V{npoint},\V{datas},\&\V{remain},\&\V{srate},0);}}
+\L{\LB{___\C{}\1\* convert gw signal (ADC counts) from shorts to floats \*\1\CE{}}}
+\L{\LB{___\K{for}_(\V{i}=0;\V{i}\<\V{NPOINT};\V{i}++)_\V{data}[\V{i}]=\V{datas}[\V{i}];}}
+\L{\LB{___\C{}\1\* FFT the data  \*\1\CE{}}}
+\L{\LB{___\V{realft}(\V{data}\-1,\V{npoint},1);}}
+\L{\LB{___\C{}\1\* get normalization R(f) using swept sine file \*\1\CE{}}}
+\L{\LB{___\V{normalize\_gw}(\V{fpss},\V{npoint},\V{srate},\V{response});}}
+\L{\LB{___\C{}\1\* one-sided power-spectrum normalization, to get meters\1rHz \*\1\CE{}}}
+\L{\LB{___\V{factor}=\V{sqrt}(2.0\1(\V{srate}\*\V{npoint}));}}
+\L{\LB{___\C{}\1\* compute dl.  Leave off DC (i=0) or Nyquist (i=npoint\12) freq \*\1\CE{}}}
+\L{\LB{___\K{for}_(\V{i}=1;\V{i}\<\V{npoint}\12;\V{i}++)_\{}}
+\L{\LB{______\C{}\1\* frequency \*\1\CE{}}}
+\L{\LB{______\V{freq}=\V{i}\*\V{srate}\1\V{npoint};}}
+\L{\LB{______\C{}\1\* real and imaginary parts of tilde c0 \*\1\CE{}}}
+\L{\LB{______\V{c0\_real}=\V{data}[2\*\V{i}];}}
+\L{\LB{______\V{c0\_imag}=\V{data}[2\*\V{i}+1];}}
+\L{\LB{______\C{}\1\* real and imaginary parts of R \*\1\CE{}}}
+\L{\LB{______\V{res\_real}=\V{response}[2\*\V{i}];}}
+\L{\LB{______\V{res\_imag}=\V{response}[2\*\V{i}+1];}}
+\L{\LB{______\C{}\1\* real and imaginary parts of tilde dl \*\1\CE{}}}
+\L{\LB{______\V{dl\_real}=\V{c0\_real}\*\V{res\_real}\-\V{c0\_imag}\*\V{res\_imag};}}
+\L{\LB{______\V{dl\_imag}=\V{c0\_real}\*\V{res\_imag}+\V{c0\_imag}\*\V{res\_real};}}
+\L{\LB{______\C{}\1\* \|tilde dl\| \*\1\CE{}}}
+\L{\LB{______\V{spectrum}=\V{factor}\*\V{sqrt}(\V{dl\_real}\*\V{dl\_real}+\V{dl\_imag}\*\V{dl\_imag});}}
+\L{\LB{______\C{}\1\* output freq in Hz, noise power in meters\1rHz \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"\%e\2t\%e\2n\"\SE{},\V{freq},\V{spectrum});}}
+\L{\LB{___\}}}
+\L{\LB{___\K{return}_0;}}
+\L{\LB{\}}}

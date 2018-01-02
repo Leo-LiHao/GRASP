@@ -1,0 +1,145 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_stochastic\1simulation.c},{11:59},{Jan 23 1998}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\C{}\1\* main program for stochastic background simulation \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{}}
+\L{\LB{\K{\#define}_\V{DETECTORS\_FILE}_\S{}\"detectors.dat\"\SE{}_\C{}\1\* file containing detector info \*\1\CE{}__}}
+\L{\LB{\K{\#define}_\V{SITE1\_CHOICE}_1_______\C{}\1\* identification number for site 1 \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{SITE2\_CHOICE}_2_______\C{}\1\* identification number for site 2 \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{FAKE\_SB}_1____________\C{}\1\* 1: simulate stochastic background \*\1\CE{}}}
+\L{\LB{_____________________________\C{}\1\* 0: stochastic background from real data \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{FAKE\_NOISE1}_1________\C{}\1\* 1: simulate detector noise at site 1 \*\1\CE{}}}
+\L{\LB{_____________________________\C{}\1\* 0: detector noise from real data at site 1 \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{FAKE\_NOISE2}_1________\C{}\1\* 1: simulate detector noise at site 2 \*\1\CE{}}}
+\L{\LB{_____________________________\C{}\1\* 0: detector noise from real data at site 2 \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{N}_65536______________\C{}\1\* number of data points \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{DELTA\_T}_(5.0e\-5)_____\C{}\1\* sampling period (in sec) \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{OMEGA\_0}_(1.0e\-3)_____\C{}\1\* omega\_0 \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{F\_LOW}_(0.0)__________\C{}\1\* minimum frequency (in Hz) \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{F\_HIGH}_(1.0e4)_______\C{}\1\* maximum frequency (in Hz) \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{REAL\_TIME\_NOISE1}_0___\C{}\1\* 1: use real-time noise at site 1 \*\1\CE{}}}
+\L{\LB{}\Tab{16}{_____________\C{}\1\* 0: use noise information from data file \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{REAL\_TIME\_NOISE2}_0___\C{}\1\* 1: use real-time noise at site 2 \*\1\CE{}}}
+\L{\LB{}\Tab{16}{_____________\C{}\1\* 0: use noise information from data file \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{NUM\_RUNS}_2500________\C{}\1\* number of runs (for simulation) \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{NUM\_BINS}_200_________\C{}\1\* number of bins (for statistics) \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}(\K{int}_\V{argc},\K{char}_\*\*\V{argv})}}
+\L{\LB{\{}}
+\L{\LB{__\K{int}____\V{i},\V{pass\_test}=0,\V{previous\_test},\V{runs\_completed}=0,\V{seed}=_\-17;}}
+\L{\LB{__\K{float}__\V{delta\_f};}}
+\L{\LB{__\K{double}_\V{signal},\V{variance};}}
+\L{\LB{}}
+\L{\LB{__\K{float}__\V{site1\_parameters}[9],\V{site2\_parameters}[9];}}
+\L{\LB{__\K{char}___\V{site1\_name}[100],\V{noise1\_file}[100],\V{whiten1\_file}[100];}}
+\L{\LB{__\K{char}___\V{site2\_name}[100],\V{noise2\_file}[100],\V{whiten2\_file}[100];}}
+\L{\LB{}}
+\L{\LB{__\K{double}_\*\V{generation\_power1},\*\V{generation\_power2};}}
+\L{\LB{__\K{double}_\*\V{analysis\_power1},\*\V{analysis\_power2};}}
+\L{\LB{__\K{double}_\*\V{whiten1},\*\V{whiten2};}}
+\L{\LB{__\K{double}_\*\V{gamma12};}}
+\L{\LB{__\K{float}__\*\V{out1},\*\V{out2};}}
+\L{\LB{__\K{float}__\*\V{stats};}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* ALLOCATE MEMORY \*\1\CE{}_}}
+\L{\LB{__\V{generation\_power1}=(\K{double}_\*)\V{malloc}((\V{N}\12)\*\K{sizeof}(\K{double}));}}
+\L{\LB{__\V{generation\_power2}=(\K{double}_\*)\V{malloc}((\V{N}\12)\*\K{sizeof}(\K{double}));}}
+\L{\LB{__\V{analysis\_power1}=(\K{double}_\*)\V{malloc}((\V{N}\12)\*\K{sizeof}(\K{double}));}}
+\L{\LB{__\V{analysis\_power2}=(\K{double}_\*)\V{malloc}((\V{N}\12)\*\K{sizeof}(\K{double}));}}
+\L{\LB{__\V{whiten1}=(\K{double}_\*)\V{malloc}(\V{N}\*\K{sizeof}(\K{double}));}}
+\L{\LB{__\V{whiten2}=(\K{double}_\*)\V{malloc}(\V{N}\*\K{sizeof}(\K{double}));}}
+\L{\LB{__\V{gamma12}=(\K{double}_\*)\V{malloc}((\V{N}\12)\*\K{sizeof}(\K{double}));}}
+\L{\LB{__\V{out1}=(\K{float}_\*)\V{malloc}(\V{N}\*\K{sizeof}(\K{float}));}}
+\L{\LB{__\V{out2}=(\K{float}_\*)\V{malloc}(\V{N}\*\K{sizeof}(\K{float}));}}
+\L{\LB{__\V{stats}=(\K{float}_\*)\V{malloc}(\V{NUM\_RUNS}\*\K{sizeof}(\K{float}));}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* INITIALIZE OUTPUT ARRAYS TO ZERO \*\1\CE{}}}
+\L{\LB{__\K{for}_(\V{i}=0;\V{i}\<\V{N};\V{i}++)_\V{out1}[\V{i}]=\V{out2}[\V{i}]=0.0;}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* CALL DETECTOR\_SITE() TO GET SITE PARAMETER INFORMATION \*\1\CE{}}}
+\L{\LB{__\V{detector\_site}(\V{DETECTORS\_FILE},\V{SITE1\_CHOICE},\V{site1\_parameters},\V{site1\_name},}}
+\L{\LB{}\Tab{16}{\V{noise1\_file},\V{whiten1\_file});}}
+\L{\LB{__\V{detector\_site}(\V{DETECTORS\_FILE},\V{SITE2\_CHOICE},\V{site2\_parameters},\V{site2\_name},}}
+\L{\LB{}\Tab{16}{\V{noise2\_file},\V{whiten2\_file});}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* DISPLAY STOCHASTIC BACKGROUND SIMULATION PARAMETERS \*\1\CE{}}}
+\L{\LB{__\V{printf}(\S{}\"\2n\"\SE{});}}
+\L{\LB{__\V{printf}(\S{}\"STOCHASTIC_GRAVITATIONAL_WAVE_BACKGROUND_SIMULATION\2n\"\SE{});}}
+\L{\LB{__\V{printf}(\S{}\"\2n\"\SE{});}}
+\L{\LB{__\V{printf}(\S{}\"PARAMETERS:\2n\"\SE{});}}
+\L{\LB{__\V{printf}(\S{}\"Simulated_stochastic_background_(0=no,1=yes):_\%d\2n\"\SE{},\V{FAKE\_SB});}}
+\L{\LB{__\V{printf}(\S{}\"Simulated_detector_noise_at_site_1_(0=no,1=yes):_\%d\2n\"\SE{},\V{FAKE\_NOISE1});}}
+\L{\LB{__\V{printf}(\S{}\"Simulated_detector_noise_at_site_2_(0=no,1=yes):_\%d\2n\"\SE{},\V{FAKE\_NOISE2});}}
+\L{\LB{__\V{printf}(\S{}\"Real\-time_noise_at_site_1_(0=no,1=yes):_\%d\2n\"\SE{},_\V{REAL\_TIME\_NOISE1});}}
+\L{\LB{__\V{printf}(\S{}\"Real\-time_noise_at_site_2_(0=no,1=yes):_\%d\2n\"\SE{},_\V{REAL\_TIME\_NOISE2});}}
+\L{\LB{__\V{printf}(\S{}\"Detector_site_1_=_\%s\2n\"\SE{},\V{site1\_name});}}
+\L{\LB{__\V{printf}(\S{}\"Detector_site_2_=_\%s\2n\"\SE{},\V{site2\_name});}}
+\L{\LB{__\V{printf}(\S{}\"Sampling_period_=_\%e_seconds\2n\"\SE{},\V{DELTA\_T});}}
+\L{\LB{__\V{printf}(\S{}\"Number_of_data_points_=_\%d\2n\"\SE{},\V{N});}}
+\L{\LB{__\V{printf}(\S{}\"Omega\_0_=_\%e\2n\"\SE{},\V{OMEGA\_0});}}
+\L{\LB{__\V{printf}(\S{}\"f\_low__=_\%e_Hz\2n\"\SE{},\V{F\_LOW});}}
+\L{\LB{__\V{printf}(\S{}\"f\_high_=_\%e_Hz\2n\"\SE{},\V{F\_HIGH});}}
+\L{\LB{__\V{printf}(\S{}\"Number_of_runs_(for_simulation)_=_\%d\2n\"\SE{},\V{NUM\_RUNS});}}
+\L{\LB{__\V{printf}(\S{}\"Number_of_bins_(for_statistics)_=_\%d\2n\"\SE{},\V{NUM\_BINS});}}
+\L{\LB{__\V{printf}(\S{}\"\2n\"\SE{});}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* CONSTRUCT NOISE POWER (FOR SIGNAL GENERATION), WHITENING FILTER \*\1\CE{}}}
+\L{\LB{__\C{}\1\* AND THE OVERLAP REDUCTION FUNCTION \*\1\CE{}}}
+\L{\LB{__\V{delta\_f}=(\K{float})(1.0\1(\V{N}\*\V{DELTA\_T}));}}
+\L{\LB{__\V{noise\_power}(\V{noise1\_file},\V{N}\12,\V{delta\_f},\V{generation\_power1});}}
+\L{\LB{__\V{noise\_power}(\V{noise2\_file},\V{N}\12,\V{delta\_f},\V{generation\_power2});}}
+\L{\LB{__\V{whiten}(\V{whiten1\_file},\V{N}\12,\V{delta\_f},\V{whiten1});}}
+\L{\LB{__\V{whiten}(\V{whiten2\_file},\V{N}\12,\V{delta\_f},\V{whiten2});}}
+\L{\LB{__\V{overlap}(\V{site1\_parameters},\V{site2\_parameters},\V{N}\12,\V{delta\_f},\V{gamma12});}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* CONSTRUCT NOISE\_POWER (FOR SIGNAL ANALYSIS) IF REAL-TIME NOISE \*\1\CE{}}}
+\L{\LB{__\C{}\1\* IS NOT DESIRED \*\1\CE{}}}
+\L{\LB{__\K{if}_(\V{REAL\_TIME\_NOISE1}!=1)_\{}}
+\L{\LB{____\K{for}_(\V{i}=0;\V{i}\<\V{N}\12;\V{i}++)_\V{analysis\_power1}[\V{i}]=\V{generation\_power1}[\V{i}];}}
+\L{\LB{__\}}}
+\L{\LB{__\K{if}_(\V{REAL\_TIME\_NOISE2}!=1)_\{}}
+\L{\LB{____\K{for}_(\V{i}=0;\V{i}\<\V{N}\12;\V{i}++)_\V{analysis\_power2}[\V{i}]=\V{generation\_power2}[\V{i}];}}
+\L{\LB{__\}}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* PERFORM THE SIMULATION \*\1\CE{}}}
+\L{\LB{__\K{for}_(\V{i}=1;\V{i}\<=\V{NUM\_RUNS};\V{i}++)_\{}}
+\L{\LB{}}
+\L{\LB{____\C{}\1\* SIMULATE STOCHASTIC BACKGROUND AND\1OR DETECTOR NOISE, IF DESIRED \*\1\CE{}}}
+\L{\LB{____\K{if}_(\V{FAKE\_SB}==1_\|\,\|_\V{FAKE\_NOISE1}==1_\|\,\|_\V{FAKE\_NOISE2}==1)_\{}}
+\L{\LB{______\V{monte\_carlo}(\V{FAKE\_SB},\V{FAKE\_NOISE1},\V{FAKE\_NOISE2},\V{N},\V{DELTA\_T},\V{OMEGA\_0},}}
+\L{\LB{}\Tab{16}{__\V{F\_LOW},\V{F\_HIGH},\V{gamma12},}}
+\L{\LB{}\Tab{16}{__\V{generation\_power1},\V{generation\_power2},}}
+\L{\LB{}\Tab{16}{__\V{whiten1},\V{whiten2},\V{out1},\V{out2},\&\V{seed});}}
+\L{\LB{____\}}}
+\L{\LB{}}
+\L{\LB{____\C{}\1\* TEST DATA TO SEE IF GAUSSIAN \*\1\CE{}}}
+\L{\LB{____\V{previous\_test}=\V{pass\_test};}}
+\L{\LB{____\V{pass\_test}=\V{test\_data12}(\V{N},\V{out1},\V{out2});}}
+\L{\LB{}}
+\L{\LB{____\K{if}_(\V{pass\_test}==1)_\{}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* ANALYZE DATA \*\1\CE{}}}
+\L{\LB{______\V{analyze}(\V{previous\_test},\V{out1},\V{out2},\V{N},\V{DELTA\_T},\V{OMEGA\_0},\V{F\_LOW},\V{F\_HIGH},}}
+\L{\LB{}\Tab{8}{______\V{gamma12},\V{whiten1},\V{whiten2},}}
+\L{\LB{}\Tab{8}{______\V{REAL\_TIME\_NOISE1},\V{REAL\_TIME\_NOISE2},}}
+\L{\LB{}\Tab{8}{______\V{analysis\_power1},\V{analysis\_power2},\&\V{signal},\&\V{variance});}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* DISPLAY PRELIMINARY STATISTICS \*\1\CE{}}}
+\L{\LB{______\V{prelim\_stats}(\V{OMEGA\_0},\V{N}\*\V{DELTA\_T},\V{signal},\V{variance});}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* UPDATE RUNS COMPLETED AND STATS ARRAY FOR FINAL STATISTICS \*\1\CE{}}}
+\L{\LB{______\V{runs\_completed}++;}}
+\L{\LB{______\V{stats}[\V{runs\_completed}\-1]=\V{signal};}}
+\L{\LB{____\}}}
+\L{\LB{}}
+\L{\LB{__\}_\C{}\1\* end for (i=1;i\<+NUM\_RUNS;i++) \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* FINAL STATISTICS \*\1\CE{}}}
+\L{\LB{__\V{printf}(\S{}\"\2n\"\SE{});}}
+\L{\LB{__\V{statistics}(\V{stats},\V{runs\_completed},\V{NUM\_BINS});}}
+\L{\LB{}}
+\L{\LB{__\K{return}_0;}}
+\L{\LB{\}}}

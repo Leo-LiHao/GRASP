@@ -1,0 +1,168 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_galaxy\1inject.c},{21:29},{Mar 27 1999}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\C{}\1\* Program inject.c}}
+\L{\LB{}}
+\L{\LB{___Produces a list of random Galactic NS-NS binary inspiral parameters for}}
+\L{\LB{___injection into the interferometer data to test the data analysis software.}}
+\L{\LB{}}
+\L{\LB{___The inspiral waveforms correspond to two NS companions, each with a mass}}
+\L{\LB{___distribution that is uniform between two cutoffs MLO and MHI}}
+\L{\LB{___[for example see L S Finn, Phys Rev Lett 73 1878 (1994)].}}
+\L{\LB{}}
+\L{\LB{___The amplitude distribution corresponds to the (time dependent) model}}
+\L{\LB{___described for the GRASP routine mc\_chirp().  The initial phase is uniformly}}
+\L{\LB{___distributed.  The variables LAT, LON, and ARM correspond to the latitude,}}
+\L{\LB{___longitude, and arm orientation of the detector, and are required for the}}
+\L{\LB{___model.}}
+\L{\LB{}}
+\L{\LB{___The injection time is either at a fixed intervals INV\_RATE (FIXED=1),}}
+\L{\LB{___or at random intervals corresponding to a Poisson process with}}
+\L{\LB{___inverse rate INV\_RATE (FIXED=0).}}
+\L{\LB{___Injection times are between the start and the end of the data run specified}}
+\L{\LB{___by the environment variable GRASP\_DATAPATH.  The start and end times of this}}
+\L{\LB{___data run are obtained from code resembling that in program locklist.c.}}
+\L{\LB{___If two chirps potentially occur within the same data segment (of length}}
+\L{\LB{___NPOINT points), a warning message is printed.}}
+\L{\LB{}}
+\L{\LB{___The results are output to stdout in a list containing the arrival time}}
+\L{\LB{___(double), the two masses (floats), the amplitude---inverse Mpc distance}}
+\L{\LB{___(float), and the initial phase (float), separated by spaces.  This is the}}
+\L{\LB{___same format as required for the file insert.ascii which is read by the}}
+\L{\LB{___binary\_get\_data() routine in the binary search code.}}
+\L{\LB{\*\1\CE{}}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{}}
+\L{\LB{\K{\#define}_\V{OFFSET}_15.0___\C{}\1\* offset in secs of injected chirps arrival times \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{SEED}_\-101_____\C{}\1\* initial seed value for random \#, \<0 \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{LAT}__34.1667__\C{}\1\* detector latitude in degrees North \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{LON}_118.133___\C{}\1\* detector longitude in degrees West \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{ARM}_180.0_____\C{}\1\* detector arm orientation in degrees CCW from North \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{MLO}_1.29______\C{}\1\* low NS mass limit in solar masses \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{MHI}_1.45______\C{}\1\* high NS mass limit in solar masses \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{INV\_RATE}_30.0_\C{}\1\* inverse of event rate in seconds \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{FIXED}_1_______\C{}\1\* 0: Events occur in Poisson-distributed intervals}}
+\L{\LB{}\Tab{24}{_1: Events occur at the fixed rate RATE \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{NPOINT}_262144_\C{}\1\* number of points in each data segment (used to warn}}
+\L{\LB{}\Tab{24}{_when two events may exist in the same segment) \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{KNOWN\_START\_END}_1_\C{}\1\* use the starting times below rather than from data \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{TSTART}_784880277}}
+\L{\LB{\K{\#define}_\V{TEND}___785388428}}
+\L{\LB{\K{float}_\V{ran1}(\K{long}_\*);}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{known\_time}(\K{double}_\*\V{time},\K{long}_\*\V{seed})\{}}
+\L{\LB{__\K{static}_\K{int}_\V{first}=1;}}
+\L{\LB{__\K{if}_(\V{first})_\{}}
+\L{\LB{____\*\V{time}=\V{TSTART}+\V{OFFSET};}}
+\L{\LB{____\V{first}=0;}}
+\L{\LB{__\}}}
+\L{\LB{__\K{else}_\{}}
+\L{\LB{____\K{if}_(\V{FIXED})}}
+\L{\LB{______\*\V{time}+=\V{INV\_RATE};}}
+\L{\LB{____\K{else}}}
+\L{\LB{______\*\V{time}+=\V{INV\_RATE}\*\V{log}(\V{ran1}(\V{seed}));}}
+\L{\LB{__\}}}
+\L{\LB{__\K{return}_(\*\V{time}\<\V{TEND});}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}()}}
+\L{\LB{\{}}
+\L{\LB{__\K{float}_\V{local\_sidereal\_time}(\V{time\_t},_\K{float});}}
+\L{\LB{__\K{void}_\V{mc\_chirp}(\K{float},_\K{float},_\K{float},_\K{long}_\*,_\K{float}_\*,_\K{float}_\*,_\K{float}_\*);}}
+\L{\LB{__\K{int}_\V{next\_time}(\K{double}_\*,_\K{long}_\*);}}
+\L{\LB{__\K{double}_\V{time};}}
+\L{\LB{__\K{long}_\V{seed}=\V{SEED};}}
+\L{\LB{__}}
+\L{\LB{\K{\#if}_(\V{KNOWN\_START\_END})}}
+\L{\LB{__\K{while}_(\V{known\_time}(\&\V{time},\&\V{seed}))}}
+\L{\LB{\K{\#else}}}
+\L{\LB{__\K{while}_(\V{next\_time}(\&\V{time},\&\V{seed}))}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{____\{_}}
+\L{\LB{______\K{float}_\V{lst},\V{m1},\V{m2},\V{c0},\V{c1},\V{phase},\V{invMpc};}}
+\L{\LB{______}}
+\L{\LB{______\C{}\1\* compute the local sidereal time in seconds \*\1\CE{}}}
+\L{\LB{______\V{lst}_=_3600\*\V{local\_sidereal\_time}((\V{time\_t})\V{time},\V{LON});}}
+\L{\LB{______}}
+\L{\LB{______\C{}\1\* obtain the random chirp parameters \*\1\CE{}}}
+\L{\LB{______\V{mc\_chirp}(\V{lst},\V{LAT},\V{ARM},\&\V{seed},\&\V{invMpc},\&\V{c0},\&\V{c1});}}
+\L{\LB{______}}
+\L{\LB{______\C{}\1\* the random phase in radians \*\1\CE{}}}
+\L{\LB{______\V{phase}_=_\V{atan2}(\V{c1},\V{c0});}}
+\L{\LB{______}}
+\L{\LB{______\C{}\1\* the mass of the first and second NSs \*\1\CE{}}}
+\L{\LB{______\V{m1}_=_\V{MLO}_+_(\V{MHI}_\-_\V{MLO})\*\V{ran1}(\&\V{seed});}}
+\L{\LB{______\V{m2}_=_\V{MLO}_+_(\V{MHI}_\-_\V{MLO})\*\V{ran1}(\&\V{seed});}}
+\L{\LB{______}}
+\L{\LB{______\C{}\1\* print the parameters \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"\%f_\%f_\%f_\%f_\%f\2n\"\SE{},\V{time},\V{m1},\V{m2},\V{invMpc},\V{phase});_}}
+\L{\LB{____\}__}}
+\L{\LB{__\K{return}_0;}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{}}
+\L{\LB{\C{}\1\*}}
+\L{\LB{__Calculates the next time of a binary inspiral and returns 1 if this time}}
+\L{\LB{__occurs before the end of the data run or 0 if it does not.}}
+\L{\LB{__\*\1\CE{}}}
+\L{\LB{\K{int}_\V{next\_time}(\K{double}_\*\V{time},_\K{long}_\*\V{seed})}}
+\L{\LB{\{}}
+\L{\LB{__\K{float}_\V{ran1}(\K{long}_\*);}}
+\L{\LB{__}}
+\L{\LB{__\K{static}_\K{int}_\V{first}=1;}}
+\L{\LB{__\K{static}_\K{double}_\V{end};}}
+\L{\LB{__\K{static}_\K{float}_\V{srate};}}
+\L{\LB{__\K{float}_\V{dt};}}
+\L{\LB{__}}
+\L{\LB{__\K{if}_(\V{first})_\{_\C{}\1\* obtain the start and the end of the data run on first call \*\1\CE{}}}
+\L{\LB{____}}
+\L{\LB{____\V{time\_t}_\V{begin};}}
+\L{\LB{____\K{float}_\V{st},\V{et},\V{slowrate};}}
+\L{\LB{____\K{int}_\V{soff},\V{sblk},\V{eoff},\V{eblk};}}
+\L{\LB{____\V{FILE}_\*\V{fplock};}}
+\L{\LB{____}}
+\L{\LB{____\V{first}_=_0;}}
+\L{\LB{____}}
+\L{\LB{____\C{}\1\* read ld\_mainheader to get begin time \*\1\CE{}}}
+\L{\LB{____\{}}
+\L{\LB{______}}
+\L{\LB{______\K{struct}_\V{ld\_mainheader}_\V{mh};}}
+\L{\LB{______\K{struct}_\V{ld\_binheader}_\V{bh};}}
+\L{\LB{______\K{short}_\*\V{datas}=\V{NULL};}}
+\L{\LB{______\V{FILE}_\*\V{fpifo};}}
+\L{\LB{______\K{int}_\V{alloc}=0,\V{n}=0;}}
+\L{\LB{______\V{fpifo}_=_\V{grasp\_open}(\S{}\"GRASP\_DATAPATH\"\SE{},\S{}\"channel.0\"\SE{},\S{}\"r\"\SE{});}}
+\L{\LB{______\V{read\_block}(\V{fpifo},\&\V{datas},\&\V{n},\&\V{st},\&\V{srate},1,\&\V{alloc},1,\&\V{bh},\&\V{mh});}}
+\L{\LB{______\V{fclose}(\V{fpifo});}}
+\L{\LB{______\V{begin}_=_(\V{time\_t})\V{mh}.\V{epoch\_time\_sec};}}
+\L{\LB{____\}______}}
+\L{\LB{____\C{}\1\* start of the first locked segment \*\1\CE{}}}
+\L{\LB{____\V{fplock}_=_\V{grasp\_open}(\S{}\"GRASP\_DATAPATH\"\SE{},\S{}\"channel.10\"\SE{},\S{}\"r\"\SE{});}}
+\L{\LB{____\V{find\_locked}(\V{fplock},\&\V{soff},\&\V{sblk},\&\V{eoff},\&\V{eblk},\&\V{st},\&\V{et},\&\V{slowrate});}}
+\L{\LB{____\*\V{time}_=_(\K{double})(\V{begin})_+_(\K{double})(\V{soff}\1\V{srate})_+_\V{OFFSET};}}
+\L{\LB{____}}
+\L{\LB{____\C{}\1\* end of the last locked segment \*\1\CE{}}}
+\L{\LB{____\K{while}_(\V{find\_locked}(\V{fplock},\&\V{soff},\&\V{sblk},\&\V{eoff},\&\V{eblk},\&\V{st},\&\V{et},\&\V{slowrate}));}}
+\L{\LB{____\V{fclose}(\V{fplock});}}
+\L{\LB{____\V{end}_=_(\K{double})(\V{begin})_+_(\K{double})(\V{et}_+_\V{eoff}\1\V{srate});}}
+\L{\LB{____}}
+\L{\LB{____\C{}\1\* print the start and end times and the duration of the run \*\1\CE{}}}
+\L{\LB{____\V{fprintf}(\V{stderr},\S{}\"start:_\%f,_end:_\%f,_duration:_\%f\2n\"\SE{},\*\V{time},\V{end},\V{end}_\-_\*\V{time});}}
+\L{\LB{____}}
+\L{\LB{__\}}}
+\L{\LB{__\K{if}_(\V{FIXED})_\C{}\1\* fixed rate intervals \*\1\CE{}}}
+\L{\LB{____\V{dt}_=_\V{INV\_RATE};}}
+\L{\LB{__\K{else}_\C{}\1\* intervals for a Poisson process \*\1\CE{}}}
+\L{\LB{____\V{dt}_=_\-\V{INV\_RATE}\*\V{log}(\V{ran1}(\V{seed}));}}
+\L{\LB{__}}
+\L{\LB{__\K{if}_(\V{dt}\*\V{srate}\<\V{NPOINT})_\C{}\1\* print warning message when chirps too close \*\1\CE{}}}
+\L{\LB{____\V{fprintf}(\V{stderr},\S{}\"Warning:_potentially_two_chirps_in_same_segment\2n\"\SE{});}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* increment the time \*\1\CE{}}}
+\L{\LB{__\*\V{time}_+=_\V{dt};}}
+\L{\LB{__}}
+\L{\LB{__\K{if}_(\*\V{time}\<\V{end})_\K{return}_1;}}
+\L{\LB{__\K{else}_\K{return}_0;}}
+\L{\LB{\}}}

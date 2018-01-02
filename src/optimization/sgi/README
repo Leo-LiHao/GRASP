@@ -1,0 +1,8 @@
+This contains functions that replace the Numerical Recipes realft()
+function.  The replacement makes the (risky) assumption that the data segment
+extends 8 bytes below the furthest malloc()'d address, and makes use of
+the extra space.  If the risky version generates segmentation violations,
+write a safe on that uses memcpy.  See the paragon example.
+
+These functions use the optimized FFT's from the Cray/SGI scientific
+library.

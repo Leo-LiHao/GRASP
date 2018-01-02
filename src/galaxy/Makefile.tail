@@ -1,0 +1,11 @@
+#############################################################################
+#  THE REGION ABOVE THIS SPACE IS FILLED IN BY InstallGRASP                 #
+#############################################################################
+
+INCLUDES= -I$(GRASP_I)
+
+all: galaxy.o
+
+galaxy.o: galaxy.c $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) -c galaxy.c
+	ar -vr $(GRASP_HOME)/lib/libgrasp.a galaxy.o

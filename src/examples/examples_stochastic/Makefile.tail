@@ -1,0 +1,29 @@
+#############################################################################
+#  THE REGION ABOVE THIS SPACE IS FILLED IN BY InstallGRASP                 #
+#############################################################################
+
+INCLUDES= -I$(GRASP_I) 
+
+LIBS= $(OPTIMIZED_OBJECTS) -L$(GRASP_HOME)/lib -lgrasp -L$(RECIPES_LIB) -l$(LRECIPES) $(OPTIMIZED_LIBS) -lm
+
+all:  monte_carlo omega_min optimal_filter overlap simulation snr
+
+
+monte_carlo: monte_carlo.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) monte_carlo.c -o monte_carlo $(LIBS) 
+
+omega_min: omega_min.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) omega_min.c -o omega_min $(LIBS) 
+
+optimal_filter: optimal_filter.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) optimal_filter.c -o optimal_filter $(LIBS) 
+
+overlap: overlap.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) overlap.c -o overlap $(LIBS) 
+
+simulation: simulation.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) simulation.c -o simulation $(LIBS) 
+
+snr: snr.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) snr.c -o snr $(LIBS) 
+

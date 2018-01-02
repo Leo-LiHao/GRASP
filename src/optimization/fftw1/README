@@ -1,0 +1,63 @@
+This contains functions that replace the Numerical Recipes realft()
+function.  These functions use the optimized FFTW routines which may
+be obtained from the site:
+	http://theory.lcs.mid.edu/~fftw/
+To install FFTW version 1.1, see the instructions below.
+
+The executable realft constructs a short input sequence, then does a
+forward Numerical Recipes realft() and prints out the resulting array.
+It then takes an identical input array, and does a forward transform
+using the FFTW routine.  The comparison between the two outputs lets you
+easily see the difference in packing order.
+
+The module realft_fftw.c/o contains a replacement for the Numerical
+Recipes realft() routine which takes identical arguments and internally
+makes use of FFTW to do the fft.  On first entry, and anytime that the
+size of the array changes, it prints a notification message to standard
+error.
+
+The executables realft_fftw_test1 and realft_fftw_test2 are identical
+source code, but the first is linked with the Numerical Recipes library
+and the second is linked with the realft_fftw.o routine.  By comparing
+the outputs of these programs (which do one forward and one inverse FFT),
+which are identical except for rounding error, you can verify that the
+replacement for the realft() routine is working correctly.
+
+
+NOTES FOR INSTALLATION OF FFTW-1.1
+
+0. All directory names are relative to the fftw-1.1 directory which is
+   created by unpacking the archive.
+
+1. Modify the file src/fftw.h as follows: Change the line that reads
+	typedef double FFTW_REAL;
+   to
+	typedef float FFTW_REAL;
+
+2. Modify the lines in src/planner.c according to the instructions in the
+   README.hacks file (if desired).
+
+3. Modify the file src/Makefile:
+
+   a.  to have the correct variable "prefix" which points to your desired
+       installation path.  This must be a pointer to a directory (such
+       as /usr/local) containing directories called lib and include.
+
+   b.  Add the file `../rfftw/rfftw.h' to the HEADERS variable so
+       that it reads: HEADERS = fftw.h ../rfftw/rfftw.h
+
+4. Type `make' in the src directory, but do not install yet.
+
+5. Type `make' in the rfftw directory (you can probably ignore the
+   warning messages if using gcc; this is because of the -Wall option).
+
+6. Type the following commands in the src directory:
+	ar rv libfftw.a ../rfftw/rfftw*.o
+	ranlib libfftw.a
+
+7. At this point, you *should* just be able to type
+        make install
+   If it does't work for you then just copy the
+   libfftw.a into the place where you had intended for it to reside
+   (say, /usr/local/lib) and the fftw.h into the place where you
+   had intended for it to reside (say, /usr/local/include).

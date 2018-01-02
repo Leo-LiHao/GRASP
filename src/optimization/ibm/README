@@ -1,0 +1,7 @@
+This contains functions that replace the Numerical Recipes realft()
+function.  This replacement makes the (risky) assumption that the data
+segment extends 8 bytes below the furthest malloc()'d address, and
+makes use of the extra space.  If the risky version generates
+segmentation violations, use the safe one!
+
+These functions use the optimized FFT's from the IBM ESSL library.

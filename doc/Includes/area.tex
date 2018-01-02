@@ -1,0 +1,22 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_template\_bank\1area.c},{15:28},{Aug  6 1998}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}()_\{}}
+\L{\LB{}\Tab{8}{\K{struct}_\V{Scope}_\V{Grid};}}
+\L{\LB{}\Tab{8}{\K{float}_\V{area};}}
+\L{\LB{}}
+\L{\LB{}\Tab{8}{\C{}\1\* Specify the parameter space \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{Grid}.\V{m\_mn}=0.8;}}
+\L{\LB{}\Tab{8}{\V{Grid}.\V{m\_mx}=50.0;}}
+\L{\LB{}\Tab{8}{\V{Grid}.\V{f\_start}=140.0;}}
+\L{\LB{}}
+\L{\LB{}\Tab{8}{\C{}\1\* find area of parameter space \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{area}=\V{template\_area}(\&\V{Grid});}}
+\L{\LB{}}
+\L{\LB{}\Tab{8}{\C{}\1\* and print it \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{printf}(\S{}\"The_area_in_parameter_space_is_\%f_seconds\^2.\2n\"\SE{},\V{area});}}
+\L{\LB{}\Tab{8}{\K{return}_0;}}
+\L{\LB{\}}}

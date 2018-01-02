@@ -1,0 +1,59 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_utility\1makesounds.c},{10:17},{Sep 25 1998}
+\L{\LB{\C{}\1\* Demonstrates the audio() and graph\_short() with (1) 200 Hz Cosine wave}}
+\L{\LB{with a quadratically varying amplitude (2) 5.0-5.0 solar mass inspiral}}
+\L{\LB{chirp (3) Lai-Shapiro 1.4 solar mass: Displays graph and plays audio}}
+\L{\LB{for each. \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{\K{\#include}_\<\V{unistd}.\V{h}\>}}
+\L{\LB{\K{\#define}_\V{S\_RATE}_9600}}
+\L{\LB{\K{\#define}_\V{NUM\_PTS}_10000}}
+\L{\LB{\K{int}_\V{i},\V{chirp\_pts};}}
+\L{\LB{\K{float}_\*\V{wave},\*\V{dummy},\V{wavemax},\V{t\_coal};}}
+\L{\LB{\K{short}_\*\V{snd};}}
+\L{\LB{\K{struct}_\V{LS\_physical\_constants}_\V{phys\_const};}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}()\{}}
+\L{\LB{___\C{}\1\* Allocate arrays \*\1\CE{}}}
+\L{\LB{___\V{wave}=(\K{float}_\*)\V{malloc}(\V{NUM\_PTS}\*\K{sizeof}(\K{float}));}}
+\L{\LB{___\V{dummy}=(\K{float}_\*)\V{malloc}(\V{NUM\_PTS}\*\K{sizeof}(\K{float}));}}
+\L{\LB{___\V{snd}=(\K{short}_\*)\V{malloc}(\V{NUM\_PTS}\*\K{sizeof}(\K{float}));}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* Generate a 200 Hz Cosine wave with quadratically varying amplitude \*\1\CE{}}}
+\L{\LB{___\K{for}_(\V{i}=0;\V{i}\<\V{NUM\_PTS};\V{i}++)_\V{wave}[\V{i}]=\V{i}\*(\V{NUM\_PTS}\-\V{i})\*\V{cos}(2.0\*\V{M\_PI}\*200.0\*\V{i}\19600.0)\1\V{NUM\_PTS};}}
+\L{\LB{___\C{}\1\* Convert wave to shorts, rescaling maximum amplitude to SHRT\_MAX-2 \*\1\CE{}}}
+\L{\LB{___\V{wavemax}=0;}}
+\L{\LB{___\K{for}_(\V{i}=0;\V{i}\<\V{NUM\_PTS};\V{i}++)_\K{if}_(\V{fabs}(\V{wave}[\V{i}])\>\V{wavemax})_\V{wavemax}=\V{fabs}(\V{wave}[\V{i}]);}}
+\L{\LB{___\K{for}_(\V{i}=0;\V{i}\<\V{NUM\_PTS};\V{i}++)_\V{snd}[\V{i}]=(\K{short})((\V{SHRT\_MAX}\-2)\*\V{wave}[\V{i}]\1\V{wavemax});}}
+\L{\LB{___\C{}\1\* Graph and play waveform, then pause briefly \*\1\CE{}}}
+\L{\LB{___\V{graph\_short}(\V{snd},\V{NUM\_PTS});}}
+\L{\LB{___\V{audio}(\V{snd},\V{NUM\_PTS});}}
+\L{\LB{___\V{sleep}(2);}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* Same procedure for an inspiral chirp for a 5.0-5.0 solar mass system. \*\1\CE{}}}
+\L{\LB{___\V{make\_filters}(5.0,5.0,\V{wave},\V{dummy},64.0,\V{NUM\_PTS},\V{S\_RATE},\&\V{chirp\_pts},\&\V{t\_coal},4000,2);}}
+\L{\LB{___\V{wavemax}=0;}}
+\L{\LB{___\K{for}_(\V{i}=0;\V{i}\<\V{NUM\_PTS};\V{i}++)_\K{if}_(\V{fabs}(\V{wave}[\V{i}])\>\V{wavemax})_\V{wavemax}=\V{fabs}(\V{wave}[\V{i}]);}}
+\L{\LB{___\K{for}_(\V{i}=0;\V{i}\<\V{NUM\_PTS};\V{i}++)_\V{snd}[\V{i}]=(\K{short})((\V{SHRT\_MAX}\-2)\*\V{wave}[\V{i}]\1\V{wavemax});}}
+\L{\LB{___\V{graph\_short}(\V{snd},\V{NUM\_PTS});}}
+\L{\LB{___\V{audio}(\V{snd},\V{NUM\_PTS});}}
+\L{\LB{___\V{sleep}(2);}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* Define parameters for Lai-Shapiro waveform \*\1\CE{}}}
+\L{\LB{___\V{phys\_const}.\V{mass}=1.4;}}
+\L{\LB{___\V{phys\_const}.\V{radius}=10.0;}}
+\L{\LB{___\V{phys\_const}.\V{distance}=1.0;}}
+\L{\LB{___\V{phys\_const}.\V{fmax}=1000.0;}}
+\L{\LB{___\V{phys\_const}.\V{inclination}=\V{phys\_const}.\V{Phi\_0}=0;}}
+\L{\LB{___\C{}\1\* Then generate, display and play the Lai-Shapiro waveform. \*\1\CE{}}}
+\L{\LB{___\V{LS\_waveform}(\V{wave},\V{phys\_const},0.0,0.0,0.125\*\V{M\_PI},1.0\1\V{S\_RATE},\V{NUM\_PTS});}}
+\L{\LB{___\V{wavemax}=0;}}
+\L{\LB{___\K{for}_(\V{i}=0;\V{i}\<\V{NUM\_PTS};\V{i}++)_\K{if}_(\V{fabs}(\V{wave}[\V{i}])\>\V{wavemax})_\V{wavemax}=\V{fabs}(\V{wave}[\V{i}]);}}
+\L{\LB{___\K{for}_(\V{i}=0;\V{i}\<\V{NUM\_PTS};\V{i}++)_\V{snd}[\V{i}]=(\K{short})((\V{SHRT\_MAX}\-2)\*\V{wave}[\V{i}]\1\V{wavemax});}}
+\L{\LB{___\V{graph\_short}(\V{snd},\V{NUM\_PTS});}}
+\L{\LB{___\V{audio}(\V{snd},\V{NUM\_PTS});}}
+\L{\LB{}}
+\L{\LB{___\K{return}_0;}}
+\L{\LB{\}}}

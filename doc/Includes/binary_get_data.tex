@@ -1,0 +1,1161 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_binary\-search\1binary\_get\_data.c},{13:52},{Jun 30 1999}
+\L{\LB{\K{\#include}_\<\V{string}.\V{h}\>}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{\K{\#include}_\S{}\"binary\_params.h\"\SE{}}}
+\L{\LB{}}
+\L{\LB{\K{\#define}_\V{SIM\_VARIANCE}_16384.0}}
+\L{\LB{\K{\#define}_\V{SIM\_SITE}_8}}
+\L{\LB{}}
+\L{\LB{\K{char}_\*\V{rcsid}=\S{}\"\$id\"\SE{};}}
+\L{\LB{}}
+\L{\LB{\K{static}_\K{int}_\V{count\_chunks},\V{count\_locked},\V{count\_segments};}}
+\L{\LB{\K{static}_\K{double}_\V{count\_tinlock},\V{lastlock},\V{discarded},\V{lastdiscard}=0;}}
+\L{\LB{\K{static}_\V{FILE}_\*\V{fp\_statistics};}}
+\L{\LB{}}
+\L{\LB{\K{struct}_\V{Chunk}_\{}}
+\L{\LB{____\K{double}_\V{time};}}
+\L{\LB{____\K{short}_\*\V{data};}}
+\L{\LB{____\K{float}_\*\V{spec};}}
+\L{\LB{____\K{int}_\V{cont};}}
+\L{\LB{____\K{int}_\V{is\_gaussian};}}
+\L{\LB{____\K{int}_\V{counter};}}
+\L{\LB{____\K{int}_\V{used\_in\_spectrum};}}
+\L{\LB{\};}}
+\L{\LB{}}
+\L{\LB{\K{void}_\V{make\_retlifs}(\K{float}_\V{m1},_\K{float}_\V{m2},_\K{float}_\*\V{ch1},_\K{float}_\*\V{ch2},_\K{float}_\V{fstart},}}
+\L{\LB{__________________\K{int}_\V{n},_\K{float}_\V{srate},_\K{int}_\*\V{filled},_\K{float}_\*\V{t\_coal},}}
+\L{\LB{__________________\K{int}_\V{err\_cd\_sprs},_\K{int}_\V{order});}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{get\_calibrated\_data}();}}
+\L{\LB{\K{\#if}_(\V{RANDOMIZE})}}
+\L{\LB{\K{float}_\V{ran2}(\K{long}_\*);}}
+\L{\LB{\K{long}_\V{randomize}=\-12345;}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}}
+\L{\LB{\K{void}_\V{nullout}(\K{float}_\V{freqmin},\K{float}_\V{freqmax},\K{int}_\V{npoint},\K{float}_\V{srate},\K{float}\*_\V{n\_inv\_noise})_\{}}
+\L{\LB{__\K{int}_\V{imin},\V{imax},\V{i};}}
+\L{\LB{__}}
+\L{\LB{__\V{imin}=\V{freqmin}\*\V{npoint}\1\V{srate};}}
+\L{\LB{__\V{imax}=\V{freqmax}\*\V{npoint}\1\V{srate};}}
+\L{\LB{__\C{}\1\* set to zero in those bins \*\1\CE{}}}
+\L{\LB{__\K{if}_(\V{imin}\<\V{npoint}\12)}}
+\L{\LB{____\K{for}_(\V{i}=\V{imin};((\V{i}\<\V{imax})_\&\&_(\V{i}\<\V{npoint}\12));\V{i}++)}}
+\L{\LB{______\V{n\_inv\_noise}[\V{i}]=0.0;}}
+\L{\LB{__\K{return};}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* Routine to compute window function for some specified window type.}}
+\L{\LB{_\* }}
+\L{\LB{_\* Input is the window type:}}
+\L{\LB{_\*   type = 0:  rectangular (no) window,}}
+\L{\LB{_\*   type = 1:  Hann window,}}
+\L{\LB{_\*   type = 2:  Welch window,}}
+\L{\LB{_\*   type = 3:  Bartlett window.}}
+\L{\LB{_\*   }}
+\L{\LB{_\* Output are \*wss (sum of window function values squared) and the window}}
+\L{\LB{_\* function values window[0.\,.n-1]. \*\1\CE{}}}
+\L{\LB{\K{void}_\V{compute\_window}(\K{float}_\*\V{wss},_\K{float}_\V{window}[\,],_\K{int}_\V{n},_\K{int}_\V{type})}}
+\L{\LB{\{}}
+\L{\LB{__\K{int}_\V{i};}}
+\L{\LB{__\K{float}_\V{fac}=2.0\1\V{n};}}
+\L{\LB{__}}
+\L{\LB{__\*\V{wss}_=_0;}}
+\L{\LB{__\K{for}_(\V{i}=0;\V{i}\<\V{n};\V{i}++)_\{}}
+\L{\LB{____\K{float}_\V{win};}}
+\L{\LB{____\K{switch}_(\V{type})_\{}}
+\L{\LB{____\K{case}_0:____\C{}\1\* rectangular (no) window \*\1\CE{}}}
+\L{\LB{______\V{win}_=_1;}}
+\L{\LB{______\K{break};}}
+\L{\LB{____\K{case}_1:____\C{}\1\* Hann window \*\1\CE{}}}
+\L{\LB{______\V{win}_=_0.5\*(1_\-_\V{cos}(\V{i}\*\V{fac}\*\V{M\_PI}));}}
+\L{\LB{______\K{break};}}
+\L{\LB{____\K{case}_2:____\C{}\1\* Welch window \*\1\CE{}}}
+\L{\LB{______\V{win}_=_\V{i}\*\V{fac}_\-_1;}}
+\L{\LB{______\V{win}_=_1_\-_\V{win}\*\V{win};}}
+\L{\LB{______\K{break};}}
+\L{\LB{____\K{case}_3:____\C{}\1\* Bartlett window \*\1\CE{}}}
+\L{\LB{______\V{win}=_1_\-_\V{fabs}(\V{i}\*\V{fac}_\-_1);}}
+\L{\LB{______\K{break};}}
+\L{\LB{____\K{default}:___\C{}\1\* unrecognized window type \*\1\CE{}}}
+\L{\LB{______\V{GR\_start\_error}(\S{}\"avg\_spec()\"\SE{},\V{rcsid},\V{\_\_FILE\_\_},\V{\_\_LINE\_\_});}}
+\L{\LB{______\V{GR\_report\_error}(\S{}\"don\'t_recognize_windowtype=\%d\2n\"\SE{},\V{type});}}
+\L{\LB{______\V{GR\_end\_error}();}}
+\L{\LB{______\V{abort}();}}
+\L{\LB{______\K{break};}}
+\L{\LB{____\}}}
+\L{\LB{____\*\V{wss}_+=_\V{win}\*\V{win};}}
+\L{\LB{____\V{window}[\V{i}]_=_\V{win};}}
+\L{\LB{__\}}}
+\L{\LB{__\K{return};}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* Routine to calculate the response function using the old-style}}
+\L{\LB{_\* data acquisition routines \*\1\CE{}}}
+\L{\LB{\K{void}_\V{recalibrate\_old}(\K{float}_\*\V{response},_\K{int}_\V{npoint})}}
+\L{\LB{\{}}
+\L{\LB{__\K{int}_\V{i};}}
+\L{\LB{__\V{FILE}_\*\V{fpss};}}
+\L{\LB{__\V{fpss}_=_\V{grasp\_open}(\S{}\"GRASP\_DATAPATH\"\SE{},\S{}\"swept\-sine.ascii\"\SE{},\S{}\"r\"\SE{});}}
+\L{\LB{__\V{normalize\_gw}(\V{fpss},\V{npoint},\V{SRATE},\V{response});}}
+\L{\LB{__\V{fclose}(\V{fpss});}}
+\L{\LB{__\K{for}_(\V{i}=0;\V{i}\<\V{npoint};\V{i}++)_\V{response}[\V{i}]_\*=_\V{HSCALE}\1\V{ARMLENGTH\_1994};}}
+\L{\LB{__\K{return};}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* Are we building a frame-compatible version? \*\1\CE{}}}
+\L{\LB{\K{\#if}_(\V{DATA\_FORMAT}_==_1)}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* Global frame variables \*\1\CE{}}}
+\L{\LB{\K{struct}_\V{fgetoutput}_\V{fgetoutput}=\{0\};}}
+\L{\LB{\K{struct}_\V{fgetinput}_\V{fgetinput}=\{0\};}}
+\L{\LB{\K{int}_\V{frame\_init}=0;}}
+\L{\LB{\K{int}_\V{time\_last\_calibrated}=\-1;}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* Routine to initialize global frame variables and to allocate memory \*\1\CE{}}}
+\L{\LB{\K{void}_\V{initialize\_frame}()}}
+\L{\LB{\{}}
+\L{\LB{__\V{frame\_init}_=_1;}}
+\L{\LB{__\V{fgetinput}.\V{nchan}_=_1;}}
+\L{\LB{__\V{fgetinput}.\V{files}_=_\V{framefiles};}}
+\L{\LB{__\V{fgetinput}.\V{calibrate}_=_1;}}
+\L{\LB{__\V{fgetinput}.\V{chnames}_=_(\K{char}_\*\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{char}_\*));}}
+\L{\LB{__\V{fgetinput}.\V{locations}_=_(\K{short}_\*\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{short}_\*));}}
+\L{\LB{__\V{fgetinput}.\V{chnames}[0]_=_\S{}\"IFO\_DMRO\"\SE{};}}
+\L{\LB{__\V{fgetinput}.\V{inlock}_=_1;}}
+\L{\LB{__\V{fgetoutput}.\V{npoint}_=_(\K{int}_\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{int}));}}
+\L{\LB{__\V{fgetoutput}.\V{ratios}_=_(\K{int}_\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{int}));}}
+\L{\LB{__\K{return};}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* Routine to calculate the response function using the frame}}
+\L{\LB{_\* data acquisition routines.  This routine should only be called}}
+\L{\LB{_\* after some data has been read, so that the frame output variables}}
+\L{\LB{_\* have been set. \*\1\CE{}}}
+\L{\LB{\K{void}_\V{recalibrate\_frame}(\K{float}_\*\V{response},_\K{int}_\V{npoint})}}
+\L{\LB{\{}}
+\L{\LB{__\K{float}_\V{srate}=\V{SRATE};}}
+\L{\LB{__\K{int}_\V{i};}}
+\L{\LB{__}}
+\L{\LB{__\K{if}_(!\V{frame\_init})_\{}}
+\L{\LB{____\V{GR\_start\_error}(\S{}\"recalibrate\_frame()\"\SE{},\V{rcsid},\V{\_\_FILE\_\_},\V{\_\_LINE\_\_});}}
+\L{\LB{____\V{GR\_report\_error}(\S{}\"must_get_some_data_before_calling_this_routine!\2n\"\SE{});}}
+\L{\LB{____\V{GR\_end\_error}();}}
+\L{\LB{____\V{abort}();}}
+\L{\LB{__\}}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* print message \*\1\CE{}}}
+\L{\LB{__\V{GR\_start\_error}(\S{}\"recalibrate\_frame()\"\SE{},\V{rcsid},\V{\_\_FILE\_\_},\V{\_\_LINE\_\_});}}
+\L{\LB{__\V{GR\_report\_error}(\S{}\"Note:_data_calibration_carried_out_at_time_\%d.\2n\"\SE{},}}
+\L{\LB{}\Tab{16}{__\V{fgetoutput}.\V{tcalibrate});}}
+\L{\LB{__\V{GR\_report\_error}(\S{}\"__previous_frame_calibration_was_from_time_\%d.\2n\"\SE{},}}
+\L{\LB{}\Tab{16}{__\V{time\_last\_calibrated});}}
+\L{\LB{__\V{GR\_end\_error}();}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* do the calibration \*\1\CE{}}}
+\L{\LB{__\V{GRnormalize}(\V{fgetoutput}.\V{fri},\V{fgetoutput}.\V{frinum},\V{npoint},\V{srate},\V{response});}}
+\L{\LB{__\K{for}_(\V{i}=0;\V{i}\<\V{npoint};\V{i}++)_\V{response}[\V{i}]_\*=_\V{HSCALE}\1\V{ARMLENGTH\_1994};}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* record time that we did calibration \*\1\CE{}}}
+\L{\LB{__\V{time\_last\_calibrated}=\V{fgetoutput}.\V{tcalibrate};}}
+\L{\LB{__}}
+\L{\LB{__\K{return};}}
+\L{\LB{\}}}
+\L{\LB{\K{\#endif}__\C{}\1\* end of frame-compatible version \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* Routine to calculate the response function for simulated data \*\1\CE{}}}
+\L{\LB{\K{void}_\V{recalibrate\_sim}(\K{float}_\*\V{response},_\K{int}_\V{npoint})}}
+\L{\LB{\{}}
+\L{\LB{__\K{double}_\*\V{power},\*\V{tmp};}}
+\L{\LB{__\K{float}_\V{parameters}[9],\V{srate}=\V{SRATE};}}
+\L{\LB{__\K{float}_\V{fac}=\V{HSCALE}\*\V{sqrt}(0.5\*\V{srate}\1\V{SIM\_VARIANCE});}}
+\L{\LB{__\K{char}__\V{site\_name}[256],\V{noise\_file}[256],\V{whiten\_file}[256];}}
+\L{\LB{__\K{int}_\V{m}=\V{npoint}\12;}}
+\L{\LB{__\V{tmp}_=_\V{power}_=_(\K{double}_\*)\V{malloc}(\V{m}\*\K{sizeof}(\K{double}));}}
+\L{\LB{__\K{if}_(\V{power}_==_\V{NULL})_\{}}
+\L{\LB{____\V{GR\_start\_error}(\S{}\"recalibrate\_sim()\"\SE{},\V{rcsid},\V{\_\_FILE\_\_},\V{\_\_LINE\_\_});}}
+\L{\LB{____\V{GR\_report\_error}(\S{}\"failed_to_allocate_\%d_doubles\2n\"\SE{},\V{m});}}
+\L{\LB{____\V{GR\_end\_error}();}}
+\L{\LB{____\V{abort}();}}
+\L{\LB{__\}}}
+\L{\LB{__\V{detector\_site}(\S{}\"detectors.dat\"\SE{},\V{SIM\_SITE},\V{parameters},}}
+\L{\LB{}\Tab{16}{\V{site\_name},\V{noise\_file},\V{whiten\_file});}}
+\L{\LB{__\V{noise\_power}(\V{noise\_file},\V{m},\V{srate}\1\V{npoint},\V{power});}}
+\L{\LB{__\K{while}_(\V{m}\-\-_\>_0)_\{}}
+\L{\LB{____\*\V{response}++_=_\V{fac}\*\V{sqrt}(\*\V{tmp}++);}}
+\L{\LB{____\*\V{response}++_=_0;}}
+\L{\LB{__\}}}
+\L{\LB{__\V{free}(\V{power});}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* Routine to calculate the response function.  The response function}}
+\L{\LB{_\* is only updated if needed --- otherwise, it is unchanged.}}
+\L{\LB{_\* }}
+\L{\LB{_\* Input is the number of points in the response function, npoint.}}
+\L{\LB{_\* }}
+\L{\LB{_\* Output is the response function array response[0.\,.npoint-1]. \*\1\CE{}}}
+\L{\LB{\K{void}_\V{recalibrate}(\K{float}_\*\V{response},_\K{int}_\V{npoint})}}
+\L{\LB{\{}}
+\L{\LB{\K{\#}_\K{if}_(\V{DATA\_FORMAT}_==_0)}}
+\L{\LB{____\K{static}_\K{int}_\V{first}_=_1;}}
+\L{\LB{____\C{}\1\* old format data \*\1\CE{}}}
+\L{\LB{____\K{if}_(\V{first})_\{}}
+\L{\LB{______\V{first}_=_0;}}
+\L{\LB{______\V{recalibrate\_old}(\V{response},\V{npoint});}}
+\L{\LB{____\}}}
+\L{\LB{\K{\#}_\K{elif}_(\V{DATA\_FORMAT}_==_1)}}
+\L{\LB{____\C{}\1\* frame format data \*\1\CE{}}}
+\L{\LB{____\K{if}_(\V{time\_last\_calibrated}_!=_\V{fgetoutput}.\V{tcalibrate})}}
+\L{\LB{______\V{recalibrate\_frame}(\V{response},\V{npoint});}}
+\L{\LB{\K{\#}_\K{elif}_(\V{DATA\_FORMAT}_==_2)}}
+\L{\LB{____\K{static}_\K{int}_\V{first}_=_1;}}
+\L{\LB{____\C{}\1\* simulated data \*\1\CE{}}}
+\L{\LB{____\K{if}_(\V{first})_\{}}
+\L{\LB{______\V{first}_=_0;}}
+\L{\LB{______\V{recalibrate\_sim}(\V{response},\V{npoint});}}
+\L{\LB{____\}}}
+\L{\LB{\K{\#}_\K{else}}}
+\L{\LB{____\C{}\1\* not a recognized format! \*\1\CE{}}}
+\L{\LB{____\V{GR\_start\_error}(\S{}\"recalibrate()\"\SE{},\V{rcsid},\V{\_\_FILE\_\_},\V{\_\_LINE\_\_});}}
+\L{\LB{____\V{GR\_report\_error}(\S{}\"unrecognized_DATA\_FORMAT_\%d\2n\"\SE{},\V{DATA\_FORMAT});}}
+\L{\LB{____\V{GR\_end\_error}();}}
+\L{\LB{____\V{abort}();}}
+\L{\LB{\K{\#}_\K{endif}}}
+\L{\LB{__\K{return};}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* open the IFO output file and read the mainheader to get runstart time \*\1\CE{}}}
+\L{\LB{\K{double}_\V{get\_runstart\_old}()}}
+\L{\LB{\{}}
+\L{\LB{__\K{struct}_\V{ld\_mainheader}_\V{mh};}}
+\L{\LB{__\K{struct}_\V{ld\_binheader}_\V{bh};}}
+\L{\LB{__\K{float}_\V{tstart},\V{srate};}}
+\L{\LB{__\K{int}_\V{zero}=0,\V{npt}=\V{NPOINT};}}
+\L{\LB{__\V{FILE}_\*\V{fpifo};}}
+\L{\LB{__\K{short}_\*\V{here};}}
+\L{\LB{__\V{fpifo}_=_\V{grasp\_open}(\S{}\"GRASP\_DATAPATH\"\SE{},\S{}\"channel.0\"\SE{},\S{}\"r\"\SE{});}}
+\L{\LB{__\V{read\_block}(\V{fpifo},\&\V{here},\&\V{zero},\&\V{tstart},\&\V{srate},0,\&\V{npt},1,\&\V{bh},\&\V{mh});}}
+\L{\LB{__\V{fclose}(\V{fpifo});}}
+\L{\LB{__\K{return}_(\K{double})\V{mh}.\V{epoch\_time\_sec}_+_(\K{double})\V{mh}.\V{epoch\_time\_msec}\*0.001;}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* Routine to get a chunk of data using the old data acquisition routines.}}
+\L{\LB{_\* }}
+\L{\LB{_\* Input is the number of points in the chunk, npoint.}}
+\L{\LB{_\* }}
+\L{\LB{_\* Output is the data in the array here[0.\,.npoint-1]}}
+\L{\LB{_\* and the time, \*time, of the start of the data.}}
+\L{\LB{_\* }}
+\L{\LB{_\* Returned is the code:}}
+\L{\LB{_\*   code = 0: no more data;}}
+\L{\LB{_\*   code = 1: beginning of a locked section}}
+\L{\LB{_\*             (no data acquired, but we have skipped MIN\_INTO\_LOCK}}
+\L{\LB{_\*              minutes into the locked segment);}}
+\L{\LB{_\*   code = 2: continuing a locked section (data acquired). \*\1\CE{}}}
+\L{\LB{\K{int}_\V{get\_chunk\_data\_old}(\K{short}_\*\V{here},_\K{int}_\V{npoint},_\K{double}_\*\V{time})}}
+\L{\LB{\{}}
+\L{\LB{__\K{static}_\V{FILE}_\*\V{fpifo},\*\V{fplock};}}
+\L{\LB{__\K{static}_\K{int}_\V{remain}=0,\V{first}=1;}}
+\L{\LB{__\K{static}_\K{float}_\V{srate}=\V{SRATE};}}
+\L{\LB{__\K{static}_\K{double}_\V{runstart};}}
+\L{\LB{__\K{float}_\V{tstart};}}
+\L{\LB{__\K{int}_\V{code};}}
+\L{\LB{__}}
+\L{\LB{__\K{if}_(\V{first})_\{_\C{}\1\* initialization \*\1\CE{}}}
+\L{\LB{____\V{first}_=_0;}}
+\L{\LB{____\V{runstart}_=_\V{get\_runstart\_old}();}}
+\L{\LB{____\C{}\1\* open the IFO output file, lock file, and swept-sine file \*\1\CE{}}}
+\L{\LB{____\V{fpifo}_=_\V{grasp\_open}(\S{}\"GRASP\_DATAPATH\"\SE{},\S{}\"channel.0\"\SE{},\S{}\"r\"\SE{});}}
+\L{\LB{____\V{fplock}_=_\V{grasp\_open}(\S{}\"GRASP\_DATAPATH\"\SE{},\S{}\"channel.10\"\SE{},\S{}\"r\"\SE{});}}
+\L{\LB{__\}}}
+\L{\LB{}}
+\L{\LB{__\K{if}_(\V{remain}_\<_\V{npoint})_\{_\C{}\1\* if new locked section \*\1\CE{}}}
+\L{\LB{____\K{int}_\V{nskip}=(\K{int})(60\*\V{MIN\_INTO\_LOCK}\*\V{SRATE});}}
+\L{\LB{____\C{}\1\* skip forward MIN\_INTO\_LOCK minutes \*\1\CE{}}}
+\L{\LB{____\V{code}_=_\V{get\_data}(\V{fpifo},\V{fplock},\&\V{tstart},\V{nskip},\V{here},\&\V{remain},\&\V{srate},1);}}
+\L{\LB{____\K{if}_(\V{code}_==_0)_\K{return}_0;}}
+\L{\LB{____\K{else}_\K{return}_1;}}
+\L{\LB{__\}}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* get the needed data \*\1\CE{}}}
+\L{\LB{__\V{code}_=_\V{get\_data}(\V{fpifo},\V{fplock},\&\V{tstart},\V{npoint},\V{here},\&\V{remain},\&\V{srate},0);}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* compute the start time \*\1\CE{}}}
+\L{\LB{__\*\V{time}_=_\V{runstart}_+_\V{tstart};}}
+\L{\LB{}}
+\L{\LB{__\K{return}_\V{code};}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* are we building a frame compatible version? \*\1\CE{}}}
+\L{\LB{\K{\#if}_(\V{DATA\_FORMAT}_==_1)}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* Routine to get a chunk of data using the frame data acquisition routines.}}
+\L{\LB{_\* }}
+\L{\LB{_\* Input is the number of points in the chunk.}}
+\L{\LB{_\* }}
+\L{\LB{_\* Output is the data in the array here[0.\,.npoint-1]}}
+\L{\LB{_\* and the time, \*time, of the start of the data.}}
+\L{\LB{_\* }}
+\L{\LB{_\* Returned is the code:}}
+\L{\LB{_\*   code = 0: no more data;}}
+\L{\LB{_\*   code = 1: beginning of a locked section}}
+\L{\LB{_\*             (no data acquired, but we have skipped MIN\_INTO\_LOCK}}
+\L{\LB{_\*              minutes into the locked segment---WARNING.\,.\,. the data}}
+\L{\LB{_\*              array here will be filled with junk, which should be}}
+\L{\LB{_\*              ignored!)}}
+\L{\LB{_\*   code = 2: continuing a locked section (data acquired). \*\1\CE{}}}
+\L{\LB{\K{int}_\V{get\_chunk\_data\_frame}(\K{short}_\*\V{here},_\K{int}_\V{npoint},_\K{double}_\*\V{time},_\K{int}_\*\V{counter})}}
+\L{\LB{\{}}
+\L{\LB{__\K{static}_\K{float}_\V{srate}=\V{SRATE};}}
+\L{\LB{__\K{int}_\V{code},_\V{retcode};}}
+\L{\LB{__\K{static}_\K{int}_\V{private\_count}=0;}}
+\L{\LB{}}
+\L{\LB{__\V{private\_count}++;}}
+\L{\LB{__\V{fprintf}(\V{fp\_statistics},\S{}\"get\_chunk\_data\_frame:_getting_chunk_\%d\2n\"\SE{},\V{private\_count});}}
+\L{\LB{__}}
+\L{\LB{__\K{if}_(!\V{frame\_init})_\V{initialize\_frame}();}}
+\L{\LB{__}}
+\L{\LB{___________________________________\C{}\1\* we want.\,.\,. \*\1\CE{}}}
+\L{\LB{__\V{fgetinput}.\V{npoint}_=_\V{npoint};_______\C{}\1\* .\,.\,.npoints of data.\,.\,. \*\1\CE{}}}
+\L{\LB{__\V{fgetinput}.\V{locations}[0]_=_\V{here};___\C{}\1\* .\,.\,.in array here[\,].\,.\,. \*\1\CE{}}}
+\L{\LB{__\V{fgetinput}.\V{seek}_=_0;______________\C{}\1\* .\,.\,.no seek.\,.\,. \*\1\CE{}}}
+\L{\LB{__\V{fgetinput}.\V{inlock}_=_1;____________\C{}\1\* .\,.\,.only when in lock \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* get npoints of data \*\1\CE{}}}
+\L{\LB{__\V{retcode}_=_\V{code}_=_\V{fget\_ch}(\&\V{fgetoutput},\&\V{fgetinput});}}
+\L{\LB{__\V{fprintf}(\V{fp\_statistics},\S{}\"Current_frame_file:_\%s\2n\"\SE{},\V{fgetoutput}.\V{filename});}}
+\L{\LB{}}
+\L{\LB{__\K{while}_(\V{code}_==_1)_\{}}
+\L{\LB{____\C{}\1\* seek to a total of MIN\_INTO\_LOCK minutes into locked section .\,.\,. \*\1\CE{}}}
+\L{\LB{____\V{fgetinput}.\V{seek}_=_1;}}
+\L{\LB{____\C{}\1\* .\,.\,. we have already gone npoint, so we need to subtract this off .\,.\,. \*\1\CE{}}}
+\L{\LB{____\V{fgetinput}.\V{npoint}_=_\V{MIN\_INTO\_LOCK}\*60\*\V{srate}_\-_\V{npoint};}}
+\L{\LB{____\C{}\1\* .\,.\,. subtracting npoint is an inconvenience! \*\1\CE{}}}
+\L{\LB{____\K{if}_(\V{fgetinput}.\V{npoint}_\<_1)_\{}}
+\L{\LB{______\V{GR\_start\_error}(\S{}\"get\_chunk\_data\_frame()\"\SE{},\V{rcsid},\V{\_\_FILE\_\_},\V{\_\_LINE\_\_});}}
+\L{\LB{______\V{GR\_report\_error}(\S{}\"set_MIN\_INTO\_LOCK_to_a_larger_value\2n\"\SE{});}}
+\L{\LB{______\V{GR\_end\_error}();}}
+\L{\LB{______\V{abort}();}}
+\L{\LB{____\}}}
+\L{\LB{____\V{code}_=_\V{fget\_ch}(\&\V{fgetoutput},\&\V{fgetinput});}}
+\L{\LB{__\V{fprintf}(\V{fp\_statistics},\S{}\"Current_frame_file:_\%s\2n\"\SE{},\V{fgetoutput}.\V{filename});}}
+\L{\LB{}}
+\L{\LB{____\K{if}_(\V{code}_==_0)_\K{return}_0;_\C{}\1\* no more data \*\1\CE{}}}
+\L{\LB{____\K{if}_(\V{code}_==_1)_\{_\C{}\1\* oops.\,.\,. skiped into yet another locked section .\,.\,. \*\1\CE{}}}
+\L{\LB{______\C{}\1\* .\,.\,. so we need to skip forward the npoint offset we subtracted above \*\1\CE{}}}
+\L{\LB{______\V{fgetinput}.\V{npoint}_=_\V{npoint};}}
+\L{\LB{______\V{code}_=_\V{fget\_ch}(\&\V{fgetoutput},\&\V{fgetinput});}}
+\L{\LB{__\V{fprintf}(\V{fp\_statistics},\S{}\"Current_frame_file:_\%s\2n\"\SE{},\V{fgetoutput}.\V{filename});}}
+\L{\LB{}}
+\L{\LB{______\K{if}_(\V{code}_==_0)_\K{return}_0;}}
+\L{\LB{____\}}}
+\L{\LB{__\}}}
+\L{\LB{}}
+\L{\LB{__\V{lastlock}=\V{fgetoutput}.\V{lastlock};}}
+\L{\LB{__\V{discarded}=(\K{double})\V{fgetoutput}.\V{discarded}\1\V{srate};}}
+\L{\LB{__\*\V{time}_=_\V{fgetoutput}.\V{tstart};}}
+\L{\LB{__\*\V{counter}=\V{private\_count};}}
+\L{\LB{__\K{return}_\V{retcode};}}
+\L{\LB{\}}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* Routine to generate a chunk of simulated white noise.}}
+\L{\LB{_\* }}
+\L{\LB{_\* Input is the number of points in the chunk, npoint.}}
+\L{\LB{_\* }}
+\L{\LB{_\* Output is the data in the array here[0.\,.npoint-1]}}
+\L{\LB{_\* and the time, \*time, of the start of the data.}}
+\L{\LB{_\* }}
+\L{\LB{_\* Returned is the code:}}
+\L{\LB{_\*   code = 0: no more data;}}
+\L{\LB{_\*   code = 1: beginning of a locked section}}
+\L{\LB{_\*             (no data acquired, but we have skipped MIN\_INTO\_LOCK}}
+\L{\LB{_\*              minutes into the locked segment);}}
+\L{\LB{_\*   code = 2: continuing a locked section (data acquired). \*\1\CE{}}}
+\L{\LB{\K{int}_\V{get\_chunk\_data\_sim}(\K{short}_\*\V{here},_\K{int}_\V{npoint},_\K{double}_\*\V{time})}}
+\L{\LB{\{}}
+\L{\LB{__\K{float}_\V{ran2}(\K{long}_\*);}}
+\L{\LB{__\K{static}_\K{double}_\V{local\_time}=0,\V{srate}=\V{SRATE};}}
+\L{\LB{__\K{static}_\K{long}_\V{seed}=\-100;}}
+\L{\LB{__\K{int}_\V{m}=\V{npoint}\12;}}
+\L{\LB{__}}
+\L{\LB{__\K{if}_(\V{seed}_\<_0)_\{}}
+\L{\LB{____\V{ran2}(\&\V{seed});}}
+\L{\LB{____\K{return}_1;}}
+\L{\LB{__\}}}
+\L{\LB{__\V{local\_time}_+=_(\K{double})\V{npoint}\1\V{srate};}}
+\L{\LB{__\*\V{time}_=_\V{local\_time};}}
+\L{\LB{__\K{while}_(\V{m}\-\-_\>_0)_\{}}
+\L{\LB{____\K{float}_\V{x},\V{y},\V{rr},\V{fac};}}
+\L{\LB{____\K{do}_\{}}
+\L{\LB{______\V{x}_=_2\*\V{ran2}(\&\V{seed})_\-_1;}}
+\L{\LB{______\V{y}_=_2\*\V{ran2}(\&\V{seed})_\-_1;}}
+\L{\LB{______\V{rr}_=_\V{x}\*\V{x}_+_\V{y}\*\V{y};}}
+\L{\LB{____\}_\K{while}_(\V{rr}_\>_1_\|\,\|_\V{rr}_==_0);}}
+\L{\LB{____\V{fac}_=_\V{sqrt}(\-2\*\V{SIM\_VARIANCE}\*\V{log}(\V{rr})\1\V{rr});}}
+\L{\LB{____\*\V{here}++_=_\V{floor}(\V{fac}\*\V{x});}}
+\L{\LB{____\*\V{here}++_=_\V{floor}(\V{fac}\*\V{y});}}
+\L{\LB{__\}}}
+\L{\LB{__\K{return}_2;}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* Routine to compute the spectrum of a chunk of data.}}
+\L{\LB{_\* }}
+\L{\LB{_\* Input is the number of points of data, npoint,}}
+\L{\LB{_\* and the array of data, data[0.\,.npoint-1].}}
+\L{\LB{_\* }}
+\L{\LB{_\* Output is spectrum, spec[0.\,.npoint\12]. \*\1\CE{}}}
+\L{\LB{\K{void}_\V{get\_spectrum}(\K{short}_\*\V{data},_\K{float}_\*\V{spec},_\K{int}_\V{npoint})}}
+\L{\LB{\{}}
+\L{\LB{__\K{void}_\V{realft}(\K{float}_[\,],_\K{unsigned}_\K{long},_\K{int});}}
+\L{\LB{__\K{static}_\K{float}_\*\V{work}=\V{NULL},\*\V{win}=\V{NULL},\V{fac};}}
+\L{\LB{__\K{static}_\K{int}_\V{nkeep}=\-1;}}
+\L{\LB{__\K{int}_\V{i},\V{n}=\V{npoint},\V{m}=\V{npoint}\12;}}
+\L{\LB{__}}
+\L{\LB{__\K{if}_(\V{npoint}_!=_\V{nkeep})_\{}}
+\L{\LB{____\K{float}_\V{wss};}}
+\L{\LB{____\V{nkeep}_=_\V{npoint};}}
+\L{\LB{____\V{work}_=_\V{realloc}(\V{work},\V{npoint}\*\K{sizeof}(\K{float}));}}
+\L{\LB{____\K{if}_(\V{work}_==_\V{NULL})_\{}}
+\L{\LB{______\V{GR\_start\_error}(\S{}\"get\_spectrum()\"\SE{},\V{rcsid},\V{\_\_FILE\_\_},\V{\_\_LINE\_\_});}}
+\L{\LB{______\V{GR\_report\_error}(\S{}\"failed_to_allocate_\%d_floats\2n\"\SE{},\V{npoint});}}
+\L{\LB{______\V{GR\_end\_error}();}}
+\L{\LB{______\V{abort}();}}
+\L{\LB{____\}}}
+\L{\LB{____\V{win}_=_\V{realloc}(\V{win},\V{npoint}\*\K{sizeof}(\K{float}));}}
+\L{\LB{____\K{if}_(\V{win}_==_\V{NULL})_\{}}
+\L{\LB{______\V{GR\_start\_error}(\S{}\"get\_spectrum()\"\SE{},\V{rcsid},\V{\_\_FILE\_\_},\V{\_\_LINE\_\_});}}
+\L{\LB{______\V{GR\_report\_error}(\S{}\"failed_to_allocate_\%d_floats\2n\"\SE{},\V{npoint});}}
+\L{\LB{______\V{GR\_end\_error}();}}
+\L{\LB{______\V{abort}();}}
+\L{\LB{____\}}}
+\L{\LB{____\V{compute\_window}(\&\V{wss},\V{win},\V{npoint},\V{WINDOW});}}
+\L{\LB{____\V{fac}_=_2\1(\V{wss}\*\V{SRATE});}}
+\L{\LB{__\}}}
+\L{\LB{__\C{}\1\* copy data to workspace and apply window \*\1\CE{}}}
+\L{\LB{__\K{for}_(\V{i}=0;\V{i}\<\V{n};\V{i}++)_\V{work}[\V{i}]_=_\V{win}[\V{i}]\*\V{data}[\V{i}];}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* FFT workspace \*\1\CE{}}}
+\L{\LB{__\V{realft}(\V{work}\-1,\V{npoint},1);}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* DC and Nyquist terms \*\1\CE{}}}
+\L{\LB{__\V{spec}[0]_=_\V{fac}\*\V{work}[0];}}
+\L{\LB{__\V{spec}[\V{m}]_=_\V{fac}\*\V{work}[1];}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* other terms \*\1\CE{}}}
+\L{\LB{__\K{for}_(\V{i}=1;\V{i}\<\V{m};\V{i}++)_\{}}
+\L{\LB{____\K{int}_\V{ir}=\V{i}+\V{i},\V{ii}=\V{ir}+1;}}
+\L{\LB{____\K{float}_\V{re}=\V{work}[\V{ir}],\V{im}=\V{work}[\V{ii}];}}
+\L{\LB{____\V{spec}[\V{i}]_=_\V{fac}\*(\V{re}\*\V{re}_+_\V{im}\*\V{im});}}
+\L{\LB{__\}}}
+\L{\LB{__\K{return};}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* === Patrick Brady === Modified: 4 December 1998 === }}
+\L{\LB{_\*}}
+\L{\LB{_\* Routine to fill a chunk with data.}}
+\L{\LB{_\* }}
+\L{\LB{_\* Input is the number of points, npoint, in the chunk of data.}}
+\L{\LB{_\* }}
+\L{\LB{_\* Output is the struct chunk with}}
+\L{\LB{_\*   chunk.data[0.\,.npoint-1]: the data}}
+\L{\LB{_\*   chunk.spec[0.\,.npoint\12]: the power spectrum of the data}}
+\L{\LB{_\*   chunk.time: the time of the start of the data in the chunk}}
+\L{\LB{_\*   chunk.cont: a flag indicating if the data is continuous from the}}
+\L{\LB{_\*     last chunk filled (1) or not (0).}}
+\L{\LB{_\*   chunk.is\_gaussian: a flag to indicate if the data has outliers (0) or not (1)}}
+\L{\LB{_\* }}
+\L{\LB{_\* Returned is the code:}}
+\L{\LB{_\*   code = 0: no more data;}}
+\L{\LB{_\*   code = 1: beginning of a locked section}}
+\L{\LB{_\*             (no data acquired, but we have skipped MIN\_INTO\_LOCK}}
+\L{\LB{_\*              minutes into the locked segment);}}
+\L{\LB{_\*   code = 2: continuing a locked section (data acquired). \*\1\CE{}}}
+\L{\LB{\K{int}_\V{fill\_chunk}(\K{struct}_\V{Chunk}_\*\V{chunk},_\K{int}_\V{npoint})}}
+\L{\LB{\{}}
+\L{\LB{__\K{int}_\V{code};}}
+\L{\LB{__}}
+\L{\LB{\K{\#if}_(\V{DATA\_FORMAT}_==_0)}}
+\L{\LB{__\C{}\1\* old format data \*\1\CE{}}}
+\L{\LB{__\V{code}_=_\V{get\_chunk\_data\_old}(\V{chunk}\-\!\>\V{data},\V{npoint},\&\V{chunk}\-\!\>\V{time});}}
+\L{\LB{\K{\#elif}_(\V{DATA\_FORMAT}_==_1)}}
+\L{\LB{__\C{}\1\* frame format data \*\1\CE{}}}
+\L{\LB{__\V{code}_=_\V{get\_chunk\_data\_frame}(\V{chunk}\-\!\>\V{data},\V{npoint},\&\V{chunk}\-\!\>\V{time},\&\V{chunk}\-\!\>\V{counter});}}
+\L{\LB{\K{\#elif}_(\V{DATA\_FORMAT}_==_2)}}
+\L{\LB{__\C{}\1\* simulated data \*\1\CE{}}}
+\L{\LB{__\V{code}_=_\V{get\_chunk\_data\_sim}(\V{chunk}\-\!\>\V{data},\V{npoint},\&\V{chunk}\-\!\>\V{time});}}
+\L{\LB{\K{\#else}}}
+\L{\LB{__\C{}\1\* not a recognized request! \*\1\CE{}}}
+\L{\LB{__\V{GR\_start\_error}(\S{}\"fill\_chunk()\"\SE{},\V{rcsid},\V{\_\_FILE\_\_},\V{\_\_LINE\_\_});}}
+\L{\LB{__\V{GR\_report\_error}(\S{}\"unrecognized_DATA\_FORMAT_\%d\2n\"\SE{},\V{DATA\_FORMAT});}}
+\L{\LB{__\V{GR\_end\_error}();}}
+\L{\LB{__\V{abort}();}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}}
+\L{\LB{__\K{switch}_(\V{code})_\{}}
+\L{\LB{__\K{case}_0:_\C{}\1\* no more data \*\1\CE{}}}
+\L{\LB{______\K{return}_\V{code};}}
+\L{\LB{__\K{case}_1:_\C{}\1\* starting a new locked section \*\1\CE{}}}
+\L{\LB{______\V{chunk}\-\!\>\V{cont}_=_0;}}
+\L{\LB{______\K{break};}}
+\L{\LB{__\K{case}_2:_\C{}\1\* continuing a locked section \*\1\CE{}}}
+\L{\LB{______\V{chunk}\-\!\>\V{cont}_=_1;}}
+\L{\LB{______\K{break};}}
+\L{\LB{__\K{default}:}}
+\L{\LB{______\V{GR\_start\_error}(\S{}\"fill\_chunk()\"\SE{},\V{rcsid},\V{\_\_FILE\_\_},\V{\_\_LINE\_\_});}}
+\L{\LB{______\V{GR\_report\_error}(\S{}\"unrecognized_code_\%d\2n\"\SE{},\V{code});}}
+\L{\LB{______\V{GR\_end\_error}();}}
+\L{\LB{______\V{abort}();}}
+\L{\LB{__\}}}
+\L{\LB{}}
+\L{\LB{__\V{chunk}\-\!\>\V{is\_gaussian}=\V{is\_gaussian}(\V{chunk}\-\!\>\V{data},\V{npoint},\-2048,2047,0);}}
+\L{\LB{__\V{chunk}\-\!\>\V{used\_in\_spectrum}=0;_}}
+\L{\LB{__\V{get\_spectrum}(\V{chunk}\-\!\>\V{data},\V{chunk}\-\!\>\V{spec},\V{npoint});}}
+\L{\LB{__}}
+\L{\LB{__\K{return}_\V{code};}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* Bruce Allen, Modified Jan 18, 1998}}
+\L{\LB{___The new algorithm works as follows:}}
+\L{\LB{___(1) go through all the kk current chunks}}
+\L{\LB{___(2) Count the number which are outlier free}}
+\L{\LB{___(3) replace the oldest of the kk saved spectra with these ones}}
+\L{\LB{___(4) compute the average spectrum}}
+\L{\LB{___(5) return}}
+\L{\LB{}}
+\L{\LB{___Comment: the only place this routine might \"misbehave\" is at the start of}}
+\L{\LB{___a newly-calibrated section of data (if the calibration curve has significantly}}
+\L{\LB{___changed), or if the first kk segments of data all have}}
+\L{\LB{___outliers.}}
+\L{\LB{\*\1\CE{}}}
+\L{\LB{\K{void}_\V{average\_spectrum}(\K{struct}_\V{Chunk}_\*\V{chunk},_\K{int}_\V{kk},_\K{int}_\V{npoint},_\K{float}_\*\V{spec},_\K{int}_\V{new\_lock})}}
+\L{\LB{\{}}
+\L{\LB{____\K{static}_\K{int}_\V{num\_stored}=0,\V{oldest}=0;}}
+\L{\LB{____\K{static}_\K{float}_\*\V{stored\_spectras}=\V{NULL};}}
+\L{\LB{____\K{static}_\K{int}_\*\V{stored\_chunks}=\V{NULL};}}
+\L{\LB{____}}
+\L{\LB{____\K{float}_\V{factor};}}
+\L{\LB{____\K{int}_\V{i},\V{j},\V{m}=\V{npoint}\12;}}
+\L{\LB{____}}
+\L{\LB{________\C{}\1\* allocate memory if first time \*\1\CE{}}}
+\L{\LB{____\K{if}_(!\V{stored\_spectras})_}}
+\L{\LB{________\{}}
+\L{\LB{________\V{stored\_spectras}=(\K{float}_\*)\V{malloc}(\V{kk}\*\V{m}\*\K{sizeof}(\K{float}));}}
+\L{\LB{________\V{stored\_chunks}=(\K{int}_\*)\V{malloc}(\V{kk}\*\K{sizeof}(\K{int}));}}
+\L{\LB{________\}}}
+\L{\LB{____}}
+\L{\LB{________\C{}\1\* loop over outlier-free chunks not already used in spectrum \*\1\CE{}}}
+\L{\LB{____\K{for}_(\V{i}=0;\V{i}\<\V{kk};\V{i}++)}}
+\L{\LB{________\K{if}_(\V{chunk}[\V{i}].\V{is\_gaussian}_\&\&_!\V{chunk}[\V{i}].\V{used\_in\_spectrum})_}}
+\L{\LB{____________\{}}
+\L{\LB{________________\K{float}_\*\V{oldest\_spec};}}
+\L{\LB{____________________\C{}\1\* mark this spectrum as used \*\1\CE{}}}
+\L{\LB{________________\V{chunk}[\V{i}].\V{used\_in\_spectrum}=1;}}
+\L{\LB{____________________\C{}\1\* keep track of chunk being used to produce spectrum \*\1\CE{}}}
+\L{\LB{________________\V{stored\_chunks}[\V{oldest}]=\V{chunk}[\V{i}].\V{counter};}}
+\L{\LB{____________________\C{}\1\* copy outlier-free spectra to oldest saved spectra \*\1\CE{}}}
+\L{\LB{________________\V{oldest\_spec}=\V{stored\_spectras}+\V{oldest}\*\V{m};}}
+\L{\LB{________________\V{memcpy}((\K{void}_\*)(\V{oldest\_spec}),(\V{const}_\K{void}_\*)(\V{chunk}[\V{i}].\V{spec}),(\V{size\_t})\V{m}\*\K{sizeof}(\K{float}));}}
+\L{\LB{____________________\C{}\1\* make circular buffer point back if needed \*\1\CE{}}}
+\L{\LB{________________\V{oldest}=(\V{oldest}+1)\%\V{kk};}}
+\L{\LB{____________________\C{}\1\* increment number of stored spectra \*\1\CE{}}}
+\L{\LB{________________\K{if}_(\V{num\_stored}\<\V{kk})_\V{num\_stored}++;}}
+\L{\LB{____________________\C{}\1\* print some useful diagnostic information \*\1\CE{}}}
+\L{\LB{________________\V{fprintf}(\V{fp\_statistics},\S{}\"Incorporating_chunk_\%d_into_power_spectra\"\SE{},\V{chunk}[\V{i}].\V{counter});}}
+\L{\LB{________________\K{for}_(\V{j}=0;\V{j}\<\V{num\_stored}\-1;\V{j}++)}}
+\L{\LB{____________________\V{fprintf}(\V{fp\_statistics},\S{}\"_\%d\"\SE{},\V{stored\_chunks}[\V{j}]);}}
+\L{\LB{________________\V{fprintf}(\V{fp\_statistics},\S{}\"_\%d\2n\"\SE{},\V{stored\_chunks}[\V{num\_stored}\-1]);}}
+\L{\LB{____________\}}}
+\L{\LB{____}}
+\L{\LB{________\C{}\1\* check that we have SOMETHING stored! \*\1\CE{}}}
+\L{\LB{____\K{if}_(!\V{num\_stored})}}
+\L{\LB{________\{________}}
+\L{\LB{____________\V{fprintf}(\V{stderr},\S{}\"average\_spectrum:_no_outlier_free_data_to_compute_spectrum_with!\2n\"\SE{});}}
+\L{\LB{____________\V{fflush}(\V{stderr});}}
+\L{\LB{____________\V{abort}();}}
+\L{\LB{________\}}}
+\L{\LB{____}}
+\L{\LB{________\C{}\1\* Now compute the sum of the stored spectra \*\1\CE{}}}
+\L{\LB{____\V{clear}(\V{spec},\V{m},1);}}
+\L{\LB{____\K{for}_(\V{j}=0;\V{j}\<\V{num\_stored};\V{j}++)_}}
+\L{\LB{________\{}}
+\L{\LB{____________\K{float}_\*\V{current\_spec};}}
+\L{\LB{____________\V{current\_spec}=\V{stored\_spectras}+\V{j}\*\V{m};}}
+\L{\LB{____________\K{for}_(\V{i}=0;\V{i}\<\V{m};\V{i}++)}}
+\L{\LB{________________\V{spec}[\V{i}]+=\V{current\_spec}[\V{i}];}}
+\L{\LB{________\}}}
+\L{\LB{____}}
+\L{\LB{________\C{}\1\* Normalize to get average spectrum  \*\1\CE{}}}
+\L{\LB{____\V{factor}=1.0\1\V{num\_stored};}}
+\L{\LB{____\K{for}_(\V{i}=0;\V{i}\<\V{m};\V{i}++)}}
+\L{\LB{________\V{spec}[\V{i}]\*=\V{factor};}}
+\L{\LB{}}
+\L{\LB{________\C{}\1\* print out some information about which chunks are used \*\1\CE{}}}
+\L{\LB{___}}
+\L{\LB{____\K{return};}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* === Patrick Brady === Modified: 4 December 1998 ===}}
+\L{\LB{__}}
+\L{\LB{___Routine to average the spectra of several chunks of data.}}
+\L{\LB{___}}
+\L{\LB{___chunk: Input. The array of chunks}}
+\L{\LB{}}
+\L{\LB{___kk: Input. The number of chunks}}
+\L{\LB{}}
+\L{\LB{___npoint: Input. The number of points of data in each chunk}}
+\L{\LB{}}
+\L{\LB{___spec: Ouput. Pointer to the array of (npoint\12 +1) floats}}
+\L{\LB{}}
+\L{\LB{___new\_lock: Input. Flag to indicate if all the chunks are continuous (new\_lock=0)}}
+\L{\LB{_____________or if we have new locked data in the buffer (new\_lock=1).}}
+\L{\LB{}}
+\L{\LB{___Authors: Jolien Creighton}}
+\L{\LB{__}}
+\L{\LB{_\*\1\CE{}}}
+\L{\LB{\K{void}_\V{average\_spectrum\_brady}(\K{struct}_\V{Chunk}_\*\V{chunk},_\K{int}_\V{kk},_\K{int}_\V{npoint},_\K{float}_\*\V{spec},_\K{int}_\V{new\_lock})}}
+\L{\LB{\{}}
+\L{\LB{____\K{static}_\K{float}_\*\V{stored\_spec};}}
+\L{\LB{____\K{static}_\K{int}_\V{first}=1;}}
+\L{\LB{____\K{float}_\V{fac}=1\1(\K{float})\V{kk},\V{norm}=0;}}
+\L{\LB{____\K{int}_\V{i},\V{j},\V{m}=\V{npoint}\12;}}
+\L{\LB{____}}
+\L{\LB{____\K{if}_(\V{first})\{_\C{}\1\* Allocate memory the first time in \*\1\CE{}}}
+\L{\LB{________\V{stored\_spec}=(\K{float}_\*)\V{malloc}((\V{npoint}\12_+_1)\*\K{sizeof}(\K{float}));}}
+\L{\LB{________\V{clear}(\V{stored\_spec},\V{m},1);}}
+\L{\LB{________\V{first}=0;}}
+\L{\LB{____\}}}
+\L{\LB{________\C{}\1\* Note: ignore the Nyquist component for some reason.\,.\,.\,. \*\1\CE{}}}
+\L{\LB{________\C{}\1\* If the data is continuous .\,.\,. \*\1\CE{}}}
+\L{\LB{____\K{if}_(\V{new\_lock}==0)\{}}
+\L{\LB{________\V{clear}(\V{spec},\V{m},1);__________}}
+\L{\LB{________\K{for}_(\V{j}=0;\V{j}\<\V{kk};\V{j}++)\{}}
+\L{\LB{________________\C{}\1\* If data is outlier free .\,.\,. \*\1\CE{}}}
+\L{\LB{____________\K{if}_(\V{chunk}[\V{j}].\V{is\_gaussian})\{}}
+\L{\LB{____________________\C{}\1\* .\,.\,.\,.\,. add in spectrum from this chunk \*\1\CE{}}}
+\L{\LB{________________\V{norm}+=1;}}
+\L{\LB{________________\K{for}_(\V{i}=0;\V{i}\<\V{m};\V{i}++)}}
+\L{\LB{____________________\V{spec}[\V{i}]_+=_\V{chunk}[\V{j}].\V{spec}[\V{i}];__}}
+\L{\LB{____________\}}}
+\L{\LB{________\}}}
+\L{\LB{____________\C{}\1\* If all spectra have outliers .\,.\,. \*\1\CE{}}}
+\L{\LB{________\K{if}_(!\V{norm})\{}}
+\L{\LB{____________\V{GR\_start\_error}(\S{}\"average\_spectrum()\"\SE{},\V{rcsid},\V{\_\_FILE\_\_},\V{\_\_LINE\_\_});}}
+\L{\LB{____________\V{GR\_report\_error}(\S{}\"\%i_contiguous_chunks_with_outliers\2n\"\SE{},\V{kk});}}
+\L{\LB{____________\V{GR\_end\_error}();}}
+\L{\LB{________________\C{}\1\* return the spectrum computed previously \*\1\CE{}}}
+\L{\LB{____________\K{for}_(\V{i}=0;\V{i}\<\V{m};\V{i}++)_\V{spec}[\V{i}]_=_\V{stored\_spec}[\V{i}];_}}
+\L{\LB{________\}}}
+\L{\LB{____________\C{}\1\* otherwise .\,.\,. \*\1\CE{}}}
+\L{\LB{________\K{else}\{}}
+\L{\LB{____________\V{fac}=_(1\1\V{norm});}}
+\L{\LB{____________\K{for}_(\V{i}=0;\V{i}\<\V{m};\V{i}++)\{}}
+\L{\LB{________________\V{spec}[\V{i}]_\*=_\V{fac};_}\Tab{40}{_\C{}\1\* normalize the spectrum \*\1\CE{}}}
+\L{\LB{________________\V{stored\_spec}[\V{i}]=_\V{spec}[\V{i}];_\C{}\1\* keep this spectrum for when we encounter new locked data \*\1\CE{}}}
+\L{\LB{____________\}}}
+\L{\LB{________\}}}
+\L{\LB{____\}}}
+\L{\LB{________\C{}\1\* otherwise the data is not continuous \*\1\CE{}}}
+\L{\LB{____\K{else}_}}
+\L{\LB{________\K{for}_(\V{i}=0;\V{i}\<\V{m};\V{i}++)}}
+\L{\LB{____________\V{spec}[\V{i}]_=_\V{stored\_spec}[\V{i}];_\C{}\1\* return the spectrum computed previously \*\1\CE{}}}
+\L{\LB{____\K{return};}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* === Patrick Brady === 4 December 1998 ===}}
+\L{\LB{}}
+\L{\LB{___This function initialises the array of chunks,  and returns an}}
+\L{\LB{___integer code:}}
+\L{\LB{______code = 0: no more data;}}
+\L{\LB{______code = 2: continuing a locked section.}}
+\L{\LB{}}
+\L{\LB{___If it returns code = 1 something is wrong.}}
+\L{\LB{___}}
+\L{\LB{___The arguments are:}}
+\L{\LB{___}}
+\L{\LB{_____chunk: Output. The array of chunks.}}
+\L{\LB{}}
+\L{\LB{_____npoint: Input. The number of points in chunk.data[0.\,.npoint-1]}}
+\L{\LB{}}
+\L{\LB{_____chunks\_filled: Input. Number of chunks that are already filled.}}
+\L{\LB{}}
+\L{\LB{_____start\_filled: Input. First chunk with good data}}
+\L{\LB{}}
+\L{\LB{_____kk: Input: total number of chunks}}
+\L{\LB{}}
+\L{\LB{\*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{initialise\_chunks}(\K{struct}_\V{Chunk}_\*\V{chunk},_\K{int}_\V{npoint},_\K{int}_\V{chunks\_filled},_\K{int}_\V{start\_filled},_\K{int}_\V{kk})\{}}
+\L{\LB{____\K{int}_\V{i}=0,\V{code}=2;}}
+\L{\LB{____\K{float}_\V{srate}=\V{SRATE};}}
+\L{\LB{}}
+\L{\LB{____\K{while}_(\V{i}_\<_\V{chunks\_filled})\{}}
+\L{\LB{}\Tab{8}{\C{}\1\* copy the data \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{memcpy}((\K{void}_\*)\V{chunk}[\V{i}].\V{data},(\K{void}_\*)\V{chunk}[\V{start\_filled}+\V{i}].\V{data},(\V{size\_t})\V{npoint}\*\K{sizeof}(\K{short}));}\Tab{104}{}}
+\L{\LB{}\Tab{8}{\C{}\1\* copy the spectrum \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{memcpy}((\K{void}_\*)\V{chunk}[\V{i}].\V{spec},(\K{void}_\*)\V{chunk}[\V{start\_filled}+\V{i}].\V{spec},(\V{size\_t})(\V{npoint}\12+1)\*\K{sizeof}(\K{float}));}}
+\L{\LB{}\Tab{8}{\C{}\1\* and the time,  and continuity flag \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{chunk}[\V{i}].\V{time}=\V{chunk}[\V{start\_filled}+\V{i}].\V{time};}}
+\L{\LB{}\Tab{8}{\V{chunk}[\V{i}].\V{cont}=\V{chunk}[\V{start\_filled}+\V{i}].\V{cont};}}
+\L{\LB{____\V{chunk}[\V{i}].\V{counter}=\V{chunk}[\V{start\_filled}+\V{i}].\V{counter};}}
+\L{\LB{____\V{chunk}[\V{i}].\V{is\_gaussian}=\V{chunk}[\V{start\_filled}+\V{i}].\V{is\_gaussian};}}
+\L{\LB{____\V{chunk}[\V{i}].\V{used\_in\_spectrum}=\V{chunk}[\V{start\_filled}+\V{i}].\V{used\_in\_spectrum};}}
+\L{\LB{}\Tab{8}{\C{}\1\* increment the counter \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{i}++;}}
+\L{\LB{____\}}}
+\L{\LB{}}
+\L{\LB{____\K{while}_(\V{i}_\<_\V{kk})\{}}
+\L{\LB{}\Tab{8}{\V{code}_=_\V{fill\_chunk}(\V{chunk}_+_\V{i},\V{npoint});}}
+\L{\LB{}\Tab{8}{\K{switch}_(\V{code})_\{}}
+\L{\LB{}\Tab{8}{\K{case}_0:__\C{}\1\* no more data \*\1\CE{}}}
+\L{\LB{}\Tab{8}{____\K{return}_0;}}
+\L{\LB{}\Tab{8}{\K{case}_1:__\C{}\1\* entering new locked set \*\1\CE{}}}
+\L{\LB{}\Tab{8}{____\V{fprintf}(\V{fp\_statistics},\S{}\"Message_from_initialise\_chunks():\2n\"\SE{});}}
+\L{\LB{}\Tab{8}{____\V{fprintf}(\V{fp\_statistics},\S{}\"__Locked_section_was_too_short_to_get_\%i_chunks\2n\"\SE{},\V{kk});}}
+\L{\LB{}\Tab{8}{____\V{fflush}(\V{fp\_statistics});}}
+\L{\LB{}\Tab{8}{____\V{i}=_\-1;}}
+\L{\LB{}\Tab{8}{____\K{break};}}
+\L{\LB{}\Tab{8}{\K{case}_2:__\C{}\1\* continuing a locked set \*\1\CE{}}}
+\L{\LB{}\Tab{8}{____\K{break};}}
+\L{\LB{}\Tab{8}{\K{default}:_\C{}\1\* unrecognized code \*\1\CE{}}}
+\L{\LB{}\Tab{8}{____\V{GR\_start\_error}(\S{}\"initialise\_chunks()\"\SE{},\V{rcsid},\V{\_\_FILE\_\_},\V{\_\_LINE\_\_});}}
+\L{\LB{}\Tab{8}{____\V{GR\_report\_error}(\S{}\"unrecognized_code_\%d\2n\"\SE{},\V{code});}}
+\L{\LB{}\Tab{8}{____\V{GR\_end\_error}();}}
+\L{\LB{}\Tab{8}{____\V{abort}();}}
+\L{\LB{}\Tab{8}{\}}}
+\L{\LB{}\Tab{8}{\C{}\1\* increment the counter \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{i}++;}}
+\L{\LB{____\}}}
+\L{\LB{}}
+\L{\LB{____\C{}\1\* If we have a locked section \> MIN\_INTO\_LOCK + kk\*npoint\1srate \*\1\CE{}}}
+\L{\LB{____\K{if}(\V{code}==2)\{_}}
+\L{\LB{}\Tab{8}{\V{fprintf}(\V{fp\_statistics},\S{}\"Message_from_initialise\_chunks():\2n\"\SE{});}}
+\L{\LB{}\Tab{8}{\V{fprintf}(\V{fp\_statistics},\S{}\"__Last_locked_section_had_\%f_secs_of_data,_\"\SE{},\V{MIN\_INTO\_LOCK}\*60.0_+}}
+\L{\LB{}\Tab{16}{(\K{float})(\V{count\_chunks})\*\V{npoint}\1\V{srate});}}
+\L{\LB{}\Tab{8}{\V{fprintf}(\V{fp\_statistics},\S{}\"_and_\%f_secs_discarded\2n\"\SE{},\V{discarded}\-\V{lastdiscard});}}
+\L{\LB{}\Tab{8}{\V{lastdiscard}=\V{discarded};}}
+\L{\LB{}\Tab{8}{\V{count\_locked}++;}}
+\L{\LB{}\Tab{8}{\V{count\_chunks}=\V{kk};}}
+\L{\LB{}\Tab{8}{\V{count\_tinlock}+=(\V{MIN\_INTO\_LOCK}\*60.0_+_(\K{double})(\V{kk}\*\V{npoint})\1\V{srate});}}
+\L{\LB{}\Tab{8}{\V{fprintf}(\V{fp\_statistics},\S{}\"__Starting_locked_section_\%i_at_time_\%f_with_segment_\%d\2n\"\SE{},\V{count\_locked},\V{lastlock},\V{count\_segments});}}
+\L{\LB{}\Tab{8}{\V{fflush}(\V{fp\_statistics});_}}
+\L{\LB{____\}_}}
+\L{\LB{}}
+\L{\LB{____\K{return}_\V{code};}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* === Patrick Brady === Modified: 4 December 1998 ===}}
+\L{\LB{}}
+\L{\LB{___This function gets more data for the binary\_search code.   It returns an}}
+\L{\LB{___integer code:}}
+\L{\LB{______code = 0: no more data;}}
+\L{\LB{______code = 1: beginning of (well.\,.\,. MIN\_INTO\_LOCK minutes into)}}
+\L{\LB{________________a locked section of data}}
+\L{\LB{______code = 2: continuing a locked section.}}
+\L{\LB{___}}
+\L{\LB{___The arguments are:}}
+\L{\LB{___}}
+\L{\LB{_____need: Input.   The number of points to skip ahead between calls.}}
+\L{\LB{}}
+\L{\LB{_____data: Ouput.   The IFO\_DMRO is returned in this array}}
+\L{\LB{}}
+\L{\LB{_____spec: Output.  The average spectrum is returned in spec[0.\,.npoint\12]}}
+\L{\LB{}}
+\L{\LB{_____\*time: Output. Time at the start of the data}}
+\L{\LB{}}
+\L{\LB{___Authors:  Jolien Creighton.}}
+\L{\LB{___}}
+\L{\LB{\*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{get\_more\_data}(\K{int}_\V{need},_\K{short}_\V{data}[\,],_\K{float}_\V{spec}[\,],_\K{float}_\V{response}[\,],}}
+\L{\LB{__________________\K{double}_\*\V{time})}}
+\L{\LB{\{}}
+\L{\LB{__\K{static}_\K{short}_\*\V{buffer};______________\C{}\1\* pointer to the beginning of the buffered data      \*\1\CE{}}}
+\L{\LB{__\K{static}_\K{short}_\*\V{end\_buffer};__________\C{}\1\* pointer to the end of the buffered data            \*\1\CE{}}}
+\L{\LB{__\K{static}_\K{short}_\*\V{here};________________\C{}\1\* pointer to the position of the data to return next \*\1\CE{}}}
+\L{\LB{__\K{static}_\K{struct}_\V{Chunk}_\*\V{chunk};________\C{}\1\* buffered data also stored in chunks                \*\1\CE{}}}
+\L{\LB{__\K{static}_\K{int}_\V{lastfill\_chunkNumber}=\-1;\C{}\1\* last chunk that was filled with data               \*\1\CE{}}}
+\L{\LB{__\K{static}_\K{int}_\V{first}=1,\V{npoint}=\V{NPOINT},\V{chunk\_needed}=0,\V{here\_position}=0,\V{new\_lock}=0;}}
+\L{\LB{__\V{const}_\K{int}_\V{kk}=8,\V{k}=4;________________\C{}\1\* kk is the (even) number of chunks; k is half of kk \*\1\CE{}}}
+\L{\LB{__\K{int}_\V{here\_chunkNumber}=0,\V{out\_code}=2;_\C{}\1\* chunk that here points to,  and the return code    \*\1\CE{}}}
+\L{\LB{__}}
+\L{\LB{__\K{if}_(\V{first})_\{\C{}\1\* on first call \*\1\CE{}}}
+\L{\LB{____\K{int}_\V{i};}}
+\L{\LB{____\V{first}_=_0;}}
+\L{\LB{____\C{}\1\* Open the file to record the statistics of the run \*\1\CE{}}}
+\L{\LB{____\V{fp\_statistics}_=_\V{grasp\_open}(\S{}\"GRASP\_MFPATH\"\SE{},\S{}\"run.stats\"\SE{},\S{}\"w\"\SE{});}}
+\L{\LB{____\V{count\_chunks}=\V{count\_locked}=\V{count\_segments}=0;}}
+\L{\LB{____\V{count\_tinlock}=0.0;}}
+\L{\LB{____\C{}\1\* allocate memory to the buffer: extra npoints is to insure continuity in the data \*\1\CE{}}}
+\L{\LB{____\V{here}_=_\V{buffer}_=_(\K{short}_\*)\V{malloc}((\V{kk}_+_1)\*\V{npoint}\*\K{sizeof}(\K{short}));}}
+\L{\LB{____\C{}\1\* end\_buffer points to the beginning of the duplicated data at the end of the buffer \*\1\CE{}}}
+\L{\LB{____\V{end\_buffer}_=_\V{buffer}_+_\V{kk}\*\V{npoint};}}
+\L{\LB{____\C{}\1\* allocate memory for the chunks of data \*\1\CE{}}}
+\L{\LB{____\V{chunk}_=_(\K{struct}_\V{Chunk}_\*)\V{malloc}(\V{kk}\*\K{sizeof}(\K{struct}_\V{Chunk}));}}
+\L{\LB{____\K{for}_(\V{i}=0;\V{i}\<\V{kk};\V{i}++)_\{__\C{}\1\* partition the buffered data into chunks \*\1\CE{}}}
+\L{\LB{______\V{chunk}[\V{i}].\V{data}_=_\V{buffer}_+_\V{i}\*\V{npoint};}}
+\L{\LB{______\V{chunk}[\V{i}].\V{spec}_=_(\K{float}_\*)\V{malloc}((\V{npoint}\12_+_1)\*\K{sizeof}(\K{float}));}}
+\L{\LB{____\}}}
+\L{\LB{____\C{}\1\* fill the chunks with data \*\1\CE{}}}
+\L{\LB{____\K{if}(!(\V{initialise\_chunks}(\V{chunk},\V{npoint},0,0,\V{kk})))_\K{return}_0;}}
+\L{\LB{__\}_}}
+\L{\LB{__\K{else}_\{\C{}\1\* on other calls \*\1\CE{}}}
+\L{\LB{______\V{here}_+=_\V{need};____________\C{}\1\* advance here by the needed amount of data       \*\1\CE{}}}
+\L{\LB{______\V{chunk\_needed}_+=_\V{need};____\C{}\1\* increment flag for getting another chunk        \*\1\CE{}}}
+\L{\LB{______\V{here\_position}_+=_\V{need};___\C{}\1\* increment counter to position of here in buffer \*\1\CE{}}}
+\L{\LB{______\V{here\_chunkNumber}_=_(\V{here\_position}\1\V{npoint})\%\V{kk};_\C{}\1\* chunk that here points to  \*\1\CE{}}}
+\L{\LB{__\}}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* If here is in duplicated data,  move to equivalent place at start of buffer \*\1\CE{}}}
+\L{\LB{__\K{if}_(_(\V{here\_position}\1\V{npoint})_==_\V{kk}_)\{}}
+\L{\LB{______\V{here\_position}_=_\V{here\_position}\%\V{npoint};}}
+\L{\LB{______\V{here}_=_\V{buffer}_+_\V{here\_position};}}
+\L{\LB{__\}}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* Does next chunk contain continuous data? \*\1\CE{}}}
+\L{\LB{__\K{if}(\V{here\_position}\%\V{npoint}_\>_0)\{}}
+\L{\LB{______\K{int}_\V{next\_chunk}=(\V{here\_chunkNumber}_+_1)\%\V{kk};}}
+\L{\LB{______\C{}\1\* If not .\,.\,.\,.\,. \*\1\CE{}}}
+\L{\LB{______\K{if}_(\V{chunk}[\V{next\_chunk}].\V{cont}_==_0_\&\&_\V{new\_lock}_==_1)\{}}
+\L{\LB{}\Tab{8}{__\K{int}_\V{code};}}
+\L{\LB{}\Tab{8}{__\V{code}_=_\V{initialise\_chunks}(\V{chunk},\V{npoint},0,0,\V{kk});}}
+\L{\LB{}\Tab{8}{__\K{switch}_(\V{code})_\{}}
+\L{\LB{}\Tab{8}{__\K{case}_0:__\C{}\1\* no more data \*\1\CE{}}}
+\L{\LB{}\Tab{8}{______\K{return}_0;}}
+\L{\LB{}\Tab{8}{__\K{case}_2:__\C{}\1\* continuing a locked set \*\1\CE{}}}
+\L{\LB{}\Tab{8}{______\K{break};}}
+\L{\LB{}\Tab{8}{__\K{default}:_\C{}\1\* unrecognized code \*\1\CE{}}}
+\L{\LB{}\Tab{8}{______\V{GR\_start\_error}(\S{}\"get\_more\_data()\"\SE{},\V{rcsid},\V{\_\_FILE\_\_},\V{\_\_LINE\_\_});}}
+\L{\LB{}\Tab{8}{______\V{GR\_report\_error}(\S{}\"Should_never_get_code_\%d_here\2n\"\SE{},\V{code});}}
+\L{\LB{}\Tab{8}{______\V{GR\_end\_error}();}}
+\L{\LB{}\Tab{8}{______\V{abort}();}}
+\L{\LB{}\Tab{8}{__\}}}
+\L{\LB{}\Tab{8}{__\C{}\1\* PATRICK:  check this with Jolien and Bruce.  Does the calling routine need }}
+\L{\LB{}\Tab{8}{_____to know about this?   Or should it be told code=2?}}
+\L{\LB{}\Tab{8}{__\*\1\CE{}}}
+\L{\LB{}\Tab{8}{__\V{out\_code}=1;________________\C{}\1\* let calling routine know this is new locked data \*\1\CE{}}}
+\L{\LB{}\Tab{8}{__\V{here}=\V{buffer};_______________\C{}\1\* point here to start of buffer                    \*\1\CE{}_}}
+\L{\LB{}\Tab{8}{__\V{chunk\_needed}=\V{here\_position}=\V{here\_chunkNumber}=\V{new\_lock}=0;__\C{}\1\* Reset all counters \*\1\CE{}}}
+\L{\LB{__________\V{lastfill\_chunkNumber}=\-1;___\C{}\1\* fill buffer from the beginning                   \*\1\CE{}}}
+\L{\LB{______\}}}
+\L{\LB{__\}}}
+\L{\LB{______}}
+\L{\LB{__\C{}\1\* If we need more data,  and the last call did not return a new locked chunk \*\1\CE{}}}
+\L{\LB{__\K{if}(_\V{chunk\_needed}_\>_\V{k}\*\V{npoint}_\&\&_\V{new\_lock}_==_0)\{}}
+\L{\LB{______\K{int}_\V{code};}}
+\L{\LB{______\V{chunk\_needed}_\-=_\V{npoint};}}
+\L{\LB{______\C{}\1\* advance lastfill\_chunkNumber (modulo kk).\,.\,. \*\1\CE{}}}
+\L{\LB{______\V{lastfill\_chunkNumber}_=_(\V{lastfill\_chunkNumber}_+_1)_\%_\V{kk};}}
+\L{\LB{______\C{}\1\* .\,.\,.and fill the data in the chunk \*\1\CE{}}}
+\L{\LB{______\V{code}_=_\V{fill\_chunk}(\V{chunk}_+_\V{lastfill\_chunkNumber},\V{npoint});}}
+\L{\LB{______\K{switch}_(\V{code})_\{}}
+\L{\LB{______\K{case}_0:__\C{}\1\* no more data \*\1\CE{}}}
+\L{\LB{}\Tab{8}{__\K{return}_0;}}
+\L{\LB{______\K{case}_1:__\C{}\1\* entering new locked set \*\1\CE{}}}
+\L{\LB{}\Tab{8}{__\V{new\_lock}_=_1;}}
+\L{\LB{}\Tab{8}{__\K{break};}}
+\L{\LB{______\K{case}_2:__\C{}\1\* continuing a locked set \*\1\CE{}}}
+\L{\LB{}\Tab{8}{__\V{count\_chunks}++;}}
+\L{\LB{}\Tab{8}{__\V{count\_tinlock}+=((\K{double})\V{npoint}\1\V{SRATE});}}
+\L{\LB{}\Tab{8}{__\K{break};}}
+\L{\LB{______\K{default}:_\C{}\1\* unrecognized code \*\1\CE{}}}
+\L{\LB{}\Tab{8}{__\V{GR\_start\_error}(\S{}\"get\_more\_data()\"\SE{},\V{rcsid},\V{\_\_FILE\_\_},\V{\_\_LINE\_\_});}}
+\L{\LB{}\Tab{8}{__\V{GR\_report\_error}(\S{}\"unrecognized_code_\%d\2n\"\SE{},\V{code});}}
+\L{\LB{}\Tab{8}{__\V{GR\_end\_error}();}}
+\L{\LB{}\Tab{8}{__\V{abort}();}}
+\L{\LB{______\}}}
+\L{\LB{______\C{}\1\* If data was put at beginning of buffer \*\1\CE{}}}
+\L{\LB{______\K{if}_(\V{lastfill\_chunkNumber}_==_0)_}}
+\L{\LB{}\Tab{8}{__\C{}\1\* place a copy of it at the end to maintain continuity \*\1\CE{}}}
+\L{\LB{}\Tab{8}{__\V{memcpy}((\K{void}_\*)\V{end\_buffer},(\K{void}_\*)\V{buffer},(\V{size\_t})\V{npoint}\*\K{sizeof}(\K{short}));}}
+\L{\LB{__\}}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* compute the average spectrum for the kk chunks of buffered data \*\1\CE{}}}
+\L{\LB{__\V{average\_spectrum}(\V{chunk},\V{kk},\V{npoint},\V{spec},\V{new\_lock});}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* recalibrate (response only modified if needed) \*\1\CE{}}}
+\L{\LB{__\V{recalibrate}(\V{response},\V{npoint});}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* the time of the returned data \*\1\CE{}}}
+\L{\LB{__\*\V{time}_=_\V{chunk}[\V{here\_chunkNumber}].\V{time}_+_(\K{double})(\V{here\_position}\%\V{npoint})\1\V{SRATE};}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* copy the data to the returned array. \*\1\CE{}}}
+\L{\LB{__\V{memcpy}((\K{void}_\*)\V{data},(\K{void}_\*)\V{here},(\V{size\_t})\V{npoint}\*\K{sizeof}(\K{short}));}}
+\L{\LB{}}
+\L{\LB{__\V{count\_segments}++;}}
+\L{\LB{__\V{fprintf}(\V{fp\_statistics},\S{}\"Returning_segment_\%d,_based_on_chunks\"\SE{},\V{count\_segments});}}
+\L{\LB{__\{_\K{int}_\V{i};}}
+\L{\LB{__\K{for}_(\V{i}=0;\V{i}\<\V{kk}\-1;\V{i}++)}}
+\L{\LB{______\V{fprintf}(\V{fp\_statistics},\S{}\"_\%d\"\SE{},\V{chunk}[\V{i}].\V{counter});}}
+\L{\LB{__\}}}
+\L{\LB{__\V{fprintf}(\V{fp\_statistics},\S{}\"_\%d\2n\"\SE{},\V{chunk}[\V{kk}\-1].\V{counter});}}
+\L{\LB{__}}
+\L{\LB{__\K{return}_\V{out\_code};}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* global variables for passing data from get\_calibrated\_data() \*\1\CE{}}}
+\L{\LB{\K{extern}_\K{double}_\V{datastart};}}
+\L{\LB{\K{extern}_\K{float}_\*\V{n\_inv\_noise},\*\V{htilde},\*\V{pow\_renorm},\V{srate};}}
+\L{\LB{\K{extern}_\K{int}_\V{npoint},\V{new\_lock},\V{gauss\_test};}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{get\_calibrated\_data}()}}
+\L{\LB{\{}}
+\L{\LB{__\K{void}_\V{realft}(\K{float}_[\,],_\K{unsigned}_\K{long},_\K{int});}}
+\L{\LB{\K{\#if}(\V{INSERT\_CHIRP})}}
+\L{\LB{__\K{void}_\V{ins\_chirp}(\K{int});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{__}}
+\L{\LB{__\K{static}_\K{float}_\*\V{work},\*\V{spec},\*\V{response},\*\V{ave\_spec};}}
+\L{\LB{__\K{static}_\K{short}_\*\V{data};}}
+\L{\LB{__\K{static}_\K{int}_\V{first}=1,\V{npoint}=\V{NPOINT},\V{num\_sent}=0;}}
+\L{\LB{__\K{double}_\V{fac}=(\K{double})\V{npoint}\*\V{SRATE};}}
+\L{\LB{__\K{int}_\V{i},\V{cut},\V{code},\V{need}=\V{npoint}\-(\V{POSTSAFETY}+\V{PRESAFETY});}}
+\L{\LB{__\K{static}_\K{int}_\V{nomoredata}=0;}}
+\L{\LB{__}}
+\L{\LB{__\K{if}_(\V{first})_\{}}
+\L{\LB{____\V{first}_=_0;}}
+\L{\LB{____\V{data}_=_(\K{short}_\*)\V{malloc}(\V{npoint}\*\K{sizeof}(\K{short}));}}
+\L{\LB{____\V{work}_=_(\K{float}_\*)\V{malloc}(\V{npoint}\*\K{sizeof}(\K{float}));}}
+\L{\LB{____\V{spec}_=_(\K{float}_\*)\V{malloc}((\V{npoint}\12_+_1)\*\K{sizeof}(\K{float}));}}
+\L{\LB{____\V{ave\_spec}_=_(\K{float}_\*)\V{malloc}((\V{npoint}\12_+_1)\*\K{sizeof}(\K{float}));}}
+\L{\LB{____\V{response}_=_(\K{float}_\*)\V{malloc}((\V{npoint}+2)\*\K{sizeof}(\K{float}));}}
+\L{\LB{____\K{if}_(\V{data}_==_\V{NULL}_\|\,\|_\V{work}_==_\V{NULL}_\|\,\|_\V{spec}_==_\V{NULL}}}
+\L{\LB{}\Tab{8}{\|\,\|_\V{ave\_spec}_==_\V{NULL}_\|\,\|_\V{response}_==_\V{NULL}_)_\{}}
+\L{\LB{______\V{GR\_start\_error}(\S{}\"get\_calibrated\_data()\"\SE{},\V{rcsid},\V{\_\_FILE\_\_},\V{\_\_LINE\_\_});}}
+\L{\LB{______\V{GR\_report\_error}(\S{}\"could_not_allocate_memory\2n\"\SE{});}}
+\L{\LB{______\V{GR\_end\_error}();}}
+\L{\LB{______\V{abort}();}}
+\L{\LB{____\}}}
+\L{\LB{__\}}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* return 0 if the required number of segments (or more!) have been sent \*\1\CE{}}}
+\L{\LB{__\C{}\1\*  fprintf(stderr,\"Just sent segment number \%d\2n\",num\_sent); \*\1\CE{}}}
+\L{\LB{__\K{if}_((\V{num\_sent}++)\>=\V{DATA\_SEGMENTS})_\K{return}_0;}}
+\L{\LB{__\K{if}_(\V{nomoredata})_\K{return}_0;}}
+\L{\LB{__}}
+\L{\LB{__\V{code}_=_\V{get\_more\_data}(\V{need},\V{data},\V{ave\_spec},\V{response},\&\V{datastart});}}
+\L{\LB{}}
+\L{\LB{__\K{switch}_(\V{code})_\{}}
+\L{\LB{__\K{case}_0:}}
+\L{\LB{______\V{fprintf}(\V{fp\_statistics},\S{}\"Message_from_get\_calibrated\_data():\2n\"\SE{});}}
+\L{\LB{______\V{fprintf}(\V{fp\_statistics},\S{}\"__Last_locked_section_had_\%f_secs_of_data,_\"\SE{},\V{MIN\_INTO\_LOCK}\*60.0_+}}
+\L{\LB{}\Tab{8}{______(\K{float})(\V{count\_chunks})\*\V{npoint}\1\V{srate});}}
+\L{\LB{______\V{fprintf}(\V{fp\_statistics},\S{}\"_and_\%f_secs_discarded\2n\"\SE{},\V{discarded}\-\V{lastdiscard});}}
+\L{\LB{______\V{fprintf}(\V{fp\_statistics},\S{}\"No_more_data\2n\"\SE{});}}
+\L{\LB{______\V{fprintf}(\V{fp\_statistics},\S{}\"__Total_locked_data_=_\%f_secs,_acquired_lock_\%i_times,_\"\SE{},}}
+\L{\LB{}\Tab{8}{______\V{count\_tinlock},\V{count\_locked});}}
+\L{\LB{______\V{fprintf}(\V{fp\_statistics},\S{}\"_and_analyzed_\%i_segments\2n\"\SE{},\V{count\_segments});}}
+\L{\LB{______\V{fflush}(\V{fp\_statistics});_}}
+\L{\LB{______\V{nomoredata}=1;}}
+\L{\LB{______\K{return}_0;}}
+\L{\LB{__\K{case}_1:}}
+\L{\LB{______\V{new\_lock}_=_1;}}
+\L{\LB{______\K{break};}}
+\L{\LB{__\K{case}_2:}}
+\L{\LB{______\V{new\_lock}_=_0;}}
+\L{\LB{______\K{break};}}
+\L{\LB{__\K{default}:}}
+\L{\LB{______\V{GR\_start\_error}(\S{}\"get\_calibrated\_data()\"\SE{},\V{rcsid},\V{\_\_FILE\_\_},\V{\_\_LINE\_\_});}}
+\L{\LB{______\V{GR\_report\_error}(\S{}\"unrecognized_code_\%d\2n\"\SE{},\V{code});}}
+\L{\LB{______\V{GR\_end\_error}();}}
+\L{\LB{______\V{abort}();}}
+\L{\LB{__\}}}
+\L{\LB{__}}
+\L{\LB{__\K{for}_(\V{i}=0;\V{i}\<\V{npoint};\V{i}++)_\V{work}[\V{i}]_=_\V{data}[\V{i}];}}
+\L{\LB{__\V{realft}(\V{work}\-1,\V{npoint},1);}}
+\L{\LB{\K{\#if}_(\V{RANDOMIZE})}}
+\L{\LB{__\C{}\1\* do everything BUT DC and Nyquist \*\1\CE{}}}
+\L{\LB{__\K{for}_(\V{i}=1;\V{i}\<\V{npoint}\12;\V{i}++)_\{}}
+\L{\LB{}\Tab{8}{\K{int}_\V{ir}=\V{i}+\V{i},\V{ii}=\V{ir}+1;}}
+\L{\LB{}\Tab{8}{\K{double}_\V{mag}=\V{sqrt}(\V{work}[\V{ir}]\*\V{work}[\V{ir}]+\V{work}[\V{ii}]\*\V{work}[\V{ii}]);}}
+\L{\LB{}\Tab{8}{\K{float}_\V{phase}=2.0\*\V{M\_PI}\*\V{ran2}(\&\V{randomize});}}
+\L{\LB{}\Tab{8}{\V{work}[\V{ir}]=\V{mag}\*\V{cos}(\V{phase});}}
+\L{\LB{}\Tab{8}{\V{work}[\V{ii}]=\V{mag}\*\V{sin}(\V{phase});}}
+\L{\LB{__\}}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{__\V{product}(\V{htilde},\V{work},\V{response},\V{npoint}\12);}}
+\L{\LB{\K{\#if}(\V{INSERT\_CHIRP})}}
+\L{\LB{__\C{}\1\* insert a chirrp if desired \*\1\CE{}}}
+\L{\LB{__\V{ins\_chirp}(\V{num\_sent});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* lower cutoff frequency \*\1\CE{}}}
+\L{\LB{__\V{cut}_=_\V{npoint}\*\V{FLO}\1\V{SRATE};}}
+\L{\LB{__\K{if}_(\V{cut}\<1)_\V{cut}_=_1;}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* set n\_inv\_noise to zero at low frequencies and Nyquist \*\1\CE{}}}
+\L{\LB{__\V{n\_inv\_noise}[0]_=_0;}}
+\L{\LB{__\V{n\_inv\_noise}[\V{npoint}\12]_=_0;}}
+\L{\LB{__\K{for}_(\V{i}=1;\V{i}\<\V{cut};\V{i}++)_\V{n\_inv\_noise}[\V{i}]_=_0;}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* compute remaining n\_inv\_noise elements \*\1\CE{}}}
+\L{\LB{__\K{for}_(\V{i}=\V{cut};\V{i}\<\V{npoint}\12;\V{i}++)_\{}}
+\L{\LB{____\K{int}_\V{ir}=\V{i}+\V{i},\V{ii}=\V{ir}+1;}}
+\L{\LB{____\K{double}_\V{re}=\V{response}[\V{ir}],\V{im}=\V{response}[\V{ii}],\V{tmp}=\V{ave\_spec}[\V{i}];}}
+\L{\LB{\K{\#if}_(\V{NORM\_CF})}}
+\L{\LB{____\V{n\_inv\_noise}[\V{i}]_=_4.0\1(\V{fac}\*\V{tmp}\*(\V{re}\*\V{re}_+_\V{im}\*\V{im}));}}
+\L{\LB{\K{\#else}}}
+\L{\LB{____\V{n\_inv\_noise}[\V{i}]_=_2.0\1(\V{fac}\*\V{tmp}\*(\V{re}\*\V{re}_+_\V{im}\*\V{im}));}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{__\}}}
+\L{\LB{__}}
+\L{\LB{\K{\#}_\K{if}_(\V{SPEC\_TRUNC}_\>_0)_\C{}\1\* truncate time-domain version of n\_inv\_noise[\,]   \*\1\CE{}}}
+\L{\LB{__\{}}
+\L{\LB{____\K{float}_\V{out0},\V{norm}_=_2\1(\K{float})\V{npoint};_______\C{}\1\* normalization factor for iFFT \*\1\CE{}}}
+\L{\LB{____\K{int}_\V{spec\_zero}=(\V{SPEC\_TRUNC}\12);____________\C{}\1\* where to start zeroing        \*\1\CE{}}}
+\L{\LB{____\K{for}(\V{i}=0;\V{i}\<\V{npoint};\V{i}++)_\V{work}[\V{i}]=0;_________\C{}\1\* clear out work array          \*\1\CE{}}}
+\L{\LB{____\K{for}(\V{i}=0;\V{i}\<\V{npoint}\12;\V{i}++)_\V{work}[\V{i}+\V{i}]=\V{sqrt}(\V{n\_inv\_noise}[\V{i}]);_\C{}\1\* fill the array \*\1\CE{}}}
+\L{\LB{____\V{realft}(\V{work}\-1,\V{npoint},\-1);________________\C{}\1\* iFFT it                       \*\1\CE{}}}
+\L{\LB{____\K{for}(\V{i}=\V{spec\_zero};\V{i}\<\V{npoint}\-\V{spec\_zero};\V{i}++)_\V{work}[\V{i}]=0;_\C{}\1\* truncate work[\,]     \*\1\CE{}}}
+\L{\LB{____\V{realft}(\V{work}\-1,\V{npoint},1);_________________\C{}\1\* FFT to freq domain            \*\1\CE{}}}
+\L{\LB{____\K{for}(\V{i}=0;\V{i}\<\V{npoint}\12;\V{i}++)\{}}
+\L{\LB{}\Tab{8}{\V{out0}=\V{norm}\*\V{work}[\V{i}+\V{i}];_______________\C{}\1\* reconstruct n\_inv\_noise[\,]     \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{n\_inv\_noise}[\V{i}]=\V{out0}\*\V{out0};}}
+\L{\LB{____\}}}
+\L{\LB{____\K{if}_((\V{cut}_=_\V{npoint}\*\V{FLO}\1\V{SRATE})_\<_1)_\V{cut}_=_1;_\C{}\1\* low-frequency cutoff        \*\1\CE{}}}
+\L{\LB{____\K{for}_(\V{i}=0;\V{i}\<\V{cut};\V{i}++)_\V{n\_inv\_noise}[\V{i}]=0.0;_\C{}\1\* clear low-frequency components \*\1\CE{}}}
+\L{\LB{____\V{n\_inv\_noise}[\V{npoint}\12]_=_0;________\C{}\1\* make absolutely sure Nyquist is zero \*\1\CE{}}}
+\L{\LB{__\}}}
+\L{\LB{\K{\#}_\K{endif}}}
+\L{\LB{}}
+\L{\LB{\K{\#if}_(\V{REMOVE\_LINE\_BINS})}}
+\L{\LB{__\{_}}
+\L{\LB{____\K{int}_\V{harmonic};}}
+\L{\LB{____\K{float}_\V{freq};}}
+\L{\LB{____\C{}\1\* step through all frequency harmonics of 60 Hz. Note: freq=(srate\*i)\1npoint  \*\1\CE{}}}
+\L{\LB{____\K{for}_(\V{harmonic}=1;\V{harmonic}\<85;\V{harmonic}++)_\{}}
+\L{\LB{______\K{float}_\V{freqmin},\V{freqmax};}}
+\L{\LB{______\C{}\1\* find the freq bins +- 0.5 N Hz above\1below center \*\1\CE{}}}
+\L{\LB{______\V{freqmin}=\V{harmonic}\*59.5;}}
+\L{\LB{______\V{freqmax}=\V{harmonic}\*60.5;}}
+\L{\LB{______\V{nullout}(\V{freqmin},\V{freqmax},\V{npoint},\V{srate},\V{n\_inv\_noise});}}
+\L{\LB{____\}}}
+\L{\LB{____\C{}\1\* Now do the same for the violin resonances \& other lines: \*\1\CE{}}}
+\L{\LB{____\C{}\1\* Bruce\'s list \*\1\CE{}}}
+\L{\LB{____\V{nullout}(__79.0,___81.0,\V{npoint},\V{srate},\V{n\_inv\_noise});}}
+\L{\LB{____\V{nullout}(_109.0,__110.0,\V{npoint},\V{srate},\V{n\_inv\_noise});}}
+\L{\LB{____\V{nullout}(_139.0,__140.0,\V{npoint},\V{srate},\V{n\_inv\_noise});}}
+\L{\LB{____\V{nullout}(_245.0,__246.0,\V{npoint},\V{srate},\V{n\_inv\_noise});}}
+\L{\LB{____\V{nullout}(_487.0,__490.0,\V{npoint},\V{srate},\V{n\_inv\_noise});}}
+\L{\LB{____\V{nullout}(_499.0,__501.0,\V{npoint},\V{srate},\V{n\_inv\_noise});}}
+\L{\LB{____\V{nullout}(_571.0,__572.0,\V{npoint},\V{srate},\V{n\_inv\_noise});}}
+\L{\LB{____\V{nullout}(_576.0,__585.0,\V{npoint},\V{srate},\V{n\_inv\_noise});}}
+\L{\LB{____\V{nullout}(_592.0,__602.0,\V{npoint},\V{srate},\V{n\_inv\_noise});}}
+\L{\LB{____\V{nullout}(_603.0,__607.0,\V{npoint},\V{srate},\V{n\_inv\_noise});}}
+\L{\LB{____\V{nullout}(_998.0,_1001.0,\V{npoint},\V{srate},\V{n\_inv\_noise});}}
+\L{\LB{____\V{nullout}(1155.0,_1159.0,\V{npoint},\V{srate},\V{n\_inv\_noise});}}
+\L{\LB{____\V{nullout}(1208.0,_1214.0,\V{npoint},\V{srate},\V{n\_inv\_noise});}}
+\L{\LB{____\V{nullout}(1740.0,_1750.0,\V{npoint},\V{srate},\V{n\_inv\_noise});}}
+\L{\LB{____\V{nullout}(3500.0,_3520.0,\V{npoint},\V{srate},\V{n\_inv\_noise});}}
+\L{\LB{____}}
+\L{\LB{____\C{}\1\* Stan\'s list \*\1\CE{}}}
+\L{\LB{____\V{nullout}(__77.0,___83.0,\V{npoint},\V{srate},\V{n\_inv\_noise});}}
+\L{\LB{____\V{nullout}(_105.0,__115.0,\V{npoint},\V{srate},\V{n\_inv\_noise});}}
+\L{\LB{____\V{nullout}(_569.0,__607.0,\V{npoint},\V{srate},\V{n\_inv\_noise});}}
+\L{\LB{____\V{nullout}(1138.0,_1214.0,\V{npoint},\V{srate},\V{n\_inv\_noise});}}
+\L{\LB{____\V{nullout}(1707.0,_1821.0,\V{npoint},\V{srate},\V{n\_inv\_noise});}}
+\L{\LB{____\V{nullout}(3500.0,_3520.0,\V{npoint},\V{srate},\V{n\_inv\_noise});}}
+\L{\LB{__\}}}
+\L{\LB{\K{\#endif}_\C{}\1\* (REMOVE\_LINE\_BINS) \*\1\CE{}}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* compute outlier statistic \*\1\CE{}}}
+\L{\LB{__\V{gauss\_test}_=_\V{is\_gaussian}(\V{data},\V{npoint},\-2048,2047,0);}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* compute power statistic---don\'t include DC term \*\1\CE{}}}
+\L{\LB{__\V{get\_spectrum}(\V{data},\V{spec},\V{npoint});}}
+\L{\LB{__\*\V{pow\_renorm}_=_0;}}
+\L{\LB{__\K{for}_(\V{i}=1;\V{i}\<\V{npoint}\12;\V{i}++)_\*\V{pow\_renorm}_+=_\V{spec}[\V{i}]\1\V{ave\_spec}[\V{i}];}}
+\L{\LB{__\*\V{pow\_renorm}_\*=_2.0\1\V{npoint};}}
+\L{\LB{__\K{return}_1;}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{}}
+\L{\LB{\K{\#if}(\V{INSERT\_CHIRP})}}
+\L{\LB{\C{}\1\* routine to determine if a chirp is to be inserted, and to insert it \*\1\CE{}}}
+\L{\LB{\K{void}_\V{ins\_chirp}(\K{int}_\V{segment})}}
+\L{\LB{\{}}
+\L{\LB{__\K{void}_\V{realft}(\K{float}_\*,_\K{unsigned}_\K{long},_\K{int});}}
+\L{\LB{__\K{static}_\V{FILE}_\*\V{fpinsert},\*\V{fpinslog};}}
+\L{\LB{__\K{static}_\K{double}_\V{instime}=0;}}
+\L{\LB{__\K{static}_\K{float}_\*\V{chirp0},\*\V{chirp1},\V{m1},\V{m2},\V{invMpc},\V{c0},\V{c1},\V{phase};}}
+\L{\LB{__\K{static}_\K{int}_\V{first}=1,\V{end}=0,\V{npoint}=\V{NPOINT};}}
+\L{\LB{__\K{int}_\V{offset};}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* no more chirps to insert \*\1\CE{}}}
+\L{\LB{__\K{if}_(\V{end})_\K{return};}}
+\L{\LB{__\K{if}_(\V{first})_\{}}
+\L{\LB{____\V{first}_=_0;}}
+\L{\LB{____}}
+\L{\LB{____\C{}\1\* open the insert.ascii file for input \*\1\CE{}}}
+\L{\LB{____\V{fpinsert}_=_\V{grasp\_open}(\S{}\"GRASP\_INSERT\"\SE{},\S{}\"insert.ascii\"\SE{},\S{}\"r\"\SE{});}}
+\L{\LB{____}}
+\L{\LB{____\C{}\1\* open the insert.log file for output \*\1\CE{}}}
+\L{\LB{____\V{fpinslog}_=_\V{grasp\_open}(\S{}\"GRASP\_INSERT\"\SE{},\S{}\"insert.log\"\SE{},\S{}\"w\"\SE{});}}
+\L{\LB{____}}
+\L{\LB{____\C{}\1\* allocate memory to chirp arrays \*\1\CE{}}}
+\L{\LB{____\V{chirp0}_=_(\K{float}_\*)\V{malloc}(\V{npoint}\*\K{sizeof}(\K{float}));}}
+\L{\LB{____\V{chirp1}_=_(\K{float}_\*)\V{malloc}(\V{npoint}\*\K{sizeof}(\K{float}));}}
+\L{\LB{__\}}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* scan through the file until the next chirp is found \*\1\CE{}}}
+\L{\LB{__\C{}\1\* note: assume that only one chirp will be present in any data segment! \*\1\CE{}}}
+\L{\LB{__\K{while}_(\V{instime}\<\V{datastart})_\{}}
+\L{\LB{____}}
+\L{\LB{____\K{float}_\V{tc},\V{scale}=2\*\V{HSCALE}\*\V{M\_SOLAR}\1\V{MPC};}}
+\L{\LB{____\K{int}_\V{i},\V{code},\V{chpts};}}
+\L{\LB{____}}
+\L{\LB{____\C{}\1\* read the next injected chirp time \*\1\CE{}}}
+\L{\LB{____\V{code}_=_\V{fscanf}(\V{fpinsert},\S{}\"\%lf_\%f_\%f_\%f_\%f\2n\"\SE{},}}
+\L{\LB{}\Tab{16}{__\&\V{instime},\&\V{m1},\&\V{m2},\&\V{invMpc},\&\V{phase});}}
+\L{\LB{____\C{}\1\* if we have reached the end of the file \*\1\CE{}}}
+\L{\LB{____\K{if}_(\V{code}==\V{EOF})_\{}}
+\L{\LB{______\V{end}_=_1;}}
+\L{\LB{______\V{fclose}(\V{fpinsert});}}
+\L{\LB{______\V{fclose}(\V{fpinslog});}}
+\L{\LB{______\V{free}(\V{chirp0});}}
+\L{\LB{______\V{free}(\V{chirp1});}}
+\L{\LB{______\K{return};}}
+\L{\LB{____\}}}
+\L{\LB{}}
+\L{\LB{____\C{}\1\* If injection is well before the segment start, try again \*\1\CE{}}}
+\L{\LB{____\K{if}_(\V{instime}\<(\V{datastart}\-2\*\V{npoint}\1\V{srate}))_\K{continue};}}
+\L{\LB{____}}
+\L{\LB{____\C{}\1\* coefficients of the injected chirp \*\1\CE{}}}
+\L{\LB{____\V{c0}_=_\V{cos}(\V{phase});}}
+\L{\LB{____\V{c1}_=_\V{sin}(\V{phase});}}
+\L{\LB{____}}
+\L{\LB{____\C{}\1\* construct the chirp to be injected \*\1\CE{}}}
+\L{\LB{\K{\#if}_(\V{INJECT\_TIME\_REVERSE})}}
+\L{\LB{____\V{make\_retlifs}(\V{m1},\V{m2},\V{chirp0},\V{chirp1},\V{FLO},\V{npoint},\V{srate},\&\V{chpts},\&\V{tc},4000,4);}}
+\L{\LB{\K{\#else}}}
+\L{\LB{____\V{make\_filters}(\V{m1},\V{m2},\V{chirp0},\V{chirp1},\V{FLO},\V{npoint},\V{srate},\&\V{chpts},\&\V{tc},4000,4);}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{____\K{for}_(\V{i}=0;\V{i}\<\V{chpts};\V{i}++)_\{}}
+\L{\LB{______\V{chirp0}[\V{i}]_\*=_\V{scale};}}
+\L{\LB{______\V{chirp1}[\V{i}]_\*=_\V{scale};}}
+\L{\LB{____\}}}
+\L{\LB{____\K{for}_(\V{i}=\V{chpts};\V{i}\<\V{npoint};\V{i}++)_\V{chirp0}[\V{i}]_=_\V{chirp1}[\V{i}]_=_0;}}
+\L{\LB{____\V{realft}(\V{chirp0}\-1,\V{npoint},1);}}
+\L{\LB{____\V{realft}(\V{chirp1}\-1,\V{npoint},1);}}
+\L{\LB{__\}}}
+\L{\LB{__\C{}\1\* compute offset; return if after the end of the data segment \*\1\CE{}}}
+\L{\LB{__\K{if}_(\V{instime}\>(\V{datastart}+\V{npoint}\1\V{srate}))_\K{return};}}
+\L{\LB{__\V{offset}_=_\V{srate}\*(\V{instime}_\-_\V{datastart});}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* inject the chirp \*\1\CE{}}}
+\L{\LB{__\V{freq\_inject\_chirp}(\V{c0},\V{c1},\V{offset},\V{invMpc},\V{chirp0},\V{chirp1},\V{htilde},\V{npoint});}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* write an entry into the log file \*\1\CE{}}}
+\L{\LB{__\V{fprintf}(\V{fpinslog},\S{}\"\%d_\%d_\%f_\%f_\%f_\%f_\%f\2n\"\SE{},}}
+\L{\LB{__________\V{segment},\V{offset},\V{instime},\V{m1},\V{m2},\V{invMpc},\V{phase});}}
+\L{\LB{__\V{fflush}(\V{fpinslog});}}
+\L{\LB{__\K{return};}}
+\L{\LB{\}}}
+\L{\LB{\K{\#endif}}}

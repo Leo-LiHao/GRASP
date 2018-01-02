@@ -1,0 +1,509 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_utility\1translate.c},{10:25},{May 19 2000}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\K{\#include}_\<\V{math}.\V{h}\>}}
+\L{\LB{\K{\#include}_\<\V{stdio}.\V{h}\>}}
+\L{\LB{\K{\#include}_\<\V{stdlib}.\V{h}\>}}
+\L{\LB{\K{\#include}_\<\V{string}.\V{h}\>}}
+\L{\LB{\K{\#include}_\S{}\"FrameL.h\"\SE{}}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{\K{\#define}_\V{OLDNAMES}_0____________\C{}\1\* set to zero to use new channel names, 1 for old names \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{LOCKLO}_1}}
+\L{\LB{\K{\#define}_\V{LOCKHI}_10}}
+\L{\LB{\K{\#define}_\V{CORRECTTIMESTAMPS}_1___\C{}\1\* set to 1 to correct loss of timestamp resolution \*\1\CE{}}}
+\L{\LB{\C{}\1\* The compression method: None = 0; GZIP = 1; Diff = 2; Diff+GZIP = 3 \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{COMPRESSION}_3}}
+\L{\LB{\C{}\1\* The Level of GZIP compression used; Values between 1 and 9 allowed \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{GZIP\_LEVEL}_1}}
+\L{\LB{\C{}\1\* the latest version of the frame lib that this code has been tested with \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{FRAMELIB\_TESTED}_3.85}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* Each block of old-format data contains 5.07 secs of data.  This}}
+\L{\LB{parameter determines how many of these old-format blocks (now a frame)}}
+\L{\LB{end up in each FRAME file. \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{FRAMES\_PER\_FILE}_32}}
+\L{\LB{\C{}\1\* earth\'s equatorial radius, in meters \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{EQUATORIAL}_(6.37814e+06)}}
+\L{\LB{\C{}\1\* earth\'s ellipticity or flattening due to rotation \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{FLAT}_(3.35281e\-3)_}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* the conversion from ADC counts to volts is: \*\1\CE{}}}
+\L{\LB{\K{static}_\K{char}_\V{units}[\,]=\S{}\"Units_are_10_volts_per_2048_counts.__Range_\-2048_to_+2047\"\SE{};}}
+\L{\LB{}}
+\L{\LB{\K{\#if}_(\V{OLDNAMES})}}
+\L{\LB{\C{}\1\* channel assignments before Nov 15, 1994 \*\1\CE{}}}
+\L{\LB{\K{static}_\K{char}_\*\V{prenov15}[\,]=\{}}
+\L{\LB{___\S{}\"IFO_output\"\SE{},_\S{}\"\"\SE{},_\S{}\"\"\SE{},_\S{}\"microphone\"\SE{},_\S{}\"dc_strain\"\SE{},_\S{}\"mode_cleaner_pzt\"\SE{},}}
+\L{\LB{___\S{}\"seismometer\"\SE{},_\S{}\"\"\SE{},_\S{}\"\"\SE{},_\S{}\"\"\SE{},_\S{}\"TTL_locked\"\SE{},_\S{}\"arm_1_visibility\"\SE{},_\S{}\"arm_2_visibility\"\SE{},}}
+\L{\LB{___\S{}\"mode_cleaner_visibility\"\SE{},_\S{}\"slow_pzt\"\SE{},_\S{}\"arm_1_coil_driver\"\SE{}\};}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* channel assignments after Nov 15, 1994 \*\1\CE{}}}
+\L{\LB{\K{static}_\K{char}_\*\V{postnov15}[\,]=\{}}
+\L{\LB{___\S{}\"IFO_output\"\SE{},_\S{}\"magnetometer\"\SE{},_\S{}\"microphone\"\SE{},_\S{}\"\"\SE{},_\S{}\"dc_strain\"\SE{},_\S{}\"mode_cleaner_pzt\"\SE{},}}
+\L{\LB{___\S{}\"seismometer\"\SE{},_\S{}\"slow_pzt\"\SE{},_\S{}\"power_stabilizer\"\SE{},_\S{}\"\"\SE{},}}
+\L{\LB{___\S{}\"TTL_locked\"\SE{},_\S{}\"arm_1_visibility\"\SE{},_\S{}\"arm_2_visibility\"\SE{},_\S{}\"mode_cleaner_visibility\"\SE{},}}
+\L{\LB{___\S{}\"\"\SE{},_\S{}\"arm_1_coil_driver\"\SE{}\};}}
+\L{\LB{\K{\#else}}}
+\L{\LB{\C{}\1\* channel assignments before Nov 15, 1994 \*\1\CE{}}}
+\L{\LB{\K{static}_\K{char}_\*\V{prenov15}[\,]=\{}}
+\L{\LB{___\S{}\"IFO\_DMRO\"\SE{},_\S{}\"\"\SE{},_\S{}\"\"\SE{},_\S{}\"IFO\_Mike\"\SE{},_\S{}\"IFO\_DCDM\"\SE{},_\S{}\"PSL\_MC\_V\"\SE{},}}
+\L{\LB{___\S{}\"IFO\_Seis\_1\"\SE{},_\S{}\"\"\SE{},_\S{}\"\"\SE{},_\S{}\"\"\SE{},_\S{}\"IFO\_Lock\"\SE{},_\S{}\"IFO\_EAT\"\SE{},_\S{}\"IFO\_SAT\"\SE{},}}
+\L{\LB{___\S{}\"IFO\_MCR\"\SE{},_\S{}\"IFO\_SPZT\"\SE{},_\S{}\"SUS\_EE\_Coil\_V\"\SE{}\};}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* channel assignments after Nov 15, 1994 \*\1\CE{}}}
+\L{\LB{\K{static}_\K{char}_\*\V{postnov15}[\,]=\{}}
+\L{\LB{___\S{}\"IFO\_DMRO\"\SE{},_\S{}\"IFO\_Mag\_x\"\SE{},_\S{}\"IFO\_Mike\"\SE{},_\S{}\"\"\SE{},_\S{}\"IFO\_DCDM\"\SE{},_\S{}\"PSL\_MC\_V\"\SE{},}}
+\L{\LB{___\S{}\"IFO\_Seis\_1\"\SE{},_\S{}\"IFO\_SPZT\"\SE{},_\S{}\"PSL\_PSS\"\SE{},_\S{}\"\"\SE{},}}
+\L{\LB{___\S{}\"IFO\_Lock\"\SE{},_\S{}\"IFO\_EAT\"\SE{},_\S{}\"IFO\_SAT\"\SE{},_\S{}\"IFO\_MCR\"\SE{},}}
+\L{\LB{___\S{}\"\"\SE{},_\S{}\"SUS\_EE\_Coil\_V\"\SE{}\};}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* Program\'s only argument is the name of the directory containing old-format data \*\1\CE{}}}
+\L{\LB{\K{int}_\V{main}(\K{int}_\V{argc},\K{char}\*_\V{argv}[\,])_\{}}
+\L{\LB{___\K{char}_\V{filename}[256],\V{name}[256],\V{hist}[1024],\*\V{histnew},\*\V{buff},\*\*\V{chan\_name};}}
+\L{\LB{___\K{static}_\K{char}_\V{machinename}[256]=\S{}\"\"\SE{};}}
+\L{\LB{___\K{int}_\V{i},\V{code}=1,\V{num},\V{large}=50000,\V{small}=5000,\V{n},\V{first}=1,\V{firsttime}=0,\V{nlines};}}
+\L{\LB{___\K{long}_\V{buffSize};}}
+\L{\LB{___\K{float}_\V{fastrate}=9868.4208984375,\V{tblock},\V{slowrate}=986.84208984375,\*\V{real},\*\V{imag},\*\V{freq};}}
+\L{\LB{___\K{double}_\V{firstmsec}=0.0,\V{first\_estimate},\V{second\_estimate},\V{diff},\V{dt},\V{dtslow};}}
+\L{\LB{___\K{float}_\V{starttime}=\-100.0,\V{guesstime};}}
+\L{\LB{___\K{double}_\V{currenttime}=\-200;}}
+\L{\LB{___\K{int}_\V{blockcount}=0,\V{channelsopen}=0,\V{expected};}}
+\L{\LB{___\K{struct}_\V{FrFile}_\*\V{outputfile}=\V{NULL};}}
+\L{\LB{___\K{struct}_\V{FrameH}_\*\V{frame};}}
+\L{\LB{___\K{struct}_\V{FrAdcData}_\*\V{adc}[16];}}
+\L{\LB{___\K{struct}_\V{FrDetector}_\*\V{frdetect};}}
+\L{\LB{___\K{struct}_\V{FrVect}_\*\V{framevec};}}
+\L{\LB{___\K{struct}_\V{FrVect}_\*\V{framevecS};}}
+\L{\LB{___\K{struct}_\V{FrStatData}_\*\V{staticdata};}}
+\L{\LB{___\K{struct}_\V{FrStatData}_\*\V{staticdataS};}}
+\L{\LB{___\K{struct}_\V{ld\_binheader}_\V{bin\_header};}}
+\L{\LB{___\K{struct}_\V{ld\_mainheader}_\V{main\_header};}}
+\L{\LB{___\K{struct}_\V{tm}_\V{timetm},\*\V{gtime},\V{gts};}}
+\L{\LB{___\V{time\_t}_\V{translate\_time},\V{calendartime};}}
+\L{\LB{___\V{FILE}_\*\V{fp}[16],\*\V{fpsweptsine},\*\V{pipe};}}
+\L{\LB{___\K{void}_\V{unhappyexit}(\K{int}_\V{i});}}
+\L{\LB{___\K{int}_\V{get\_run\_number}(\K{int}_\V{firsttime});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* print out some information about the library being used \*\1\CE{}}}
+\L{\LB{___\V{fprintf}(\V{stderr},\S{}\"translate_compiled_with_Frame_header_file_version:_FRAMELIB\_VERSION=\%.2f\2n\"\SE{},}}
+\L{\LB{}\Tab{8}{\V{FRAMELIB\_VERSION});}}
+\L{\LB{\K{\#if}_(\V{FRAMELIB\_VERSION\_INT}\>=370)}}
+\L{\LB{___\V{fprintf}(\V{stderr},\S{}\"translate_linked_with_Frame_library_archive_version:_FrLibVersion=\%.2f\2n\"\SE{},}}
+\L{\LB{}\Tab{8}{\V{FrLibVersion}(\V{NULL}));}}
+\L{\LB{___\K{if}_((\K{int})(1000\*(\V{FRAMELIB\_VERSION}\-\V{FrLibVersion}(\V{NULL}))))}}
+\L{\LB{______\V{fprintf}(\V{stderr},}}
+\L{\LB{}\Tab{8}{\S{}\"WARNING:_translate_code_linked_to_different_run\-time_library_than_header_file_version!\2n\"\SE{});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{___\K{if}_(\V{FRAMELIB\_VERSION\_INT}!=100\*\V{FRAMELIB\_VERSION})}}
+\L{\LB{______\V{fprintf}(\V{stderr},}}
+\L{\LB{}\Tab{8}{\S{}\"WARNING:_in_building_this_code_FRAMELIB\_VERSION\_INT=\%d_!=_100_x_(FRAMELIB\_VERSION=\%.2f)\2n\"\SE{},}}
+\L{\LB{_________\V{FRAMELIB\_VERSION\_INT},\V{FRAMELIB\_VERSION});}}
+\L{\LB{___\K{if}_(\V{FRAMELIB\_VERSION}\>\V{FRAMELIB\_TESTED})}}
+\L{\LB{_________\V{fprintf}(\V{stderr},\S{}\"Warning:_translate_has_only_been_tested_with_FRAMELIB\_VERSION_\<=_\%.2f\2n\"\SE{},}}
+\L{\LB{}\Tab{8}{\V{FRAMELIB\_TESTED});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* initialize the frame system \*\1\CE{}}}
+\L{\LB{___\V{FrLibIni}(\V{NULL},\V{NULL},2);__}}
+\L{\LB{___\V{buffSize}=1000000;}}
+\L{\LB{___\V{buff}=\V{malloc}(\V{buffSize});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* create a frame \*\1\CE{}}}
+\L{\LB{___\V{frame}=\V{FrameHNew}(\S{}\"C1\"\SE{});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* assign detector structure: site location and orientation information \*\1\CE{}}}
+\L{\LB{\K{\#if}_(\V{FRAMELIB\_VERSION\_INT}\<=237)}}
+\L{\LB{___\V{frame}\-\!\>\V{detectRec}=\V{FrDetectorNew}(\S{}\"real\"\SE{});}}
+\L{\LB{___\V{frdetect}=\V{frame}\-\!\>\V{detectRec};}}
+\L{\LB{___\V{frdetect}\-\!\>\V{latitude}=34.1667;}}
+\L{\LB{___\V{frdetect}\-\!\>\V{longitude}=118.133;}}
+\L{\LB{___\V{frdetect}\-\!\>\V{arm1Angle}=180.0;}}
+\L{\LB{___\V{frdetect}\-\!\>\V{arm2Angle}=270.0;}}
+\L{\LB{___\V{frdetect}\-\!\>\V{arm1Length}=38.5;}}
+\L{\LB{___\V{frdetect}\-\!\>\V{arm2Length}=38.1;}}
+\L{\LB{\K{\#else}}}
+\L{\LB{___\V{frame}\-\!\>\V{detectProc}=\V{FrDetectorNew}(\S{}\"real\"\SE{});}}
+\L{\LB{___\V{frdetect}=\V{frame}\-\!\>\V{detectProc};}}
+\L{\LB{___\V{frdetect}\-\!\>\V{latitudeD}=34;}}
+\L{\LB{___\V{frdetect}\-\!\>\V{latitudeM}=10;}}
+\L{\LB{___\V{frdetect}\-\!\>\V{latitudeS}=0;}}
+\L{\LB{___\V{frdetect}\-\!\>\V{longitudeD}=118;}}
+\L{\LB{___\V{frdetect}\-\!\>\V{longitudeM}=8;}}
+\L{\LB{___\V{frdetect}\-\!\>\V{longitudeS}=0;}}
+\L{\LB{___\V{frdetect}\-\!\>\V{armXazimuth}=180.0;}}
+\L{\LB{___\V{frdetect}\-\!\>\V{armYazimuth}=270.0;}}
+\L{\LB{___\V{frdetect}\-\!\>\V{armLength}=38.3;}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* Correct for oblateness of earth, use reference spheriod with}}
+\L{\LB{___flattening FLAT; EQUATORIAL is earth equatorial radius in meters.}}
+\L{\LB{___Reference: eqns (4.13-14) in \"Spacecraft attitude determination and}}
+\L{\LB{___control\", Ed. James R. Wortz, D. Reidel Publishing Co., Boston, 1985.}}
+\L{\LB{___Note: this SHOULD be corrected to add in the height of Caltech above}}
+\L{\LB{___sea level. \*\1\CE{}}}
+\L{\LB{___\C{}\1\* angle measured down from the North pole \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\K{\#if}_(\V{FRAMELIB\_VERSION\_INT}\<=237)}}
+\L{\LB{___\{}}
+\L{\LB{_______\K{float}_\V{theta};}}
+\L{\LB{_______\V{theta}=(\V{M\_PI}\1180.0)\*(90.0\-\V{frdetect}\-\!\>\V{latitude});}}
+\L{\LB{_______\V{frdetect}\-\!\>\V{altitude}=\V{EQUATORIAL}\*(1.0\-\V{FLAT}\*\V{cos}(\V{theta})\*\V{cos}(\V{theta}));}}
+\L{\LB{___\}}}
+\L{\LB{\K{\#else}}}
+\L{\LB{_______\V{frdetect}\-\!\>\V{elevation}=0.0_\C{}\1\*FILL IN THE CORRECT VALUE \*\1\CE{};}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* now open files containing 40 meter data \*\1\CE{}}}
+\L{\LB{___\K{if}_(!\V{argv}[1]_\|\,\|_\V{argc}!=2)_\V{unhappyexit}(1);}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* step through all possible channels, seeing which channels have data \*\1\CE{}}}
+\L{\LB{___\K{for}_(\V{i}=0;\V{i}\<16;\V{i}++)_\{}}
+\L{\LB{______\V{sprintf}(\V{name},\S{}\"\%s\1channel.\%d\"\SE{},\V{argv}[1],\V{i});}}
+\L{\LB{______\V{fp}[\V{i}]=\V{fopen}(\V{name},\S{}\"r\"\SE{});}}
+\L{\LB{______\K{if}_(\V{fp}[\V{i}]==\V{NULL})}}
+\L{\LB{_________\V{fprintf}(\V{stderr},\S{}\"File_\%s_unavailable.__Skipping_it.\,.\,.\2n\"\SE{},\V{name});}}
+\L{\LB{______\K{else}}}
+\L{\LB{_________\V{channelsopen}++;}}
+\L{\LB{___\}}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* if there are no open files, then please exit with a warning message \*\1\CE{}}}
+\L{\LB{___\K{if}_(\V{channelsopen}==0)_\V{unhappyexit}(1);}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* the sample times for the fast\1slow channels \*\1\CE{}}}
+\L{\LB{___\V{dt}=1.0\1\V{fastrate};}}
+\L{\LB{___\V{dtslow}=1.0\1\V{slowrate};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* Define 4 fast, 12 slow ADC channels (long strings of blanks needed - see below) \*\1\CE{}}}
+\L{\LB{___\K{for}_(\V{i}=0;\V{i}\<16;\V{i}++)}}
+\L{\LB{______\K{if}_(\V{fp}[\V{i}]!=\V{NULL})}}
+\L{\LB{_________\K{if}_(\V{i}\<4)}}
+\L{\LB{____________\C{}\1\* sample rates differ from fastrate, slowrate -- see GRASP manual for details \*\1\CE{}}}
+\L{\LB{____________\V{adc}[\V{i}]=\V{FrAdcDataNew}(\V{frame},\S{}\"____________________________\"\SE{},50000.0\*15.0\176.0,\V{large},16);}}
+\L{\LB{__________\K{else}}}
+\L{\LB{____________\V{adc}[\V{i}]=\V{FrAdcDataNew}(\V{frame},\S{}\"____________________________\"\SE{},5000.0\*15.0\176.0,\V{small},16);}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* now loop over the input data, creating blocks of output data \*\1\CE{}}}
+\L{\LB{___\K{while}_(\V{code}\>0)_\{}}
+\L{\LB{______\C{}\1\* read a block of data \*\1\CE{}}}
+\L{\LB{______\K{for}_(\V{i}=0;\V{i}\<16;\V{i}++)_\{}}
+\L{\LB{_________\C{}\1\* set size of data block \*\1\CE{}}}
+\L{\LB{_________\V{n}=(\V{i}\<4)?\V{large}:\V{small};}}
+\L{\LB{_________\C{}\1\* read data into frame short array \*\1\CE{}}}
+\L{\LB{_________\K{if}_(\V{i}\<4_\&\&_\V{fp}[\V{i}]!=\V{NULL})}}
+\L{\LB{____________\V{code}=\V{read\_block}(\V{fp}[\V{i}],\&(\V{adc}[\V{i}]\-\!\>\V{data}\-\!\>\V{dataS}),\&\V{num},\&\V{tblock},\&\V{fastrate},0,\&\V{n},0,}}
+\L{\LB{____________________________\&\V{bin\_header},\&\V{main\_header});}}
+\L{\LB{_________\K{else}_\K{if}_(\V{fp}[\V{i}]!=\V{NULL})}}
+\L{\LB{____________\V{code}=\V{read\_block}(\V{fp}[\V{i}],\&(\V{adc}[\V{i}]\-\!\>\V{data}\-\!\>\V{dataS}),\&\V{num},\&\V{tblock},\&\V{slowrate},0,\&\V{n},0,}}
+\L{\LB{____________________________\&\V{bin\_header},\&\V{main\_header});}}
+\L{\LB{______\}}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* if no data remains, we have found an error \*\1\CE{}}}
+\L{\LB{______\K{if}_(\V{code}==0)_\{}}
+\L{\LB{_________\V{fprintf}(\V{stderr},\S{}\"Error_in_translation:_unexpected_end_of_data!\2n\"\SE{});}}
+\L{\LB{_________\V{abort}();}}
+\L{\LB{______\}}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* check the various sample times \*\1\CE{}}}
+\L{\LB{______\K{if}_(\V{dt}!=1.0\1\V{fastrate})_\V{fprintf}(\V{stderr},\S{}\"Fast_sample_rates_don\'t_match!\2n\"\SE{});}}
+\L{\LB{______\K{if}_(\V{dtslow}!=1.0\1\V{slowrate})_\V{fprintf}(\V{stderr},\S{}\"Slow_sample_rates_don\'t_match!\2n\"\SE{});}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* set time stamps for this block of data \*\1\CE{}}}
+\L{\LB{______\C{}\1\* Put the local California time-of-day into a structure for later use \*\1\CE{}}}
+\L{\LB{______\V{timetm}.\V{tm\_sec}=\V{main\_header}.\V{tod\_second};}}
+\L{\LB{______\V{timetm}.\V{tm\_min}=\V{main\_header}.\V{tod\_minute};}}
+\L{\LB{______\V{timetm}.\V{tm\_hour}=\V{main\_header}.\V{tod\_hour};}}
+\L{\LB{______\V{timetm}.\V{tm\_mday}=\V{main\_header}.\V{date\_day};}}
+\L{\LB{______\V{timetm}.\V{tm\_mon}=\V{main\_header}.\V{date\_month};}}
+\L{\LB{______\V{timetm}.\V{tm\_year}=\V{main\_header}.\V{date\_year};}}
+\L{\LB{______\V{timetm}.\V{tm\_wday}=\V{main\_header}.\V{date\_dow};}}
+\L{\LB{______\V{timetm}.\V{tm\_yday}=\-1;__\C{}\1\* info not available, but filled in by mktime \*\1\CE{}}}
+\L{\LB{______\V{timetm}.\V{tm\_isdst}=\-1;_\C{}\1\* info not available, but filled in by mktime \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* Now convert the stored Calendar time into the right data type \*\1\CE{}}}
+\L{\LB{______\V{calendartime}=\V{main\_header}.\V{epoch\_time\_sec};}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* Put the UTC time-of-day into a structure for later use \*\1\CE{}_}}
+\L{\LB{______\V{gtime}=\V{gmtime}(\&\V{calendartime});}}
+\L{\LB{______\V{gts}=\*\V{gtime};}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* set the time stamp for the first data sample (more precise than header time) \*\1\CE{}}}
+\L{\LB{______\K{if}_(\V{first})_\{}}
+\L{\LB{_________\V{firsttime}=\V{main\_header}.\V{epoch\_time\_sec};}}
+\L{\LB{_________\V{firstmsec}=0.001\*\V{main\_header}.\V{epoch\_time\_msec};}}
+\L{\LB{_________\V{printf}(\S{}\"UTC_(gmtime)_start_time:_\%s\"\SE{},\V{asctime}(\&\V{gts}));}}
+\L{\LB{_________\V{printf}(\S{}\"__________CA_start_time:_\%s\2n\"\SE{},\V{asctime}(\&\V{timetm}));}}
+\L{\LB{}}
+\L{\LB{_________\C{}\1\* assign the run number from 1,.\,.,11 to the frame. \*\1\CE{}}}
+\L{\LB{_________\V{frame}\-\!\>\V{run}=\V{get\_run\_number}(\V{firsttime});}}
+\L{\LB{_________\K{if}_(\V{frame}\-\!\>\V{run}\<1_\|\,\|_\V{frame}\-\!\>\V{run}\>11)_\V{unhappyexit}(2);}}
+\L{\LB{}}
+\L{\LB{_________\C{}\1\* assign proper name to adc channel (to overwrite long blank space above) \*\1\CE{}}}
+\L{\LB{_________\K{if}_(\V{frame}\-\!\>\V{run}\<=2)_\{}}
+\L{\LB{____________\V{chan\_name}=\V{prenov15};}}
+\L{\LB{____________\V{expected}=11;}}
+\L{\LB{_________\}}}
+\L{\LB{_________\K{else}_\{}}
+\L{\LB{____________\V{chan\_name}=\V{postnov15};}}
+\L{\LB{____________\V{expected}=13;}}
+\L{\LB{_________\}}}
+\L{\LB{}}
+\L{\LB{_________\K{if}_(\V{channelsopen}!=\V{expected})_\{}}
+\L{\LB{____________\V{fprintf}(\V{stderr},\S{}\"Only_found_\%d_channels.__Expected_\%d\2n\"\SE{},\V{channelsopen},\V{expected});}}
+\L{\LB{____________\V{exit}(1);}}
+\L{\LB{_________\}}}
+\L{\LB{}}
+\L{\LB{_________\K{for}_(\V{i}=0;\V{i}\<16;\V{i}++)}}
+\L{\LB{____________\K{if}_(\V{fp}[\V{i}]!=\V{NULL})_\{}}
+\L{\LB{_______________\C{}\1\* verify that name is correct \*\1\CE{}}}
+\L{\LB{_______________\K{if}_(\V{strcmp}(\V{chan\_name}[\V{i}],\S{}\"\"\SE{})==0)_\{}}
+\L{\LB{__________________\V{fprintf}(\V{stderr},\S{}\"Channel_\%d_is_not_recognized_and_has_no_name!\2n\"\SE{},\V{i});}}
+\L{\LB{__________________\V{exit}(1);}}
+\L{\LB{_______________\}}}
+\L{\LB{}}
+\L{\LB{_______________\C{}\1\* point to the correct channel name for this particular date, channel \*\1\CE{}}}
+\L{\LB{_______________\V{strcpy}(\V{adc}[\V{i}]\-\!\>\V{name},\V{chan\_name}[\V{i}]);}}
+\L{\LB{}}
+\L{\LB{_______________\C{}\1\* put in the physical volts\1counts conversion \*\1\CE{}}}
+\L{\LB{\K{\#if}_(\V{FRAMELIB\_VERSION\_INT}\<=237)}}
+\L{\LB{_______________\V{adc}[\V{i}]\-\!\>\V{data}\-\!\>\V{unit}[0]=(\K{char}_\*)\V{malloc}((\V{strlen}(\V{units})+1)\*\K{sizeof}(\K{char}));}}
+\L{\LB{_______________\V{strcpy}(\V{adc}[\V{i}]\-\!\>\V{data}\-\!\>\V{unit}[0],\V{units});}}
+\L{\LB{\K{\#else}}}
+\L{\LB{_______________\V{adc}[\V{i}]\-\!\>\V{data}\-\!\>\V{unitY}=(\K{char}_\*)\V{malloc}((\V{strlen}(\V{units})+1)\*\K{sizeof}(\K{char}));}}
+\L{\LB{_______________\V{strcpy}(\V{adc}[\V{i}]\-\!\>\V{data}\-\!\>\V{unitY},\V{units});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}}
+\L{\LB{_______________\C{}\1\* which ADC \"crate\" was this \*\1\CE{}}}
+\L{\LB{_______________\V{adc}[\V{i}]\-\!\>\V{crate}=\V{i};}}
+\L{\LB{____________\}}}
+\L{\LB{______\}}}
+\L{\LB{}}
+\L{\LB{______\K{if}_(\V{CORRECTTIMESTAMPS})_\{}}
+\L{\LB{_________\V{guesstime}=\V{currenttime}+76.0\115.0;}}
+\L{\LB{_________\K{if}_(\V{fabs}(\V{guesstime}\-\V{tblock})\>1.0)_\{}}
+\L{\LB{____________\V{starttime}=\V{tblock};}}
+\L{\LB{____________\V{blockcount}=0;}}
+\L{\LB{_________\}}}
+\L{\LB{_________\V{currenttime}=(\V{blockcount}++)\*((\K{double})76.0\115.0)+\V{starttime};}}
+\L{\LB{}}
+\L{\LB{_________\C{}\1\* put the time stamp into the frame structure \*\1\CE{}}}
+\L{\LB{_________\V{currenttime}+=\V{firstmsec};}}
+\L{\LB{\K{\#if}_(\V{FRAMELIB\_VERSION\_INT}\<330)}}
+\L{\LB{_________\V{frame}\-\!\>\V{UTimeS}=\V{firsttime}+(\K{int})\V{currenttime};}}
+\L{\LB{_________\V{frame}\-\!\>\V{UTimeN}=(\K{int})(1.e9\*(\V{currenttime}\-(\K{int})\V{currenttime}));}}
+\L{\LB{_________\V{frame}\-\!\>\V{dt}=76.0\115.0;}}
+\L{\LB{\K{\#else}}}
+\L{\LB{_________\V{frame}\-\!\>\V{GTimeS}=\V{firsttime}+(\K{int})\V{currenttime}\-\V{UTCTOGPS};}}
+\L{\LB{_________\V{frame}\-\!\>\V{GTimeN}=(\K{int})(1.e9\*(\V{currenttime}\-(\K{int})\V{currenttime}));}}
+\L{\LB{_________}\Tab{24}{________________________________\C{}\1\*JKB: should be INT(TAI-UTC) \*\1\CE{}}}
+\L{\LB{_________\V{frame}\-\!\>\V{ULeapS}=29;______________________________\C{}\1\* BA -- for Nov 1994 -- see GRASP manual on time defs \*\1\CE{}}}
+\L{\LB{_________\V{frame}\-\!\>\V{dt}=(76.0\115.0);}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}}
+\L{\LB{______\}}}
+\L{\LB{______\K{else}_\{}}
+\L{\LB{_________\C{}\1\* put the time stamp into the frame structure \*\1\CE{}}}
+\L{\LB{_________\V{tblock}+=\V{firstmsec};}}
+\L{\LB{\K{\#if}_(\V{FRAMELIB\_VERSION\_INT}\<330)}}
+\L{\LB{_________\V{frame}\-\!\>\V{UTimeS}=\V{firsttime}+(\K{int})\V{tblock};}}
+\L{\LB{_________\V{frame}\-\!\>\V{UTimeN}=(\K{int})(1.e9\*(\V{tblock}\-(\K{int})\V{tblock}));}}
+\L{\LB{_________\V{frame}\-\!\>\V{dt}=\V{num}\1\V{slowrate};}}
+\L{\LB{\K{\#else}}}
+\L{\LB{_________\V{frame}\-\!\>\V{GTimeS}=\V{firsttime}+(\K{int})\V{tblock}\-\V{UTCTOGPS};}}
+\L{\LB{_________\V{frame}\-\!\>\V{GTimeN}=(\K{int})(1.e9\*(\V{tblock}\-(\K{int})\V{tblock}));}}
+\L{\LB{_________}\Tab{24}{________________________________\C{}\1\*JKB: should be INT(TAI-UTC) \*\1\CE{}}}
+\L{\LB{_________\V{frame}\-\!\>\V{ULeapS}=29;______________________________\C{}\1\* BA -- for Nov 1995 -- see GRASP manual on time defs \*\1\CE{}}}
+\L{\LB{_________\V{frame}\-\!\>\V{dt}=(\V{num}\1\V{slowrate});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}}
+\L{\LB{______\}}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* Localtime - UTC time in seconds \*\1\CE{}}}
+\L{\LB{______\V{frame}\-\!\>\V{localTime}=\-8\*3600;}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* frame-\!\>type[0]=0; \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* put in the history information (only once per translation) \*\1\CE{}}}
+\L{\LB{______\K{if}_(\V{first})_\{}}
+\L{\LB{_________\V{first}=0;}}
+\L{\LB{_________\V{histnew}=\V{hist};}}
+\L{\LB{_________\V{time}(\&\V{translate\_time});}}
+\L{\LB{}}
+\L{\LB{_________\C{}\1\* get the name of the local machine \*\1\CE{}}}
+\L{\LB{_________\V{pipe}=\V{popen}(\S{}\"hostname\"\SE{},\S{}\"r\"\SE{});}}
+\L{\LB{}\Tab{8}{_\K{if}_(\V{pipe}==\V{NULL})_\{}}
+\L{\LB{}\Tab{8}{____\C{}\1\* if we can\'t open the pipe, then list machine name as unknown \*\1\CE{}}}
+\L{\LB{___________\V{strcpy}(\V{machinename},\S{}\"hostname_undetermined\"\SE{});}}
+\L{\LB{_________\}}}
+\L{\LB{_________\K{else}}}
+\L{\LB{___________\V{fscanf}(\V{pipe},\S{}\"\%s\"\SE{},\V{machinename});}}
+\L{\LB{}}
+\L{\LB{_________\V{histnew}+=\V{sprintf}(\V{histnew},\S{}\"\2nTranslation_carried_out_by:\2n\"\SE{});}}
+\L{\LB{_________\V{histnew}+=\V{sprintf}(\V{histnew},\S{}\"_____login:_\%s\2n\"\SE{},\V{getenv}(\S{}\"LOGNAME\"\SE{}));}}
+\L{\LB{_________\V{histnew}+=\V{sprintf}(\V{histnew},\S{}\"_____user:_\%s\2n\"\SE{},\V{getenv}(\S{}\"USER\"\SE{}));}}
+\L{\LB{_________\V{histnew}+=\V{sprintf}(\V{histnew},\S{}\"_____translation_machine_name:_\%s\2n\"\SE{},\V{machinename});}}
+\L{\LB{_________\V{histnew}+=\V{sprintf}(\V{histnew},\S{}\"_____directory:_\%s\2n\"\SE{},\V{getenv}(\S{}\"PWD\"\SE{}));}}
+\L{\LB{_________\V{histnew}+=\V{sprintf}(\V{histnew},\S{}\"_____datapath:_\%s\2n\"\SE{},\V{argv}[1]);}}
+\L{\LB{_________\V{histnew}+=\V{sprintf}(\V{histnew},\S{}\"_____translation_program_name:_\%s\2n\"\SE{},\V{argv}[0]);}}
+\L{\LB{_________\V{histnew}+=\V{sprintf}(\V{histnew},\S{}\"_____source_code_name:_\%s\2n\"\SE{},\S{}\"translate.c\"\SE{});}}
+\L{\LB{_________\V{histnew}+=\V{sprintf}(\V{histnew},\S{}\"_____Frame_library_header_file_(compile)_version:_\%.2f\2n\"\SE{},\V{FRAMELIB\_VERSION});}}
+\L{\LB{\K{\#if}_(\V{FRAMELIB\_VERSION\_INT}\>=370)}}
+\L{\LB{_________\V{histnew}+=\V{sprintf}(\V{histnew},\S{}\"_____Frame_library_archive_(link)_version:_\%.2f\2n\"\SE{},\V{FrLibVersion}(\V{NULL}));}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{_________\V{histnew}+=\V{sprintf}(\V{histnew},\S{}\"_____translation_date:_\%s\2n\"\SE{},\V{ctime}(\&\V{translate\_time}));}}
+\L{\LB{_________\V{FrHistoryAdd}(\V{frame},\V{hist});}}
+\L{\LB{}}
+\L{\LB{_________\C{}\1\* read the swept sine calibration files (only once per run) \*\1\CE{}}}
+\L{\LB{_________\V{sprintf}(\V{name},\S{}\"\%s\1swept\-sine.ascii\"\SE{},\V{argv}[1]);}}
+\L{\LB{_________\V{fpsweptsine}=\V{fopen}(\V{name},\S{}\"r\"\SE{});}}
+\L{\LB{_________\V{read\_sweptsine}(\V{fpsweptsine},\&\V{nlines},\&\V{freq},\&\V{real},\&\V{imag});}}
+\L{\LB{}}
+\L{\LB{_________\C{}\1\* copy swept sine calibration data into vector; see below for packing style \*\1\CE{}}}
+\L{\LB{\K{\#if}_(\V{FRAMELIB\_VERSION\_INT}\<=237)}}
+\L{\LB{_________\V{framevec}=\V{FrVectNew}(\V{FR\_VECT\_F},1,3\*\V{nlines},1.0,\S{}\"Vifo\1Vcoil\"\SE{});}}
+\L{\LB{\K{\#else}}}
+\L{\LB{_________\V{framevec}=\V{FrVectNew}(\V{FR\_VECT\_4R},1,3\*\V{nlines},1.0,\S{}\"Vifo\1Vcoil\"\SE{});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{_________\K{for}_(\V{i}=0;\V{i}\<\V{nlines};\V{i}++)_\{}}
+\L{\LB{____________\V{framevec}\-\!\>\V{dataF}[\V{i}]=\V{freq}[\V{i}];}}
+\L{\LB{____________\V{framevec}\-\!\>\V{dataF}[\V{i}+\V{nlines}]=\V{real}[\V{i}];}}
+\L{\LB{____________\V{framevec}\-\!\>\V{dataF}[\V{i}+2\*\V{nlines}]=\V{imag}[\V{i}];}}
+\L{\LB{_________\}}}
+\L{\LB{}}
+\L{\LB{_________\C{}\1\* then link the calibration data into the history structure \*\1\CE{}}}
+\L{\LB{\K{\#if}_(\V{FRAMELIB\_VERSION\_INT}\<330)}}
+\L{\LB{_________\V{staticdata}=\V{FrStatDataNew}(\S{}\"sweptsine\"\SE{},}}
+\L{\LB{_____________\S{}\"swept_sine_calibration:\2npacking:_freq[i],_real[i],_imaginary[i]\"\SE{},}}
+\L{\LB{_____________\V{frame}\-\!\>\V{UTimeS},\V{INT\_MAX},1,\V{framevec});}}
+\L{\LB{\K{\#else}}}
+\L{\LB{_________\V{staticdata}=\V{FrStatDataNew}(\S{}\"sweptsine\"\SE{},}}
+\L{\LB{_____________\S{}\"swept_sine_calibration:\2npacking:_freq[i],_real[i],_imaginary[i]\"\SE{},}}
+\L{\LB{_____________\V{frame}\-\!\>\V{GTimeS},\V{INT\_MAX},1,\V{framevec});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}}
+\L{\LB{\K{\#if}_(\V{FRAMELIB\_VERSION\_INT}\<=237)}}
+\L{\LB{_________\V{FrStatDataAdd}(\&\V{frame}\-\!\>\V{detectRec}\-\!\>\V{sData},\V{staticdata});}}
+\L{\LB{\K{\#elif}_(\V{FRAMELIB\_VERSION\_INT}\<=330)}}
+\L{\LB{_________\V{FrStatDataAdd}(\&\V{frame}\-\!\>\V{detectProc}\-\!\>\V{sData},\V{staticdata});}}
+\L{\LB{\K{\#else}}}
+\L{\LB{_________\V{FrStatDataAdd}(\V{frame}\-\!\>\V{detectProc},\V{staticdata});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}}
+\L{\LB{________\C{}\1\* put in lock range (INCLUSIVE low-\!\>high) Rolf: if 0=unlock and 1=lock }}
+\L{\LB{___________then you need LOCKLO=LOCKHI=1}}
+\L{\LB{_________\*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\K{\#if}_(\V{FRAMELIB\_VERSION\_INT}\<=237)}}
+\L{\LB{_________\V{framevecS}=\V{FrVectNew}(\V{FR\_VECT\_S},1,2,1.0,\S{}\"adcCounts\"\SE{});}}
+\L{\LB{\K{\#else}}}
+\L{\LB{_________\V{framevecS}=\V{FrVectNew}(\V{FR\_VECT\_2S},1,2,1.0,\S{}\"adcCounts\"\SE{});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}}
+\L{\LB{_________\V{framevecS}\-\!\>\V{dataS}[0]=\V{LOCKLO};__\C{}\1\* smallest value at which we are still in lock \*\1\CE{}}}
+\L{\LB{_________\V{framevecS}\-\!\>\V{dataS}[1]=\V{LOCKHI};__\C{}\1\* largest value at which we are still in lock \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{_________\C{}\1\* then link the lockrange data into the history structure \*\1\CE{}}}
+\L{\LB{\K{\#if}_(\V{FRAMELIB\_VERSION\_INT}\<330)}}
+\L{\LB{_________\V{staticdataS}=\V{FrStatDataNew}(\S{}\"locklo\1lockhi\"\SE{},}}
+\L{\LB{_____________\S{}\"lock_range:\2npacking:_array[0]=locklo_array[1]=lockhi\"\SE{},}}
+\L{\LB{_____________\V{frame}\-\!\>\V{UTimeS},\V{INT\_MAX},1,\V{framevecS});}}
+\L{\LB{\K{\#else}}}
+\L{\LB{_________\V{staticdataS}=\V{FrStatDataNew}(\S{}\"locklo\1lockhi\"\SE{},}}
+\L{\LB{_____________\S{}\"lock_range:\2npacking:_array[0]=locklo_array[1]=lockhi\"\SE{},}}
+\L{\LB{_____________\V{frame}\-\!\>\V{GTimeS},\V{INT\_MAX},1,\V{framevecS});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}}
+\L{\LB{\K{\#if}_(\V{FRAMELIB\_VERSION\_INT}\<=237)}}
+\L{\LB{_________\V{FrStatDataAdd}(\&\V{frame}\-\!\>\V{detectRec}\-\!\>\V{sData},\V{staticdataS});}}
+\L{\LB{\K{\#elif}_(\V{FRAMELIB\_VERSION\_INT}\<=330)}}
+\L{\LB{_________\V{FrStatDataAdd}(\&\V{frame}\-\!\>\V{detectProc}\-\!\>\V{sData},\V{staticdata});}}
+\L{\LB{\K{\#else}}}
+\L{\LB{_________\V{FrStatDataAdd}(\V{frame}\-\!\>\V{detectProc},\V{staticdataS});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{______\}}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* is the time stamp for this data block consistent with start time+offset? \*\1\CE{}}}
+\L{\LB{\K{\#if}_(\V{FRAMELIB\_VERSION\_INT}\<330)}}
+\L{\LB{______\V{first\_estimate}=\V{frame}\-\!\>\V{UTimeS}+1.e\-9\*\V{frame}\-\!\>\V{UTimeN};}}
+\L{\LB{\K{\#else}}}
+\L{\LB{______\V{first\_estimate}=\V{frame}\-\!\>\V{GTimeS}+\V{UTCTOGPS}+1.e\-9\*\V{frame}\-\!\>\V{GTimeN};}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}}
+\L{\LB{______\V{second\_estimate}=\V{main\_header}.\V{epoch\_time\_sec}+1.e\-3\*\V{main\_header}.\V{epoch\_time\_msec};}}
+\L{\LB{______\V{diff}=\V{first\_estimate}\-\V{second\_estimate};}}
+\L{\LB{______\K{if}_(\V{fabs}(\V{diff})\>0.002)}}
+\L{\LB{_________\V{fprintf}(\V{stderr},\S{}\"Time_stamps_have_drifted_by_\%f_msec!\2n\"\SE{},\V{diff});}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* Increment frame counter (set to 1 for first frame of each run) \*\1\CE{}}}
+\L{\LB{______\V{frame}\-\!\>\V{frame}++;}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* Open Frame file (one file per FRAMES\_PER\_FILE frames) \*\1\CE{}}}
+\L{\LB{______\K{if}_((\V{frame}\-\!\>\V{frame}\%\V{FRAMES\_PER\_FILE})==1)_\{}}
+\L{\LB{_________\C{}\1\* set file name.  Note than month=1 to 12 not 0 to 11! \*\1\CE{}}}
+\L{\LB{\C{}\1\* Obsolete as of Aug 1998 -- new file name is GPS time \*\1\CE{}}}
+\L{\LB{\K{\#if}_(\V{FRAMELIB\_VERSION\_INT}\<330)}}
+\L{\LB{}\Tab{8}{\V{sprintf}(\V{filename},\S{}\"C1\-\%02d\_\%02d\_\%02d\_\%02d\_\%02d\_\%02d\"\SE{},\V{gts}.\V{tm\_year},\V{gts}.\V{tm\_mon}+1,}}
+\L{\LB{}\Tab{16}{\V{gts}.\V{tm\_mday},\V{gts}.\V{tm\_hour},\V{gts}.\V{tm\_min},\V{gts}.\V{tm\_sec});}}
+\L{\LB{\K{\#else}}}
+\L{\LB{}\Tab{8}{\V{sprintf}(\V{filename},\S{}\"C1\-\%d.F\"\SE{},\V{frame}\-\!\>\V{GTimeS});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}}
+\L{\LB{_________\V{printf}(\S{}\"Filename:_\%s\2n\"\SE{},\V{filename});}}
+\L{\LB{\K{\#if}_(\V{FRAMELIB\_VERSION\_INT}\<330)}}
+\L{\LB{_________\V{outputfile}=\V{FrFileONew}(\V{filename},_\V{NO},_\V{buff},_\V{buffSize});}}
+\L{\LB{\K{\#else}}}
+\L{\LB{_________\V{outputfile}=\V{FrFileONew}(\V{filename},_\V{COMPRESSION},_\V{buff},_\V{buffSize});}}
+\L{\LB{_________\K{if}_(\V{GZIP\_LEVEL}\>0)_}}
+\L{\LB{_____________\{}}
+\L{\LB{_________________\V{printf}(\S{}\"Building_frames_with_compression_gzip_level_=_\%d\2n\"\SE{},\V{GZIP\_LEVEL});}}
+\L{\LB{_____________\}}}
+\L{\LB{_________\V{FrFileOSetGzipLevel}(\V{outputfile},\V{GZIP\_LEVEL});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{______\}}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* un-comment to print a short snippet of each Frame onto the screen \*\1\CE{}}}
+\L{\LB{______\C{}\1\* FrameDump(frame, stdout, 2); \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* Write frame to file, \*\1\CE{}}}
+\L{\LB{______\V{FrameWrite}(\V{frame},_\V{outputfile});}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* Close file if finished with FRAMES\_PER\_FILE or no remaining data \*\1\CE{}}}
+\L{\LB{______\K{if}_((\V{frame}\-\!\>\V{frame}\%\V{FRAMES\_PER\_FILE})==0_\|\,\|_\V{code}==\-1)}}
+\L{\LB{_________\V{FrFileOEnd}(\V{outputfile});}}
+\L{\LB{___\}}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* Free frame memory and return \*\1\CE{}______________________________}}
+\L{\LB{___\V{FrameFree}(\V{frame});}}
+\L{\LB{___\K{return}(0);}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* this routine is called if something is wrong \*\1\CE{}}}
+\L{\LB{\K{void}_\V{unhappyexit}(\K{int}_\V{i})_\{}}
+\L{\LB{\K{switch}_(\V{i})_\{}}
+\L{\LB{___\K{case}_1:}}
+\L{\LB{______\V{fprintf}(\V{stderr},}}
+\L{\LB{______\S{}\"Syntax:_\2ntranslate_directory\2nwhere_channel.\*_files_may_be_found_in_directory\2n\"\SE{});}}
+\L{\LB{______\V{exit}(1);}}
+\L{\LB{___\K{case}_2:}}
+\L{\LB{______\V{fprintf}(\V{stderr},}}
+\L{\LB{______\S{}\"The_UTC_does_not_appear_to_lie_in_the_range_of_any_data_set!\2n\"\SE{});}}
+\L{\LB{______\V{exit}(1);}}
+\L{\LB{___\K{default}:}}
+\L{\LB{______\V{abort}();}}
+\L{\LB{\}}}
+\L{\LB{\K{return};}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* number of secs after Jan 1 1970 UTC at which Nov 1994 runs began \*\1\CE{}}}
+\L{\LB{\K{static}_\K{int}_\V{stimes}[\,]=\{784880277,784894763,785217574,785233119,785250938,785271063,}}
+\L{\LB{_____________________785288073,785315747,785333880,785351969,785368428,785388248\};}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* This routine looks at the epoch time (sec) and returns the run number (1-11) \*\1\CE{}}}
+\L{\LB{\K{int}_\V{get\_run\_number}(\K{int}_\V{firsttime})_\{}}
+\L{\LB{___\K{int}_\V{i};}}
+\L{\LB{}}
+\L{\LB{___\K{for}_(\V{i}=0;\V{i}\<12;\V{i}++)_}}
+\L{\LB{______\K{if}_(\V{firsttime}\<\V{stimes}[\V{i}])_\K{break};}}
+\L{\LB{}}
+\L{\LB{___\K{return}_\V{i};}}
+\L{\LB{\}}}

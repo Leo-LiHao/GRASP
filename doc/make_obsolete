@@ -1,0 +1,12 @@
+#!
+
+# This script modifies a postscript file by inserting the word
+# OBSOLETE on pages between STARTPAGE and ENDPAGE
+
+setenv STARTPAGE  `cat man_40meter.aux | grep '{s:40meter}' | sed 's/{/{ /g' | sed 's/}/ } /g' | awk '{print $9}'`
+setenv ENDPAGE    `cat man_40meter.aux | grep '{s:endof40m}' | sed 's/{/{ /g' | sed 's/}/ } /g' | awk '{print $9+1}'`
+
+# echo STARTPAGE IS $STARTPAGE
+# echo ENDPAGE IS $ENDPAGE
+
+cat $1 | awk '{if ($1 == "%%Page:" && $2>='$STARTPAGE' && $2<='$ENDPAGE' ) {print $0 "\n" "gsave 135 45 translate 56.5 rotate /Times-Roman findfont 145 scalefont\n" "setfont 0 0 moveto 0.86 setgray (OBSOLETE) show grestore"} else {print $0}}'

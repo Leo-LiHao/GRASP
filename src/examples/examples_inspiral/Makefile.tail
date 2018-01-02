@@ -1,0 +1,31 @@
+#############################################################################
+#  THE REGION ABOVE THIS SPACE IS FILLED IN BY InstallGRASP                 #
+#############################################################################
+
+INCLUDES= -I$(GRASP_I) 
+
+LIBS= $(OPTIMIZED_OBJECTS) -L$(GRASP_HOME)/lib -lgrasp -L$(RECIPES_LIB) -l$(LRECIPES) $(OPTIMIZED_LIBS) -lm
+
+all:   optimal optimalF filters phase_evoltn compare_chirps compute_dist
+
+compare_chirps: compare_chirps.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) compare_chirps.c -o compare_chirps $(LIBS) 
+
+optimal: optimal.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) optimal.c -o optimal $(LIBS) 
+
+optimalF: optimalF.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	if [ '$(BUILD_FRAME)' = 'true' ]; \
+	then \
+	$(CC) $(CFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include optimalF.c -o optimalF \
+	$(LIBS) $(EPICS_LIBS) -L$(FRAME_DIR)/lib -lFrame ; \
+	fi
+
+phase_evoltn: phase_evoltn.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS)  $(INCLUDES) phase_evoltn.c -o phase_evoltn $(LIBS) 
+
+filters: filters.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS)  $(INCLUDES) filters.c -o filters $(LIBS) 
+
+compute_dist: compute_dist.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) compute_dist.c -o compute_dist $(LIBS) 

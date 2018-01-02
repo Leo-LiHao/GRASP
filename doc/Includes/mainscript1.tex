@@ -1,0 +1,24 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_binary\-search\1mainscript.noinject},{14:35},{Mar 30 1999}
+\L{\LB{\K{\#}!\1\V{bin}\1\V{tcsh}}}
+\L{\LB{}}
+\L{\LB{\V{unsetenv}_\V{GRASP\_DATAPATH}}}
+\L{\LB{\V{setenv}_\V{GRASP\_FRAMEPATH}_\1\V{data}\1\V{frames}}}
+\L{\LB{\V{set}_\V{rundir}={`}\V{pwd}{`}\1\V{frameoutput}}}
+\L{\LB{\Proc{if}\K{if}_(_!_\-\V{d}_\V{\$rundir}_)_\V{then}}}
+\L{\LB{________\V{mkdir}_\V{\$rundir}}}
+\L{\LB{\K{endif}}}
+\L{\LB{}}
+\L{\LB{\V{setenv}_\V{GRASP\_MFPATH}_\V{\$rundir}}}
+\L{\LB{\V{touch}_\V{\$GRASP\_MFPATH}\1\V{run\_output}}}
+\L{\LB{\V{setenv}_\V{GRASP\_INSERT}_\V{\$rundir}}}
+\L{\LB{\V{setenv}_\V{GRASP\_STARTSEGMENT}_0}}
+\L{\LB{}}
+\L{\LB{\V{setenv}_\V{GRASP\_TEMPLATE}_{`}\V{pwd}{`}}}
+\L{\LB{\V{setenv}_\V{GRASP\_KILLSCRIPT}_\V{\$rundir}}}
+\L{\LB{\V{touch}_\V{\$rundir}\1\V{environment\_values}}}
+\L{\LB{\V{setenv}_\|_\V{grep}_\V{GRASP}_\>!_\V{\$rundir}\1\V{environment\_values}}}
+\L{\LB{\V{echo}_\V{Starting}_\V{Frame}_\V{Run}_\V{at}_\V{time}_{`}\V{date}{`}_\|_\V{mail}_\V{ballen}@\V{dirac}.\V{phys}.\V{uwm}.\V{edu}}}
+\L{\LB{\V{mpirun}_\-\V{np}_48_\-\V{machinefile}_.\1\V{machines}_.\1\V{examples\_binary}\-\V{search}\1\V{binary\_search}_\>\&!_\V{\$rundir}\1\V{run\_output}}}
+\L{\LB{}}

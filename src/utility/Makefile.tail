@@ -1,0 +1,46 @@
+#############################################################################
+#  THE REGION ABOVE THIS SPACE IS FILLED IN BY InstallGRASP                 #
+#############################################################################
+
+INCLUDES= -I$(GRASP_I)
+
+all: utility.o GR_error.o multitaper.o frameinterface.o utctime.o
+
+utctime.o: utctime.c $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) -c utctime.c
+	ar -vr $(GRASP_HOME)/lib/libgrasp.a utctime.o
+
+utility.o: utility.c $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) -c utility.c
+	ar -vr $(GRASP_HOME)/lib/libgrasp.a utility.o
+
+GR_error.o: GR_error.c $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) -c GR_error.c
+	ar -vr $(GRASP_HOME)/lib/libgrasp.a GR_error.o
+
+multitaper.o: multitaper.c $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) -c multitaper.c
+	ar -vr $(GRASP_HOME)/lib/libgrasp.a multitaper.o
+
+# The nasty-looking awk script here sets a variable called
+# FRAMELIB_VERSION_INT equal to 100 times the value of the macro
+# FRAMELIB_VERSION in FrameL.h .  So for example if FRAMELIB_VERSION is
+# set to 2.37 then FRAMELIB_VERSION_INT=237.  This integer variable is
+# then used in conditional compilation statements in the code.  If there
+# is an easier way, please tell me (ballen@dirac.phys.uwm.edu)!  You
+# can not used floating point conditionals in the C-preprocessor.
+frameinterface.o: frameinterface.c $(GRASP_I)/grasp.h
+	if [ '$(BUILD_FRAME)' = 'true' ]; \
+	then \
+	FRAMELIB_VERSION_INT=`cat $(FRAME_DIR)/include/FrameL.h | head | \
+	awk '{ if ($$0~/define FRAMELIB_VERSION/) print (100 * $$3 )}'`;\
+	echo FRAMELIB_VERSION_INT set to $$FRAMELIB_VERSION_INT;\
+	$(CC) -DFRAMELIB_VERSION_INT=$$FRAMELIB_VERSION_INT $(CFLAGS) $(BUILD_REALTIME) $(INCLUDES) $(EPICS_INCLUDES) -I$(FRAME_DIR)/include -c frameinterface.c; \
+	ar -vr $(GRASP_HOME)/lib/libgrasp.a frameinterface.o ;\
+	fi
+
+# experimental data server
+#dataserver.o: dataserver.c $(GRASP_I)/grasp.h
+#	$(CC) $(CFLAGS) $(INCLUDES) -c dataserver.c
+#	ar -vr $(GRASP_HOME)/lib/libgrasp.a dataserver.o
+

@@ -1,0 +1,5 @@
+This contains functions that replace the Numerical Recipes realft()
+function. 
+
+These functions use the optimized FFT's from the Digital Extended Math
+Library (dxml).

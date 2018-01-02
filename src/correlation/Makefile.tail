@@ -1,0 +1,21 @@
+#############################################################################
+#  THE REGION ABOVE THIS SPACE IS FILLED IN BY InstallGRASP                 #
+#############################################################################
+
+INCLUDES=  -I$(GRASP_I) -I$(FRAME_DIR)/include/   
+
+LIBS= $(OPTIMIZED_OBJECTS) -L$(GRASP_HOME)/lib   -lgrasp -L$(FRAME_DIR)/lib -lFrame -L$(RECIPES_LIB) -l$(LRECIPES) $(CLAPACK_LIBS)  $(OPTIMIZED_LIBS) -lm
+
+all: calc_rho.o chan_clean.o 
+
+calc_rho.o: calc_rho.c $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) -c calc_rho.c -o calc_rho.o
+	ar -vr $(GRASP_HOME)/lib/libgrasp.a calc_rho.o
+
+
+chan_clean.o: chan_clean.c $(GRASP_I)/grasp.h
+	if [ '$(WITH_CLAPACK)' = 'true' ]; \
+	then \
+	$(CC) $(CFLAGS) -I$(F2C_INC) $(INCLUDES) -c chan_clean.c -o chan_clean.o ; \
+	ar -vr $(GRASP_HOME)/lib/libgrasp.a chan_clean.o ; \
+	fi

@@ -1,0 +1,125 @@
+# detector site information
+#
+# format:
+# site_id,site_location_north,site_location_west,
+# arm1_orientation,arm2_orientation,arm_length_cm
+# site_name,noise_file,whiten_file
+#
+# Hanford, Washington LIGO Site (initial detector)
+# Fred Raab fjr@ligo.caltech.edu 
+1 46.45236 119.40753 36.8 126.8 4.e5 LIGO-WA_init noise_ligo_init.dat whiten_ligo_init.dat
+#
+# Livingston, Louisiana LIGO Site (initial detector)
+# Fred Raab fjr@ligo.caltech.edu
+2 30.56277 90.77425 108.0 198.0 4.e5 LIGO-LA_init noise_ligo_init.dat whiten_ligo_init.dat
+#
+# VIRGO Site
+# Biplab Bhawal biplab@iucaa.iucaa.ernet.in   
+# 3 43.3 -10.1 71.5 341.5 
+# Raffaele Flaminio flaminio@lapphp0.in2p3.fr 
+# Carlo Bradaschia BRADASCHIA@VAXPIA.PI.INFN.IT 
+# Rosa Poggiani POGGIANI@pisa.infn.it 
+3 43.6333 -10.5 71.5 341.5 3.e5 VIRGO noise_virgo.dat whiten_virgo.dat
+#
+# GEO-600 as of April 1995
+# Albrecht Ruediger atr@mpq.mpg.de
+4 52.2467 -9.82167 25.94 291.61 6.e4 GEO-600 noise_geo.dat whiten_geo.dat
+#
+# Garching 30 Meter Interferometer
+# Albrecht Ruediger atr@mpq.mpg.de 
+5 48.244 -11.675 329.0 239.0 3.e3 Garching-30 no_noise_file_exists no_whitening_file_exists
+#
+# Glasgow 10 Meter Interferometer 
+# Albrecht Ruediger atr@mpq.mpg.de
+# 6 55.86 4.23 77.0 167.0 
+# Jim Hough hough@physics.gla.ac.uk
+6 55.8667 4.28333 62.0 152.0 1.e3 Glasgow-10 no_noise_file_exists no_whitening_file_exists
+#
+# MIT 5 Meter Interferometer 
+# Gabriela Gonzalez gg@tristan.mit.edu
+7 42.3667 71.1 34.5 304.5 5.e2 MIT-5 no_noise_file_exists no_whitening_file_exists
+#
+# Caltech 40 Meter Interferometer NEEDS CORRECTION 
+# Fred Raab fjr@ligo.caltech.edu 
+8 34.1667 118.133 180.0 270.0 3.825e3 Caltech-40 noise_40.dat whiten_40.dat
+#
+# An imaginary "ghost" Caltech 40 meter created for stochastic bg simulation 
+# Created by Bruce Allen and Joe Romano, ballen@dirac.phys.uwm.edu romano@csd.uwm.edu
+14 34.1667 116.50 180.0 270.0 3.825e3 GHOST-40 noise_40.dat whiten_40.dat
+#
+# Caltech 40 Meter Interferometer smooth-fit noise-curve (Sathyaprakash, Nov 1994 data) 
+# Fred Raab fjr@ligo.caltech.edu 
+15 34.1667 118.133 180.0 270.0 3.825e3 Caltech-40 noise_40smooth.dat whiten_40.dat
+#
+# TAMA 300 Meter 
+# Masa-Katsu Fujimoto fujimoto@gravity.mtk.nao.ac.jp 
+9 35.6766 -139.536 90.0 180.0 3.0e4 TAMA-300 noise_tama.dat whiten_tama.dat
+#
+# TAMA 20 Meter 
+# Masa-Katsu Fujimoto fujimoto@gravity.mtk.nao.ac.jp 
+10 35.6751 -139.536 45.0 315.0 2.0e3 TAMA-20 no_noise_file_exists no_whitening_file_exists
+#
+# ISAS 100 Meter delay line 
+# Hide Mizuno hide@pleiades.sci.isas.ac.jp 
+11 35.5678 -139.467 42.0 135.0 1.0e4 ISAS-100 no_noise_file_exists no_whitening_file_exists
+#
+# advanced detectors
+#
+# Hanford, Washington LIGO Site (advanced detector SCIENCE 1992 article)
+# Fred Raab fjr@ligo.caltech.edu 
+12 46.45236 119.40753 36.8 126.8 4.e5 LIGO-WA_adv noise_ligo_adv.dat whiten_ligo_adv.dat
+#
+# Livingston, Louisiana LIGO Site (advanced detector SCIENCE 1992 article)
+# Fred Raab fjr@ligo.caltech.edu
+13 30.56277 90.77425 108.0 198.0 4.e5 LIGO-LA_adv noise_ligo_adv.dat whiten_ligo_adv.dat
+#
+
+# Hanford LIGO (the 7 stages of enhanced LIGO, 0=initial 7=final)
+16 46.45236 119.40753 36.8 126.8 4.e5 LIGO-WA_enh0 ligo-0.dat whiten_ligo_adv.dat
+17 46.45236 119.40753 36.8 126.8 4.e5 LIGO-WA_enh1 ligo-1.dat whiten_ligo_adv.dat
+18 46.45236 119.40753 36.8 126.8 4.e5 LIGO-WA_enh2 ligo-2.dat whiten_ligo_adv.dat
+19 46.45236 119.40753 36.8 126.8 4.e5 LIGO-WA_enh3 ligo-3.dat whiten_ligo_adv.dat
+20 46.45236 119.40753 36.8 126.8 4.e5 LIGO-WA_enh4 ligo-4.dat whiten_ligo_adv.dat
+21 46.45236 119.40753 36.8 126.8 4.e5 LIGO-WA_enh5 ligo-5.dat whiten_ligo_adv.dat
+22 46.45236 119.40753 36.8 126.8 4.e5 LIGO-WA_enh6 ligo-6.dat whiten_ligo_adv.dat
+23 46.45236 119.40753 36.8 126.8 4.e5 LIGO-WA_enh7 ligo-7.dat whiten_ligo_adv.dat
+
+# Livingston LIGO (the 7 stages of enhanced LIGO, 0=initial 7=final)
+24 30.56277 90.77425 108.0 198.0 4.e5 LIGO-LA_enh0 ligo-0.dat whiten_ligo_adv.dat
+25 30.56277 90.77425 108.0 198.0 4.e5 LIGO-LA_enh1 ligo-1.dat whiten_ligo_adv.dat
+26 30.56277 90.77425 108.0 198.0 4.e5 LIGO-LA_enh2 ligo-2.dat whiten_ligo_adv.dat
+27 30.56277 90.77425 108.0 198.0 4.e5 LIGO-LA_enh3 ligo-3.dat whiten_ligo_adv.dat
+28 30.56277 90.77425 108.0 198.0 4.e5 LIGO-LA_enh4 ligo-4.dat whiten_ligo_adv.dat
+29 30.56277 90.77425 108.0 198.0 4.e5 LIGO-LA_enh5 ligo-5.dat whiten_ligo_adv.dat
+30 30.56277 90.77425 108.0 198.0 4.e5 LIGO-LA_enh6 ligo-6.dat whiten_ligo_adv.dat
+31 30.56277 90.77425 108.0 198.0 4.e5 LIGO-LA_enh7 ligo-7.dat whiten_ligo_adv.dat
+
+# White paper curve 1: LIGO-I as given by Ken Strain in the white paper
+# Hanford
+32 46.45236 119.40753 36.8 126.8 4.e5 LIGO-WA_whitepaper1 noise_whitepaper1.dat whiten_ligo_adv.dat
+# Livingston
+33 30.56277 90.77425 108.0 198.0 4.e5 LIGO-LA_whitepaper1 noise_whitepaper1.dat whiten_ligo_adv.dat
+
+# White paper curve 2: LIGO-II optimized to detected inspiralling binaries,
+#                      as given by Ken Strain in the white paper
+# Hanford
+34 46.45236 119.40753 36.8 126.8 4.e5 LIGO-WA_whitepaper2 noise_whitepaper2.dat whiten_ligo_adv.dat
+# Livingston
+35 30.56277 90.77425 108.0 198.0 4.e5 LIGO-LA_whitepaper2 noise_whitepaper2.dat whiten_ligo_adv.dat
+
+# White paper curve 7: LIGO-II in a broad-band configuration, designed to
+#                      have good sensitivity from ~50 Hz to several hundred
+#                      Hz; as given by Ken Strain in the white paper
+# Hanford
+36 46.45236 119.40753 36.8 126.8 4.e5 LIGO-WA_whitepaper7 noise_whitepaper7.dat whiten_ligo_adv.dat
+# Livingston
+37 30.56277 90.77425 108.0 198.0 4.e5 LIGO-LA_whitepaper7 noise_whitepaper7.dat whiten_ligo_adv.dat
+
+# sens270: An earlier version of curve 2 produced by Ken Strain before the
+#          final version of the white paper was ready.  Now obsolete; kept
+#          to allow historical comparisons.
+# Hanford
+38 46.45236 119.40753 36.8 126.8 4.e5 LIGO-WA_sens270 noise_sens270.dat whiten_ligo_adv.dat
+# Livingston
+39 30.56277 90.77425 108.0 198.0 4.e5 LIGO-LA_sens270 noise_sens270.dat whiten_ligo_adv.dat
+

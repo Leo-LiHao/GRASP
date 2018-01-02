@@ -1,0 +1,21 @@
+#############################################################################
+#  THE REGION ABOVE THIS SPACE IS FILLED IN BY InstallGRASP                 #
+#############################################################################
+
+INCLUDES= -I$(GRASP_I)
+
+OBJECTS =  testmass.o util.o
+
+all:  $(OBJECTS) 
+	
+	
+testmass.o: testmass.c $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) -c testmass.c
+	ar -vr $(GRASP_HOME)/lib/libgrasp.a testmass.o
+
+util.o: util.c
+	$(CC) $(CFLAGS) $(INCLUDES) -c util.c
+	ar -vr $(GRASP_HOME)/lib/libgrasp.a util.o
+
+clean:
+	rm -f *.o

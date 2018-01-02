@@ -1,0 +1,15 @@
+#############################################################################
+#  THE REGION ABOVE THIS SPACE IS FILLED IN BY InstallGRASP                 #
+#############################################################################
+
+INCLUDES= -I$(GRASP_I) 
+
+all: LS_phas_and_freq.o LS_waveform.o
+
+LS_phas_and_freq.o: LS_phas_and_freq.c $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) -c LS_phas_and_freq.c
+	ar -vr $(GRASP_HOME)/lib/libgrasp.a LS_phas_and_freq.o
+
+LS_waveform.o: LS_waveform.c $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) -c LS_waveform.c
+	ar -vr $(GRASP_HOME)/lib/libgrasp.a LS_waveform.o

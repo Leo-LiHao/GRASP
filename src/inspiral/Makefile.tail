@@ -1,0 +1,19 @@
+#############################################################################
+#  THE REGION ABOVE THIS SPACE IS FILLED IN BY InstallGRASP                 #
+#############################################################################
+
+INCLUDES= -I$(GRASP_I) 
+
+all: matched.o pN_chirp.o eff_dist.o
+
+matched.o: matched.c $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) -c matched.c
+	ar -vr $(GRASP_HOME)/lib/libgrasp.a matched.o
+
+pN_chirp.o: pN_chirp.c $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(DEFINES) $(INCLUDES) -c pN_chirp.c
+	ar -vr $(GRASP_HOME)/lib/libgrasp.a pN_chirp.o
+
+eff_dist.o: eff_dist.c $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(DEFINES) $(INCLUDES) -c eff_dist.c
+	ar -vr $(GRASP_HOME)/lib/libgrasp.a eff_dist.o

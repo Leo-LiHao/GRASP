@@ -1,0 +1,18 @@
+#############################################################################
+#  THE REGION ABOVE THIS SPACE IS FILLED IN BY InstallGRASP                 #
+#############################################################################
+
+INCLUDES= -I$(GRASP_I) 
+
+LIBS= $(OPTIMIZED_OBJECTS) -L$(GRASP_HOME)/lib -lgrasp -L$(RECIPES_LIB) -l$(LRECIPES) $(OPTIMIZED_LIBS) -lm
+
+all: caltech_lst inject galactic2equatorial
+
+inject: inject.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) inject.c -o inject $(LIBS)
+
+caltech_lst: caltech_lst.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) caltech_lst.c -o caltech_lst $(LIBS)
+
+galactic2equatorial: galactic2equatorial.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) galactic2equatorial.c -o galactic2equatorial $(LIBS)

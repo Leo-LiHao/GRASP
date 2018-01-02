@@ -1,0 +1,246 @@
+% GRASP: Copyright 1997,1998,1999  Bruce Allen
+% $Id: man_transient.tex,v 1.5 1999/07/11 21:22:18 ballen Exp $
+\section{GRASP Routines: Supernovae and other transient sources}
+\label{s:transient}
+\setcounter{equation}0
+
+In any classification scheme for natural phenomena, the boundaries between
+classifications run the risk of becoming broad and blurry. While previous
+sections have avoided this by considering very narrowly defined classes of
+gravitational wave sources, this section considers a much broader class of
+sources, and as such is a kind of ``catch all'' for a variety of sources. 
+These sources, however, all share in common two properties which unite them in
+terms of practical detection strategies:
+\begin{enumerate}
+\item They produce gravitational radiation in the Ligo frequency and
+sensitivity band for a short time. The definition of short time is, of course,
+relative. However, if the time scale over which a source is visible to LIGO is
+of the order of days, as opposed to seconds, then it will likely be more
+suited to the analysis tools for quasi-periodic and periodic sources in
+section \ref{s:periodic}. 
+\item Astrophysical models of these sources are somewhat crude.
+Those short lived sources from which the gravitational radiation can be
+modelled accurately enough to permit matched filtering, may be dealt 
+with using the tools of earlier sections (cf. section~\ref{s:inspiral}).
+\end{enumerate}
+At the time of this writing, the sources which have these properties
+are thought to be primarily related to supernova events.
+\newpage
+
+\subsection{Centrifugal Hang-up of Core Collapse Supernovae}
+\label{ss:LS}
+
+Massive stars which have burnt their nuclear fuel will collapse under the pull
+of their gravitational self attraction, sometimes triggering a supernova event. 
+This collapse can lead to situations in which significant gravitational 
+radiation is produced.  In particular, there are various scenarios in which
+the collapsing core is thought to ``hang-up'' in a non-axisymmetric 
+configuration and radiate this assymmetry away through gravitational waves.
+
+A promising scenario of this type was explored by Lai and Shapiro \cite{LS95}
+and proceeds as follows:a
+stellar core with some initial angular momentum collapses. As the collapse
+proceeds, the ratio $\beta=T/W$ of the rotational energy ($T$) to the
+gravitational potential energy ($W$) will vary inversely with the core 
+radius. If $\beta$ becomes large enough, the evolution of non-axisymmetric 
+modes of the core become unstable. Such instabilities are well known, being 
+first described by Chandrasekhar \cite{Chandra69}. There are two 
+possibilities. If $\beta$ lies in a critical band of values between 
+$\sim 0.17$ and $\sim 0.27$, the non-axisymmetric bar mode ($\ell=m=2$) of the 
+core will be {\em secularly} unstable and grow due to either radiation 
+reaction or viscosity. This long lasting instability is expected to produce 
+significant gravitational radiation. If $\beta$ exceeds the upper limit of 
+this band ($\beta > 0.27$) then non-axisymmetric modes become {\em dynamically} 
+unstable. The transition through dynamical instability is rapid and results in 
+a nearly axisymmetric configuration with $\beta < 0.27$ but still much 
+larger than $0.17$. The core therefore again enters the regime of secular 
+instability. In either scenario the onset of the secular instability occurs 
+at approximately neutron star densities. If $\beta < 0.17$ for the entire 
+collapse, then no significant gravitational radiation is expected from this
+mechanism.
+
+Lai and Shapiro have calculated the waveform of the gravitational
+radiation emitted by a secularly unstable core based on crude Newtonian fluid 
+ellipsoids models without viscosity. They find \cite{LaiPC}:
+\begin{equation}
+   \left. \begin{array}{l}
+   h_+(t) = A(f_{max},r,M,d)~u(t)^{2.1}\sqrt{1-u(t)}\,(1+\cos^2i)\cos\Phi(t),\\
+   h_\times(t) = 2\, A(f_{max},r,M,d)~u(t)^{2.1}\sqrt{1-u(t)}\,\cos i~\sin \Phi(t).
+   \end{array} \right\}
+   \label{eq:stress}
+\end{equation}
+where:
+\begin{description}
+\item{$f_{max}$} is the initial frequency of the gravitational wave (typically
+$\stackrel{<}{\sim}$ 800 Hz).
+\item{$r$} is the radius of the core (typically $\sim$ 10 km).
+\item{$M$} is the mass of the core (typically $\sim$ 1.4 $M_\odot$).
+\item{$d$} is the distance from the core (source).
+\item{$i$} inclination angle (see section \ref{s:inspiral}).
+\item{$A(f_{max},r,M,d)$} is the amplitude function
+\begin{equation}
+   A=\frac{1}{2} \frac{M^2}{rd}\left\{\begin{array}{lr}
+      \left(\frac{\overline{f_{max}}}{1756}\right)^{2.7},&
+         \overline{f_{max}}\le 415 {\rm Hz},\\
+			\\
+      \left(\frac{\overline{f_{max}}}{1525}\right)^{3.0},&
+         \overline{f_{max}} > 415 {\rm Hz}.
+   \end{array} \right.
+   \label{eq:amp}
+\end{equation}
+\item{$\overline{f_{max}}$} = $f_{max} \sqrt{r_{10}^3 / M_{1.4}}$ where $r_{10} =
+r/10$km and $M_{1.4}=M/(1.4M_\odot)$.
+\item{$u(t)$}=$f(t)/f_{max}$ is given by the frequency evolution equation
+\begin{equation}
+   \frac{du}{dt} = \left(\frac{M}{r}\right)^{5/2} \left(\frac{A}{0.16}\right)^2
+   \sqrt{\frac{M_{1.4}}{r_{10}}} ~~u^{5.2} (u-1).
+   \label{eq:LSfreq}
+\end{equation}
+\item{$\Phi(t)$} is the phase, given implicitly by
+\begin{equation}
+   f(t)=\frac{1}{2\pi}\frac{d\Phi}{dt}(t). \label{eq:LSphase}
+\end{equation}
+\end{description}
+This model is implemented below.
+\newpage
+
+\subsection{Structure: {\tt LS\_physical\_constants}} \label{ss:LSstruct}
+The physical parameters describing the hung-up core are passed in a
+structure {\tt struct}\\ {\tt LS\_physical\_constants}. The fields are:\\
+{\tt struct LS\_physical\_constants \{}
+\begin{description}
+\item{\tt float mass}: The mass of the stellar core in solar masses (typically
+$\sim 1.4 M_\odot$).
+\item{\tt float radius}: The radius of the stellar core in km (typically $\sim
+10$km).
+\item{\tt float distance}: The distance from the stellar core to the detector 
+in Megaparsecs.
+\item{\tt float fmax}: The maximum frequency of gravitational wave emitted by
+the stellar core (typically $\stackrel{<}{\sim}$ 800 Hz).
+\item{\tt inclination angle}: angle between spin axis of stellar core and line
+of sight to detector in radians.
+\item{\tt Phi\_0}: the initial phase of the gravitational wave. 
+\end{description}
+{\tt \}}
+\newpage
+
+\subsection{Function: {\tt LS\_freq\_deriv()}}
+\label{ss:Lfd}
+{\tt void LS\_freq\_deriv(float t, float u[], float dudt[])}
+This function gives the derivative of frequency (actually, $u$ which
+is the frequency divided by the maximum frequency) as a function of 
+time, (see (\ref{eq:LSfreq})). The amplitude $\left(\frac{M}{r}\right)^{5/2} 
+\left(\frac{A}{0.16}\right)^2 \sqrt{\frac{M_{1.4}}{r_{10}}}$ must be declared
+and assigned a value as an external variable called {\tt A}.
+
+The arguments are:
+\begin{description}
+\item{\tt t}: Input. The time at which the derivative is to be taken.
+\item{\tt u[]}: Input. An array of initial values (in this case, containing
+exactly one element) of the dependent variables (in this case, only $u$).
+\item{\tt dudt[]}: Output. An array of derivatives (in this case, containing
+exactly one element) of derivates of the dependent variables (in this case,
+$\partial u /\partial t$).
+\end{description}
+
+\begin{description}
+\item{Authors:} Warren G. Anderson, warren@ricci.phys.uwm.edu 
+\item{Comments:} This function is required by numerical recipes odeint. See
+the numerical recipes manual for more information.
+\end{description}
+\newpage
+
+\subsection{Function: {\tt LS\_phas\_and\_freq()}}
+{\tt void LS\_phas\_and\_freq(double Phi[], float u[], float A, 
+           float fmax, float dt, int n\_samples)}\\
+This function integrates Lai and Shapiro's frequency and phase evolution 
+equations, (\ref{eq:LSfreq}) and (\ref{eq:LSphase}), for a hung-up 
+collapsed core. We use numerical recipes odeint, an adaptive step size 
+4th order Runge-Kutta integrator for the frequency integration and a
+simple trapezoidal integration for the phase.
+
+The arguments are:
+\begin{description}
+\item{\tt Phi[]}: Output. An array which holds the phase of the gravitational
+wave in radians at equally spaced time intervals. {\tt Phi[]} must be allocated
+sufficient memory before being passed to {\tt LS\_phas\_and\_freq()}.
+\item{\tt u[]}: Output. An array which holds the reduced frequency (frequency
+divided by $f_{max}$) of the gravitational wave at equally spaced time
+intervals. {\tt u[]} must be allocated sufficient memory before being passed
+to {\tt LS\_phas\_and\_freq()}.
+\item{\tt A}: Input. The Amplitude $A$ as calculated in (\ref{eq:amp})
+\item{\tt fmax}: Input. The maximum frequency, $f_{max}$. Usually taken from
+the appropriate field of a\\ {\tt LS\_physical\_constants} structure.
+\item{\tt dt}: Input. The time interval (in seconds) at which the phase and 
+frequency values should be output.
+\item{\tt n\_samples}: Input. The number of phase and frequency values to be
+output (i.e. the number of elements in the arrays {\tt Phi[]} and {\tt u[]}).
+\end{description}
+
+\begin{description}
+\item{Authors:} Warren G. Anderson, warren@ricci.phys.uwm.edu and Patrick Brady,
+patrick@tapir.caltech.edu
+\end{description}
+\newpage
+
+\subsection{Function: {\tt LS\_waveform()}}
+{\tt void LS\_waveform(float h[], struct LS\_physical\_constants phys\_const,
+           float sky\_theta, float sky\_phi, float polarization, float dt, 
+               int n\_samples) }\\
+This function calculates the stress as measured by a LIGO like detector
+due to a hung-up collapsing core. It uses the routines {\tt 
+LS\_phas\_and\_freq} to obtain the wave phase and reduced frequency at
+regular time intervals, calculates $h_+$ and $h_\times$ at each interval according 
+to (\ref{eq:stress}), and then converts these into a single detector stress 
+at each interval using beam pattern factors calculated with 
+{\tt beam\_pattern}. Note that the external variable {\tt A} is assigned a
+value here for use in {\tt LS\_freq\_deriv} (see \ref{ss:Lfd}).
+
+The arguments are:
+\begin{description}
+\item{\tt h[]}: Output. An array which holds the detector stress due the 
+gravitational wave of the hung-up core at equally spaced time intervals. 
+{\tt h[]} must be allocated sufficient memory before being passed to {\tt
+LS\_waveform()}.
+\item{\tt phys\_const}: Input. A structure of type {\tt
+LS\_physical\_constants} (see subsection \ref{ss:LSstruct}) which contains the
+physical parameters of the hung-up core.
+\item{\tt sky\_theta}: Input. The polar angle from zenith in radians.
+\item{\tt sky\_phi}: Input. The azimuthal angle (measured counter clockwise
+from first arm) in radians.
+\item{\tt polarization}: Input. The polarization angle in radians.
+\item{\tt dt}: Input. The time interval (in seconds) at which the detector
+stress values should be output.
+\item{\tt n\_samples}: Input. The number of detector stress values to be 
+output (i.e. the number of elements in the array {\tt h[]}).
+\end{description}
+
+\begin{description}
+\item{Authors:} Warren G. Anderson, warren@ricci.phys.uwm.edu and
+Patrick Brady,
+patrick@tapir.caltech.edu
+\item{Comments:} This function currently calculates the stress at a user
+defined distance from the hung-up core. For realistic distances, this leads
+to small values (of the order of 10e-22 at 10 MPc). If one wishes to have
+numbers of the order of unity, simply set the distance in the structure
+{\tt phys\_const} to be 10e-22.
+\end{description}
+\newpage
+
+\subsection{Example: {\tt LS\_filter} program}
+This program uses {\tt LS\_waveform} to generate a gravitational wave 
+detector stress waveform from a hung-up collapsing core and print 
+it to the screen {\tt (stdout)}. This is the same thing that one would
+generate as a filter if one wanted to use matched filtering for such waves.
+Since this waveform is not expected to be an accurate representation of an
+astrophysical gravitational wave, due to the crude model by which it is
+generated, it is probably better to think of this as simply an illustration of
+the use of the {\tt LS\_waveform} function.
+
+\lgrindfile{Includes/LS_filter.tex}
+
+\begin{description}
+\item{Author:} Warren G. Anderson, warren@ricci.phys.uwm.edu
+\end{description}
+
+

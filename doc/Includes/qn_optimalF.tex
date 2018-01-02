@@ -1,0 +1,188 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_ringdown\1qn\_optimalF.c},{17:46},{Oct  5 1998}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{}}
+\L{\LB{\K{\#define}_\V{NPOINT}_131072______\C{}\1\* number of data points \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{HSCALE}_1.0e21______\C{}\1\* convenient scaling factor \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{FLO}_120.0__________\C{}\1\* low frequency cutoff for filtering \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{MIN\_INTO\_LOCK}_3.0__\C{}\1\* time (minutes) to skip into each locked section \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{THRESHOLD}_6.0______\C{}\1\* detection threshold SNR \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{ATTEN}_30.0_________\C{}\1\* attenuation cutoff for ringdown waveforms \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{SAFETY}_1000________\C{}\1\* padding safety to avoid wraparound errors \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{DATA\_SEGMENTS}_3000_\C{}\1\* maximum number of data segments to filter \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\K{double}_\V{datastart};}}
+\L{\LB{\K{float}_\*\V{response},\V{srate}=9868.4208984375;}}
+\L{\LB{\K{short}_\*\V{datas};}}
+\L{\LB{\K{int}_\V{needed}=\V{NPOINT};}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}()}}
+\L{\LB{\{}}
+\L{\LB{__\K{void}_\V{realft}(\K{float}_\*,_\K{unsigned}_\K{long},_\K{int});}}
+\L{\LB{__\K{int}_\V{fill\_buffer}();}}
+\L{\LB{__\K{double}_\V{norm};}}
+\L{\LB{__\K{float}_\*\V{data},\*\V{htilde},\*\V{output};}}
+\L{\LB{__\K{float}_\*\V{mean\_pow\_spec},\*\V{twice\_inv\_noise};}}
+\L{\LB{__\K{float}_\*\V{ring},\*\V{ringtilde},\*\V{template};}}
+\L{\LB{__\K{float}_\V{decaytime},\V{decay}=0.0,\V{scale},\V{snr},\V{mean},\V{var},\V{tmpl\_norm},\V{dist};}}
+\L{\LB{__\K{float}_\V{mass}=50.0,\V{spin}=0.98,\V{eps}=0.03,\V{psi0}=0.0,\V{invMpc}=10.0,\V{ringstart}=500.0;}}
+\L{\LB{__\K{int}_\V{i},\V{code},\V{len},\V{safe}=\V{SAFETY},\V{diff},\V{off},\V{n}=\V{NPOINT};}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* allocate memory for arrays \*\1\CE{}}}
+\L{\LB{__\V{response}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*(\V{NPOINT}+2));}}
+\L{\LB{__\V{datas}=(\K{short}_\*)\V{malloc}(\K{sizeof}(\K{short})\*\V{NPOINT});}}
+\L{\LB{__\V{data}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{NPOINT});}}
+\L{\LB{__\V{htilde}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{NPOINT});}}
+\L{\LB{__\V{output}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{NPOINT});}}
+\L{\LB{__\V{ringtilde}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{NPOINT});}}
+\L{\LB{__\V{template}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{NPOINT});}}
+\L{\LB{__\V{mean\_pow\_spec}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*(\V{NPOINT}\12+1));}}
+\L{\LB{__\V{twice\_inv\_noise}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*(\V{NPOINT}\12+1));}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* manufacture quasinormal ring data; obtain length of signal \*\1\CE{}}}
+\L{\LB{__\V{ring}_=_\V{NULL};}}
+\L{\LB{__\V{len}_=_\V{qn\_qring}(\V{psi0},\V{eps},\V{mass},\V{spin},1.0\1\V{srate},\V{ATTEN},\V{n},\&\V{ring});}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* normalize quasinormal ring to one megaparsec \*\1\CE{}}}
+\L{\LB{__\V{scale}_=_\V{HSCALE}\*\V{M\_SOLAR}\1\V{MPC};}}
+\L{\LB{__\K{for}_(\V{i}=0;\V{i}\<\V{len};\V{i}++)_\V{ringtilde}[\V{i}]_=_\V{ring}[\V{i}]_\*=_\V{scale};}}
+\L{\LB{__\K{for}_(\V{i}=\V{len};\V{i}\<\V{n};\V{i}++)_\V{ringtilde}[\V{i}]_=_\V{ring}[\V{i}]_=_0;}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* FFT the quasinormal ring waveform \*\1\CE{}}}
+\L{\LB{__\V{realft}(\V{ringtilde}\-1,\V{n},1);}}
+\L{\LB{__\K{if}_(\V{n}\<\V{len}+2\*\V{safe})_\V{abort}();}}
+\L{\LB{}}
+\L{\LB{__\K{while}_(1)_\{}}
+\L{\LB{}}
+\L{\LB{____\C{}\1\* fill buffer with number of points needed \*\1\CE{}}}
+\L{\LB{____\V{code}_=_\V{fill\_buffer}();}}
+\L{\LB{}}
+\L{\LB{____\C{}\1\* if no points left, we are done! \*\1\CE{}}}
+\L{\LB{____\K{if}_(\V{code}==0)_\K{break};}}
+\L{\LB{}}
+\L{\LB{____\C{}\1\* if just entering a new locked stretch, reset averaging over power spectrum \*\1\CE{}}}
+\L{\LB{____\K{if}_(\V{code}==1)_\{}}
+\L{\LB{______\V{norm}_=_0;}}
+\L{\LB{______\V{clear}(\V{mean\_pow\_spec},\V{n}\12+1,1);}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* decay time in seconds: set to 15 x length of NPOINT sample \*\1\CE{}}}
+\L{\LB{______\V{decaytime}_=_15.0\*\V{n}\1\V{srate};}}
+\L{\LB{______\V{decay}_=_\V{exp}(\-1.0\*\V{n}\1(\V{srate}\*\V{decaytime}));}}
+\L{\LB{____\}}}
+\L{\LB{}}
+\L{\LB{____\C{}\1\* copy data into floats \*\1\CE{}}}
+\L{\LB{____\K{for}_(\V{i}=0;\V{i}\<\V{NPOINT};\V{i}++)_\V{data}[\V{i}]_=_\V{datas}[\V{i}];}}
+\L{\LB{}}
+\L{\LB{____\C{}\1\* inject a time-domain signal before FFT (note output is used as temp storage only) \*\1\CE{}}}
+\L{\LB{____\V{qn\_inject}(\V{data},\V{ring},\V{response},\V{output},\V{invMpc},(\K{int})(\V{srate}\*(\V{ringstart}\-\V{datastart})),\V{n},\V{len});}}
+\L{\LB{}}
+\L{\LB{____\C{}\1\* compute the FFT of data \*\1\CE{}}}
+\L{\LB{____\V{realft}(\V{data}\-1,\V{n},1);}}
+\L{\LB{}}
+\L{\LB{____\C{}\1\* normalized dL\1L tilde \*\1\CE{}}}
+\L{\LB{____\V{product}(\V{htilde},\V{data},\V{response},\V{n}\12);}}
+\L{\LB{}}
+\L{\LB{____\C{}\1\* update auto-regressive mean power spectrum \*\1\CE{}}}
+\L{\LB{____\V{avg\_inv\_spec}(\V{FLO},\V{srate},\V{n},\V{decay},\&\V{norm},\V{htilde},\V{mean\_pow\_spec},\V{twice\_inv\_noise});}}
+\L{\LB{}}
+\L{\LB{____\C{}\1\* normalize the ring to produce a template \*\1\CE{}}}
+\L{\LB{____\V{qn\_normalize}(\V{template},\V{ringtilde},\V{twice\_inv\_noise},\V{n},\&\V{tmpl\_norm});}}
+\L{\LB{}}
+\L{\LB{____\C{}\1\* calculate the filter output and find its maximum \*\1\CE{}}}
+\L{\LB{____\V{find\_ring}(\V{htilde},\V{template},\V{twice\_inv\_noise},\V{output},\V{n},\V{len},\V{safe},\&\V{off},\&\V{snr},\&\V{mean},\&\V{var});}}
+\L{\LB{}}
+\L{\LB{____\C{}\1\* perform diagnostics on filter output \*\1\CE{}}}
+\L{\LB{____\K{if}_(\V{snr}\<\V{THRESHOLD})_\{_\C{}\1\* threshold not exceeded: print a short message \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"max_snr:_\%.2f_(offset_\%6d)_\"\SE{},\V{snr},\V{off});}}
+\L{\LB{______\V{printf}(\S{}\"data_start:_\%.2f_variance:_\%.5f\2n\"\SE{},\V{datastart},\V{var});}}
+\L{\LB{____\}_\K{else}_\{_\C{}\1\* threshold exceeded \*\1\CE{}}}
+\L{\LB{______\C{}\1\* estimate distance to signal (template distance [Mpc] = 1 \1 tmpl\_norm) \*\1\CE{}}}
+\L{\LB{______\V{dist}_=_2\1(\V{tmpl\_norm}\*\V{snr});}}
+\L{\LB{______\V{printf}(\S{}\"\2nMax_SNR:_\%.2f_(offset_\%d)_variance_\%f\2n\"\SE{},\V{snr},\V{off},\V{var});}}
+\L{\LB{______\V{printf}(\S{}\"___If_ringdown,_estimated_distance:_\%f_Mpc,_\"\SE{},\V{dist});}}
+\L{\LB{______\V{printf}(\S{}\"start_time:_\%f\2n\"\SE{},\V{datastart}+\V{off}\1\V{srate});}}
+\L{\LB{______\C{}\1\* See if time domain statistics are non-Gaussian \*\1\CE{}}}
+\L{\LB{______\K{if}_(\V{is\_gaussian}(\V{datas},\V{n},\-2048,2047,1))}}
+\L{\LB{}\Tab{8}{\V{printf}(\S{}\"___POSSIBLE_RINGDOWN:_Distribution_does_not_appear_to_have_outliers\2n\2n\"\SE{});}}
+\L{\LB{______\K{else}}}
+\L{\LB{}\Tab{8}{\V{printf}(\S{}\"___Distribution_has_outliers!__Reject\2n\2n\"\SE{});}}
+\L{\LB{____\}}}
+\L{\LB{}}
+\L{\LB{____\C{}\1\* shift ends of buffer to the start \*\1\CE{}}}
+\L{\LB{____\V{diff}_=_\V{len}_+_2\*\V{safe};_\C{}\1\* safety is applied at beginning and end of buffer \*\1\CE{}}}
+\L{\LB{____\V{needed}_=_\V{NPOINT}_\-_\V{diff};}}
+\L{\LB{____\K{for}_(\V{i}=0;\V{i}\<\V{diff};\V{i}++)_\V{datas}[\V{i}]_=_\V{datas}[\V{i}+\V{needed}];}}
+\L{\LB{__\}}}
+\L{\LB{}}
+\L{\LB{__\K{return}_0;}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* this routine gets the data, overlapping the data buffer as needed \*\1\CE{}}}
+\L{\LB{\K{int}_\V{fill\_buffer}()}}
+\L{\LB{\{}}
+\L{\LB{__\K{static}_\K{struct}_\V{fgetinput}_\V{fgetinput};}}
+\L{\LB{__\K{static}_\K{struct}_\V{fgetoutput}_\V{fgetoutput};}}
+\L{\LB{__\K{static}_\K{double}_\V{lastcalibtime}=0;}}
+\L{\LB{__\K{static}_\K{int}_\V{first}=1,\V{num\_sent}=0;}}
+\L{\LB{__\K{int}_\V{i},\V{temp},\V{code}=2,\V{diff}=\V{NPOINT}\-\V{needed};}}
+\L{\LB{}}
+\L{\LB{__\K{if}_(\V{first})_\{_\C{}\1\* on first call only \*\1\CE{}}}
+\L{\LB{____\V{first}_=_0;}}
+\L{\LB{____\C{}\1\* stores ADC data as short integers \*\1\CE{}}}
+\L{\LB{____\V{fgetinput}.\V{nchan}_=_1;}}
+\L{\LB{____\V{fgetinput}.\V{files}_=_\V{framefiles};}}
+\L{\LB{____\V{fgetinput}.\V{calibrate}_=_1;}}
+\L{\LB{____\V{fgetinput}.\V{chnames}_=_(\K{char}_\*\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{char}_\*));}}
+\L{\LB{____\V{fgetinput}.\V{locations}_=_(\K{short}_\*\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{short}_\*));}}
+\L{\LB{____\V{fgetoutput}.\V{npoint}_=_(\K{int}_\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{int}));}}
+\L{\LB{____\V{fgetoutput}.\V{ratios}_=_(\K{int}_\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{int}));}}
+\L{\LB{____\V{fgetoutput}.\V{lastlock}_=_\V{fgetoutput}.\V{tstart}_=_0;}}
+\L{\LB{____\C{}\1\* set up channel names \*\1\CE{}}}
+\L{\LB{____\V{fgetinput}.\V{chnames}[0]_=_\S{}\"IFO\_DMRO\"\SE{};}}
+\L{\LB{____\K{if}_(\V{NULL}!=\V{getenv}(\S{}\"GRASP\_REALTIME\"\SE{}))_\V{fgetinput}.\V{inlock}_=_0;_\C{}\1\* don\'t care if locked \*\1\CE{}}}
+\L{\LB{____\K{else}_\V{fgetinput}.\V{inlock}_=_1;_\C{}\1\* only locked \*\1\CE{}}}
+\L{\LB{__\}}}
+\L{\LB{}}
+\L{\LB{__\K{if}_(\V{num\_sent}==\V{DATA\_SEGMENTS})_\K{return}_0;}}
+\L{\LB{}}
+\L{\LB{__\K{do}_\{}}
+\L{\LB{}}
+\L{\LB{____\C{}\1\* get number of points required \*\1\CE{}}}
+\L{\LB{____\V{fgetinput}.\V{npoint}_=_\V{needed};}}
+\L{\LB{____\V{fgetinput}.\V{locations}[0]_=_\V{datas}_+_\V{diff};}}
+\L{\LB{____\V{fgetinput}.\V{seek}_=_0;}}
+\L{\LB{}}
+\L{\LB{____\V{temp}_=_\V{fget\_ch}(\&\V{fgetoutput},\&\V{fgetinput});}}
+\L{\LB{____\V{srate}_=_\V{fgetoutput}.\V{srate};}}
+\L{\LB{____\V{datastart}_=_\V{fgetoutput}.\V{dt}_\-_\V{diff}\1\V{srate};}}
+\L{\LB{}}
+\L{\LB{____\C{}\1\* if nothing left, return \*\1\CE{}}}
+\L{\LB{____\K{if}_(\V{temp}==0)_\K{return}_0;}}
+\L{\LB{}}
+\L{\LB{____\C{}\1\* if new locked section, skip forward \*\1\CE{}}}
+\L{\LB{____\K{if}_(\V{temp}==1)_\{}}
+\L{\LB{______\V{fprintf}(\V{stderr},\S{}\"\2nEntering_new_locked_set_of_data\2n\"\SE{});}}
+\L{\LB{______\V{fgetinput}.\V{seek}_=_1;}}
+\L{\LB{______\V{fgetinput}.\V{npoint}_=_\V{MIN\_INTO\_LOCK}\*60\*\V{srate}_\-_\V{needed};}}
+\L{\LB{______\K{if}_(0==\V{fget\_ch}(\&\V{fgetoutput},\&\V{fgetinput}))_\K{return}_0;}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* number of points needed will be full length \*\1\CE{}}}
+\L{\LB{______\V{needed}_=_\V{NPOINT};}}
+\L{\LB{______\V{diff}_=_0;}}
+\L{\LB{______\V{code}_=_1;}}
+\L{\LB{____\}}}
+\L{\LB{}}
+\L{\LB{__\}_\K{while}_(\V{temp}==1);}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* if we have recalibrated, get the response function and put in scaling factor \*\1\CE{}}}
+\L{\LB{__\K{if}_(\V{lastcalibtime}\<\V{fgetoutput}.\V{tcalibrate})_\{}}
+\L{\LB{____\V{lastcalibtime}_=_\V{fgetoutput}.\V{tcalibrate};}}
+\L{\LB{____\V{GRnormalize}(\V{fgetoutput}.\V{fri},\V{fgetoutput}.\V{frinum},\V{NPOINT},\V{srate},\V{response});}}
+\L{\LB{____\K{for}_(\V{i}=0;\V{i}\<\V{NPOINT};\V{i}++)_\V{response}[\V{i}]_\*=_\V{HSCALE}\1\V{ARMLENGTH\_1994};}}
+\L{\LB{__\}}}
+\L{\LB{__}}
+\L{\LB{__\V{num\_sent}++;}}
+\L{\LB{__\K{return}_\V{code};}}
+\L{\LB{\}}}

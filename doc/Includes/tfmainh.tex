@@ -1,0 +1,68 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_timefreq\1tfmain.h},{11:31},{Jun 28 1999}
+\L{\LB{\C{}\1\*GRASP: Copyright, 1997,1998 Bruce Allen \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\K{\#define}_\V{DATADIM}_65536____\C{}\1\* size of segment  (must be power of 2)\*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{NDIM}___4096______\C{}\1\* size of the subsegment to be transformed (must be power of 2)\*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{PDIM}_512_________\C{}\1\* dimension of time-freq map; (max value NDIM\14)  \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{PRESAFETY}_\V{DATADIM}\18__\C{}\1\* number of points to ignore at beginning of correlation   \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{POSTSAFETY}_\V{DATADIM}\18_\C{}\1\* number of points to ignore at end of correlation        \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{FDIM}_(\V{NDIM}\1(4\*\V{PDIM}))__\C{}\1\* number of bins to average over in frequency space\*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{TDIM}_(\V{NDIM}\1\V{PDIM})___\C{}\1\* number of bins to average over in time space \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* THE TYPE OF NOISE \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{NOISE\_WHITE}_1____\C{}\1\* white noise \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{NOISE\_LIGO\_INI}_2_\C{}\1\* initial ligo noise curve \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* THE TYPE OF SIGNAL \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{INSERT\_INSPIRAL}_1_____\C{}\1\* the inspiral waveform \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{INSERT\_QUAS\_PER}_2_____\C{}\1\* a waveform with power law increase of freq and amp\*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{INSERT\_COALESCENCE}_3_\C{}\1\* the full coalescence waveform \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\K{\#define}_\V{RESCALE\_FACTOR}_2.0_\C{}\1\* used to decide the rescale number\*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{DEBUG}__0__________\C{}\1\* For debugging purposes \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{DEBUG1}_0__________\C{}\1\* temprorary debugging \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{DEBUG2}_0___________\C{}\1\* temprorary debugging \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{NOISE\_TYPE}_\V{NOISE\_LIGO\_INI}__\C{}\1\* To determine the noise\_type \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\K{\#ifndef}_\V{SRATE}}}
+\L{\LB{\K{\#define}_\V{SRATE}_9868.4208984375_\C{}\1\* sample rate in HZ of IFO\_DMRO channel                    \*\1\CE{}}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* Function declarations \*\1\CE{}}}
+\L{\LB{\K{void}_\V{fill\_data\_with\_signal}(\K{int},_\K{float}_\*,_\K{float}_\*,_\K{float});}}
+\L{\LB{\K{void}_\V{get\_coalescence}(\K{float}_\*,_\K{int}_,__\K{float}_,_\K{float}_,\K{int}_\*);}}
+\L{\LB{\K{int}_\V{get\_time\_series\_data}();}}
+\L{\LB{\K{int}_\V{gethtilde}();}}
+\L{\LB{\K{void}_\V{getshf}(\K{int},\K{float}_\*,\K{float});}}
+\L{\LB{\K{void}_\V{gettfparameters}();}}
+\L{\LB{\K{void}_\V{master}();}}
+\L{\LB{\K{float}_\V{mygasdev}(\K{long}_\*);}}
+\L{\LB{\K{void}_\V{noise\_gau\_col}(\K{long}_\*,\K{unsigned}_\K{long},\K{float}_\*,_\K{float}_\*);}}
+\L{\LB{\K{void}_\V{noise\_gau\_col\_fr}(\K{long}_\*,\K{unsigned}_\K{long}_,_\K{float}_\*,_\K{float}_\*);}}
+\L{\LB{\K{void}_\V{normalizehtilde}(\K{float}_\*,_\K{int},\K{float}_\*_);}}
+\L{\LB{\K{void}_\V{over\_whiten\_filter}(\K{float}_\*,_\K{long}_,_\K{float}_\*);}}
+\L{\LB{\K{void}_\V{picturerawprint}(\K{float}_\*\*);}}
+\L{\LB{\K{void}_\V{realft}(\K{float}_\*,_\K{unsigned}_\K{long},_\K{int});}}
+\L{\LB{\K{void}_\V{slave}();}}
+\L{\LB{\K{void}_\V{timstat}(\K{int},_\V{FILE}_\*,_\K{float}_\*\V{htilde});}}
+\L{\LB{\K{void}_\V{whiten\_filter}(\K{float}_\*,_\K{long}_,_\K{float}_\*);}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* Structure definitions \*\1\CE{}}}
+\L{\LB{\K{typedef}_\K{struct}_}}
+\L{\LB{\{}}
+\L{\LB{____\K{int}_\V{signaltype};________\C{}\1\* the type of signal to be used \*\1\CE{}}}
+\L{\LB{____\K{float}_\V{m1};______________\C{}\1\* the mass of one of the stars; used if signaltype = 1 \*\1\CE{}}}
+\L{\LB{____\K{float}_\V{m2};______________\C{}\1\* the mass of the other star; used if signaltype = 1 \*\1\CE{}__}}
+\L{\LB{____\K{float}_\V{pind};____________\C{}\1\* the exponent for the power law freq. increase;used if signaltype = 2 \*\1\CE{}__}}
+\L{\LB{____\K{float}_\V{ampind};__________\C{}\1\* the exponent for the power law amplitude. increase;used if signaltype=2 \*\1\CE{}__}}
+\L{\LB{____\K{float}_\V{timfrac};_________\C{}\1\* the fraction of time for which the signal lasts in each subsegment}}
+\L{\LB{______________________________;used if signaltype=2 \*\1\CE{}}}
+\L{\LB{____\K{float}_\V{freqfrac};________\C{}\1\* the bandwidth of the signal as a fraction of the sampling rate;}}
+\L{\LB{______________________________used if signaltype=2 \*\1\CE{}}}
+\L{\LB{____\K{float}_\V{cons\_noise\_pow};__\C{}\1\* an arbitrary scaling factor for the power spectrum \*\1\CE{}}}
+\L{\LB{____\K{float}_\V{snr};_____________\C{}\1\* the signal to noise ratio \*\1\CE{}}}
+\L{\LB{____\K{int}_\V{signaloffset};______\C{}\1\* the offset at which the signal begins in each subsegment \*\1\CE{}}}
+\L{\LB{____\K{int}_\V{addsignal};_________\C{}\1\* flag; TO ADD signal 1; if signal is not to be added 0 \*\1\CE{}}}
+\L{\LB{\}_\V{struct\_signalparameters};}}

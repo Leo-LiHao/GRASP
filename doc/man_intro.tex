@@ -1,0 +1,1302 @@
+% GRASP: Copyright 1997,1998,1999  Bruce Allen
+% $Id: man_intro.tex,v 1.52 2000/05/19 15:19:52 ballen Exp $
+\section{Introduction}
+\setcounter{equation}0
+\subsection{The Purpose of GRASP}
+\setcounter{equation}0
+The analysis and modeling of data from gravitational wave detectors
+requires specialized numerical techniques.  GRASP was developed in
+collaboration with the Laser Interferometer Gravitational Wave Observatory
+(LIGO) project in the United States, and contains a collection of
+software tools for this purpose.
+The first release of GRASP was in early 1997; since that time many individuals have made extensive
+contributions.
+
+In order that it be of the most use to the physics community,
+this package (including all source code) is being released in the
+public domain.  It may be freely used for any purpose, although we do
+ask that GRASP and its author be acknowledged or referenced in
+any work or publications to which GRASP made a contribution.
+If possible this reference should include a link to the GRASP distribution
+web site:\\
+\htmladdnormallink{{\tt http://www.lsc-group.phys.uwm.edu/$\sim$ballen/grasp-distribution/}}
+{http://www.lsc-group.phys.uwm.edu/~ballen/grasp-distribution}.
+The
+citation should specify the {\it version number} (for example, 1.9.1) of
+GRASP.  In addition, if the code has been modified please state this.
+We suggest that if GRASP is installed at a site,
+one person at the institution should be designated as the
+``responsible party" in charge of the GRASP package.
+
+GRASP is intended for a broad audience, including those users whose
+main interest is in running simulations and analyzing data, and those
+users whose main interest is in testing new data analysis techniques or
+incorporating searches for new types of gravitational wave sources.
+The GRASP package includes a ``cookbook" of documented and tested
+low-level routines which may be incorporated in user code, and simple
+example programs illustrating the use of these routines.  GRASP also
+includes a number of high level user applications built from these
+routines.
+
+We are always interested in extending the capabilities of GRASP.
+Suggestions for changes or additions, including reports of bugs or
+corrections, improvements, or extensions to the source code, should be
+communicated directly to the author.
+
+\subsection{Printing/Reading the Manual}
+\setcounter{equation}0
+The manual is distributed with GRASP in three forms.  In the GRASP
+directory {\tt doc} you can find a Portable Document Format (PDF) file
+{\tt manual.pdf}, a Postscript file {\tt manual.ps} and a Device Independent
+file {\tt manual.dvi}.  We suggest using the PDF file.  Not only is it
+compact, but all the sections, references, and equations are represented
+as clickable links.  Even the WWW links (URLs) can be clicked on and will fire
+up your favorite Web browser.  You can also easily ``zoom-in" on interesting
+graphs.
+
+If you want a printed copy of the manual, there are two options.
+We find that the most readable form is ``2-up".  You can make a
+postscript file of this form using the {\tt psnup} utility, available as
+part of the public-domain package {\tt psutils}.  Use the commands:\\
+{\tt
+psnup -2 /usr/local/GRASP/doc/manual.ps man2.ps\\
+}
+and then print the file that you have just created ({\tt man2.ps}) on a two-sided postscript printer.  You'll end up with four pages of this
+manual on a single sheet of paper.
+
+If you want a copy of the manual with the color graphs in color rather than gray-scale,
+we've included postscript files containing
+the color and black-and-white pages separately.  Print
+{\tt doc/manual\_color.ps} on a color printer, and {\tt doc/manual\_bw.ps}
+on a black and white printer, and start collating!
+
+\subsection{Quick Start}
+\setcounter{equation}0
+If you hate to read manuals, and you just want to try something, here's
+a suggestion.  This assumes that the GRASP package has been installed
+by your local system administrator in a directory accessible to you,
+such as {\tt /usr/local/GRASP} and that some 40-meter data (old-format)
+has also been installed, for example in {\tt /usr/local/GRASP/data}.
+
+If you want to try running a GRASP program, type\\
+{\tt setenv GRASP\_DATAPATH /usr/local/GRASP/data/19nov94.3}\\
+to set up a path to the data, then go to the GRASP directory:\\
+{\tt cd /usr/local/GRASP/src/examples/examples\_40meter}\\
+and try running one of the executables:\\
+{\tt ./locklist}\\
+will print out a list of the locked data segments from run 3 on 19 November 1994.
+A more interesting program to run (in the same directory) is\\
+{\tt ./animate | xmgr -pipe}\\
+which will produce an animated display of the IFO output.  Note that in
+order for this to work, you will need to have the {\tt xmgr} graphing
+program in your path.  (Please see the comment about {\tt xmgr} in
+Section~\ref{s:animate}).
+
+If you only have data that has been distributed in the FRAME format,
+type\\
+{\tt setenv GRASP\_FRAMEPATH /usr/local/GRASP/data/19nov94.3.frame}\\
+to set up a path to the data, then go to the GRASP directory:\\
+{\tt cd /usr/local/GRASP/src/examples/examples\_frame}\\
+and try running one of the executables:\\
+{\tt ./locklistF}\\
+will print out a list of the locked data segments from run 3 on 19 November 1994.
+A more interesting program to run (in the same directory) is\\
+{\tt ./animateF | xmgr -pipe}\\
+which will produce an animated display of the IFO output.  Note that in
+order for this to work, you will need to have the {\tt xmgr} graphing
+program in your path.  (Please see the comment about {\tt xmgr} in
+Section~\ref{s:animate}).
+
+If you want to try writing some GRASP code, a simple way to start is to 
+copy one of the example programs, and the Makefile, into your personal directory,
+and edit that:\\
+{\tt mkdir $\sim$/GRASP}\\
+{\tt cp /usr/local/GRASP/src/examples/examples\_40meter/gwoutput.c $\sim$/GRASP}\\
+{\tt cp /usr/local/GRASP/src/examples/examples\_40meter/Makefile $\sim$/GRASP}\\
+{\tt cd $\sim$/GRASP}\\
+Now make editing changes to the file {\tt gwoutput.c}, and when you are
+done, edit the {\tt Makefile} that you have
+copied into your home directory.  Find the line that reads:\\
+{\tt all: ... gwoutput ...}\\
+and delete everything to the right of the colon except {\tt gwoutput} from that
+line (but leave a space after the colon).  Then type:\\
+{\tt make gwoutput}\\
+to recompile this program.  To run it, simply type:\\
+{\tt gwoutput}.\\
+In general, if you want to modify GRASP programs, this is the simplest way to start.
+
+\subsection{A few words about data formats}
+\label{ss:dataformats}
+\setcounter{equation}0
+The GRASP package was originally written for analysis of data in the
+``old" format, which was used in the Caltech 40-meter IFO laboratory
+prior to 1996.  Starting in 1997, the LIGO project, and a number of other
+gravity-wave detector groups, have adopted the VIRGO FRAME data format.
+Almost every example in the GRASP package has equivalent programs to
+read and analyze data in either format.  For example {\tt animate}
+and {\tt animateF} are two versions of the same program.  The first
+reads data in the old format, the second reads data in the FRAME format.
+We have also included with GRASP a translation program that translates
+data from the old format to the new format (see {\tt translate} in
+Section~\ref{ss:translate}).
+
+After careful thought, the LIGO management has decided to only distribute
+the November 1994 data in the FRAME format, except to a small number of
+groups (belonging to the {\it Data Translation Group}) who are responsible
+for ensuring that the translated data set contains the same information
+as the original!  The initial distributions of GRASP will include both
+old-format and new-format code.  However after a reasonable period of
+time, the old-format data and code will be removed from the package.
+So please be aware that the old-format material will be reaching the
+end of its useful lifetime fairly soon; we do not recommend investing
+much effort in these.
+
+If you want to develop or work on data analysis algorithms, you will
+want to have access to this data archive.  Because many people
+contributed to taking this data, and because the LIGO project wants to
+maintain control of its use and distribution, {\it this data set is NOT
+in the public domain}.  However, you may request a copy for your use,
+or for use by your research group.  Write to: Director of the LIGO
+Laboratory, Mail Stop 51-33, California Institute of Technology,
+Pasadena, CA 91125.  The data set is available in {\tt tar} format on
+two Exabyte 8500c format tapes.
+
+In order to use the data in the FRAME format, you will need to have access
+to the FRAME libraries.  These are available from the VIRGO project; they
+may be downloaded from the site\\
+\htmladdnormallink{{\tt http://wwwlapp.in2p3.fr/virgo/FrameL/}.}
+{http://wwwlapp.in2p3.fr/virgo/FrameL/}
+The current release of GRASP is compatible with versions of the FRAME library
+$\le 3.72$.
+Contact Benoit Mours {\tt mours@lapp.in2p3.fr} for further information.
+
+\subsection{GRASP Hardware \& Software Requirements}
+\setcounter{equation}0
+GRASP was developed under the Unix (tm) operating system, on a Sun
+workstation network.  The package is written in POSIX/ANSI C, so that
+GRASP can be compiled and used on any machine with an ANSI C compiler.
+All operating system calls are POSIX-compliant, which is intended to keep
+GRASP as portable to different platforms as possible.  The main routines
+could also be linked to user code written in other languages such as
+Fortran or Pascal; the details of this linking, and the conventions
+by which Fortran and C (or Pascal and C) routines communicate are
+implementation dependent, and not discussed here.
+
+Several of the high-level applications in GRASP can be run on parallel
+computer systems.  These can be either dedicated parallel computers
+(such as the Intel Paragon or IBM SP2 machines) or a network of
+scientific workstations.  The parallel programming in GRASP is
+implemented with version 1.1 of the Message Passing Interface (MPI)
+library specification \cite{MPI}.  All major computer system vendors
+currently support this standard, so GRASP can be easily compiled and
+used on virtually any parallel machine.  In addition, there is a
+public-domain implementation of MPI called ``mpich" \cite{MPICH} which
+will run MPI-based programs on networks of scientific workstations.
+This makes it easy to do ``super-computing at night" by running GRASP on
+a network of workstations.  Further information on MPI is available
+from the web site\\
+\htmladdnormallink{{\tt http://www.mcs.anl.gov/mpi/}.}
+{http://www.mcs.anl.gov/mpi/}
+The mpich
+implementation is available from\\
+\htmladdnormallink{{\tt http://www.mcs.anl.gov/mpi/mpich/}.}
+{http://www.mcs.anl.gov/mpi/mpich/}
+By the way, if you don't have access to parallel machines (or have no
+interest in parallel computing) don't worry!  The only parallel code in
+GRASP is found in ``top-level" applications; all of the functions in
+the GRASP library, and most of the examples, can be used without any
+modifications on a single processor, stand-alone computer.
+
+GRASP makes use of a number of standard numerical techniques.  In general,
+we use version 2.06 of the routines from ``{\it Numerical Recipes in
+C: the art of scientific computing}" \cite{NumRec}.  [Later versions
+should work OK -- please let me know if they don't.]  These routines
+are widely used in the scientific community.  The full source code,
+examples, and complete documentation are provided in the book,
+and are also available (for about \$50) in computer readable form.
+Ordering information and further details are available from\\
+\htmladdnormallink{{\tt http://www.nr.com/}.}
+{http://www.nr.com/}
+These routines are
+extremely useful and beautifully-documented; if you don't already have
+them available for your use, you should!
+
+Certain routines in that use inter-channel correlations to `clean' a
+signal channel also use CLAPACK numerical linear algebra libraries. 
+These are extremely robust and well tested libraries and are an
+extremely valuable complement to {\it Numerical Recipes}.  
+Note that all GRASP programs can be compiled without CLAPACK but that
+some inter-channel correlation functions will not be available without
+it. The full source code 
+for these may be downloaded from
+\htmladdnormallink{{\tt http://www.netlib.org/clapack/}}{http://www.netlib.org/clapack/}.
+
+The time-frequency routines in the GRASP package also come with a function 
+({\tt plottf()}) to display time 
+frequency-maps on the screen using calls to the MESA graphics library. 
+This library is a GL lookalike and available freely
+from \htmladdnormallink{{\tt http://www.mesa3d.org/}}{http://www.mesa3d.org/}.
+
+In general, output from GRASP is in the form of ASCII text files.
+We assume that the user has graphing packages available to
+visualize and interpret this output.   Our personal favorite is
+{\tt xmgr}, available in the public domain from the site
+\htmladdnormallink{{\tt http://plasma-gate.weizmann.ac.il/Xmgr/}}
+{http://plasma-gate.weizmann.ac.il/Xmgr/}
+which also lists mirror
+sites in Europe and USA. (Please see the comment about {\tt xmgr} in
+Section~\ref{s:animate}).  In some cases we do output ``complete graphs"
+for {\tt xmgr}.  We do also output some data in the form of PostScript
+(tm) files.  Previewers for postscript files are widely available in
+the public domain (we like GhostView).
+
+\subsection{GRASP Installation}
+\setcounter{equation}0
+As we have just explained, GRASP requires access to {\it Numerical
+Recipes in C} libraries and to MPI and MPE libraries and optionally
+to the CLAPACK libraries. 
+These packages must be installed, and then within GRASP a path to
+these libraries must be defined.  This can be done by editing a single
+file, and then running a shell script.  This section explains each of
+these steps in detail.
+
+All of the site-specific information is contained in a single file {\tt
+SiteSpecific} in the top-level directory of GRASP.  This file contains
+a number of variables whose purpose is explained in this section.
+These variables must be correctly set before GRASP can be used; the
+definitions contained in  {\tt SiteSpecific} (as distributed) are
+probably {\it not} appropriate for your system, and will therefore
+require modification.  A number of example {\tt SiteSpecific} files
+are included in the GRASP distribution, in the directory {\tt Examples\_SiteSpecific/ }.
+
+\subsubsection{GRASP File Structure}
+The code for GRASP can be installed in a publicly-available directory,
+for example \mbox{\tt /usr/local/GRASP}.  (It can also be installed
+``privately" in a single user's home directory, if desired.)  The name of
+this top-level directory must be set in the file {\tt SiteSpecific} which
+is contained in the top-level GRASP directory.  To do this, edit the file
+{\tt SiteSpecific} and set the variable \mbox{\tt GRASP\_HOME}  to the
+appropriate value, for example \mbox{\tt GRASP\_HOME=/usr/local/GRASP}.
+Please note that the installation scripts are not designed to ``build"
+in one location and ``install" in a separate location.  You should go through
+the installation procedure in the same directory where you eventually want
+the GRASP package to reside.
+
+Within this top level directory resides the entire GRASP package.  The
+directories within this top level are:
+\begin{description}
+\item[{\tt Examples\_SiteSpecific}] Contains examples of SiteSpecific
+files for different sites, machine-types, and installations.  You may
+find this helpful in the installation process if you want to look at
+an example, or you are stuck.
+\item[{\tt bin/}] Contains links to all the example programs and
+scripts in the GRASP package.
+\item[{\tt data/}] Contains (both real and simulated) interferometer data,
+  or symbolic links to this data.  See the comments in Section~\ref{s:40meter}
+  to find out how to obtain this data.
+\item[{\tt doc/}] Documentation (in TeX, PostScript, DVI, and PDF formats)
+   including this users guide.
+\item[{\tt include/}] Header files used to define structures and other
+   common types in the code.
+This also include the ANSI C prototypes for all the GRASP functions.
+\item[{\tt lib/}] Contains the GRASP library archive: {\tt
+libgrasp.a}. To use any of the GRASP functions within your own code,
+simply link this library with you own code.
+\item[{\tt man/}] This may be used in the future for UNIX on-line manual pages.
+\item[{\tt parameters/}] Contains parameters such as site location information,
+  and estimated power spectra and whitening functions of future detectors.
+\item[{\tt src/}] Source code for analyzing various aspects of the
+data stream, distributed among the following directories:
+\begin{description}
+\item{\tt 40-meter/} Reading data tapes produced on the Caltech 40 meter
+  prototype prior to 1997.
+\item{\tt GRtoolbox/} Source code for the Gravitational Radiation Toolbox, a
+Matlab (command line and GUI) interface to GRASP.
+\begin{description}
+\item{\tt mexfiles/}
+Mex-files for use with the Gravitational Radiation Toolbox.
+\end{description}
+\item{\tt examples/} The source code for all of the examples given in
+this manual (organized by section).  These include:
+\begin{description}
+\item{\tt examples\_40meter/} Examples of reading/using old-format
+40-meter data.
+\item{\tt examples\_GRtoolbox/} M-file examples for the Gravitational 
+Radiation Toolbox.
+\item{\tt examples\_binary-search/} The source code and documentation for a
+binary-inspiral search carried out on the Caltech 40-meter data from
+November 1994.
+\item{\tt examples\_correlation/} Examples of determining correlations
+between different channels and using the knowledge of these
+correlations to `clean up' a particular channel.
+\item{\tt examples\_frame/} Examples of reading/using new-format FRAME
+data.
+\item{\tt examples\_galaxy/} Examples of using galactic models to
+predict source distribution parameters.
+\item{\tt examples\_inspiral/} Examples of generating inspiral
+waveforms and searching for them in the data stream using matched filtering.
+\item{\tt examples\_ringdown/} Examples of generating
+black-hole-horizon formation ringdown waveforms and searching for them
+in the data stream using matched filtering.
+\item{\tt examples\_stochastic/} Examples of simulated production of a
+stochastic background correlated signal between two detector sites and
+a pipeline to search the data stream for such signals.
+\item{\tt examples\_template\_bank/} Example code for setting up a
+bank of binary-inspiral templates and graphing their locations in
+parameter space.
+\item{\tt examples\_testmass/} Example code for evaluating binary inspiral
+waveforms in the testmass limit $m_1 \to 0$ and comparing the resulting
+waveforms with those calculated by other methods.
+\item{\tt examples\_timefreq/} Example code illustrating the use of time-frequency techinques
+for signal detection.
+\item{\tt examples\_transient/} Example code to generate and search
+for transient waveforms such as those arising from supernovae.
+\item{\tt examples\_utility/} Examples of various utility functions,
+including a translator to produce new-format FRAME data from old
+format 40-meter data.
+\end{description}
+\item{\tt correlation/} Code for calculating correlations between
+ different channels and `cleaning' a particular channel. 
+\item{\tt galaxy/} Modelling the distribution of sources in our galaxy
+(needed in order to set physical upper-limits using the 40-meter
+prototype data).
+\item{\tt inspiral/}  Binary inspiral analysis (including optimal filtering and
+vetoing).
+\item{\tt optimization/} Additional library routines for optimizing GRASP operation of specific platforms (i.e., supercomputers).
+\item{\tt ringdown/}  Black hole horizon ringdown (including optimal filtering).
+  This can be used to filter for {\it any} exponentially-decaying sinusoid.
+\item{\tt stochastic/} Stochastic background detection (including optimal filtering and simulated signal production)
+\item{\tt transient/}  Supernovae and other transient sources.
+\item{\tt periodic/} Searches for pulsars and other periodic and
+quasi-periodic sources.
+\item{\tt template\_bank/} Code for ``placing'' optimal filters in
+parameter space.
+\item{\tt testmass/} Code for calculating binary inspiral waveforms in the test mass
+limit $m_1 \to 0$.
+\item{\tt timefreq/} Code for time-frequency transforms, and searching for line-like
+features in the time-frequency maps.
+\item{\tt utility/} General purpose utility routines, including the
+interface to the FRAME library, error handler routines, etc.
+\end{description}
+\item[{\tt testing/}] This will eventually contain a suite of programs
+that test the GRASP installation.
+\end{description}
+
+
+\subsubsection{Accessing {\it Numerical Recipes in C} libraries}
+GRASP makes use of many of the functions and subroutines from {\it
+Numerical Recipes in C} \cite{NumRec}.
+The web site \htmladdnormallink{{\tt http://www.nr.com/}}
+{http://www.nr.com/} is a good source of further information.
+These functions and subroutines
+are available in Fortran, Pascal, Basic, Kernighan and Ritchie (K\&R)
+C, and ANSI-C versions; you will need the ANSI-C routines.  The source
+code for these functions (both {\tt *.c} and {\tt *.h} files) must be
+installed in a directory (for example, \mbox{\tt /usr/local/recipes/src})
+and the compiled object modules ({\tt *.o} files) must be archived into
+a single library file ({\tt *.a} file).  The instructions for this are
+included in the distribution of the source code for {\it Numerical
+Recipes}.   In the end, a file called {\tt librecipes\_c.a} must be put
+into a directory where it is available to the linker for compilation.
+A good place to put this library is in \mbox{\tt
+/usr/local/recipes/lib/librecipes\_c.a}.  When you run the command that
+installs GRASP, the linker needs to be able to find these libraries.
+The file {\tt SiteSpecific} must then contain the line \mbox{\tt
+RECIPES\_LIB = /usr/local/recipes/lib} near the top of the file.
+
+It is frequently useful, for debugging purposes, to be able to link
+with both ``debug" and ``profile" versions of the libraries.  For this
+reason, we recommend that users actually create {\it three separate
+libraries} of {\it Numerical Recipes} functions:
+\begin{description}
+\item{\tt /usr/local/recipes/lib/librecipes\_c.a:}
+a library compiled for fast execution, with optimization options (for
+example, -O3 or -xO4) turned on during compilation.
+\item{\tt /usr/local/recipes/lib/librecipes\_cg.a:}
+a library compiled for debugging, with the debug option (typically, -g)
+turned on during compilation.  Note that in order to use a debugger
+with this library, and to be able to step ``within" the {\it Numerical
+Recipes} functions, the debugger must be able to locate the source code
+for {\it Numerical Recipes}.  Thus, after {\it Numerical Recipes} is
+compiled and installed, its *.c and *.h source files must be left in
+their original locations and not deleted or moved.
+\item{\tt /usr/local/recipes/lib/librecipes\_cp.a:}
+a library compiled for profiling, with the profiling option (typically,
+-pg or -xpg for ``gprof" or -p for ``prof") turned on during compilation.
+\end{description}
+One can then easily compile GRASP code with the appropriate library by
+setting {\tt LRECIPES} in {\tt SiteSpecific}.  For example to run code
+as rapidly as possible one would set \mbox{\tt LRECIPES = recipes\_c}.
+However to compile code for debugging it would be preferable to set
+\mbox{\tt LRECIPES = recipes\_cg}.  (Note that rather than recompiling the
+entire GRASP package in this way, one can simplify modify the value of
+{\tt LRECIPES} within the desired {\tt Makefile}s and then recompile
+only the code of interest.)
+
+We have encountered one minor problem with the {\it Numerical Recipes
+in C} routines.  Unfortunately the authors of these routines choose to
+name one of their routines {\tt select()}.  This name conflicts with a
+POSIX name for one of the standard operating system calls.  In linking
+with certain libraries (for example the MPI/MPE libraries) this can
+generate conflicts where the linker attaches the {\tt select()} call to
+the entry point from the wrong library.  
+Starting with release 1.6.3 of GRASP, the {\tt select()} routine from
+Numerical Recipes is used in GRASP.  For this reason, you must
+fix this
+as follows.  Before building the {\it Numerical Recipes} libraries, edit
+the source files {\tt recipes/rofunc.c}, {\tt recipes/select.c}, and {\tt
+recipes/select.c.orig} changing each occurence of {\tt select(} to {\tt
+NRselect(}.  You will have to do this in (respectively) four places, one
+place and one place in these files.  Then edit the file {\tt include/nr.h}
+making the same change of {\tt select(} to {\tt NRselect(} in one place.
+This will elminate the {\tt select()} routine from the {\it Numerical
+Recipes} library, replacing it with a routine called {\tt NRselect()},
+and eliminating any possible naming conflict from the library.
+So, to summarize, the routine called {\tt select()} in the {\it Numerical
+Recipes} library is used in GRASP, but is called {\tt NRselect()} there.
+
+\subsubsection{Accessing MPI and MPE libraries}
+To enable use of the parallel processing code included with GRASP, one
+needs to link the code with an MPI function call library.  (If you do not
+intend to use any of the multiprocessing code, we'll tell you what to do.)
+For performance monitoring purposes, we also make calls to the Message
+Passing Environment (MPE) library, which is included with {\tt mpich}
+\cite{MPICH}.  If these function libraries are not currently available
+on your system, you should obtain the public domain implementation {\tt
+mpich} from the URL\\
+\htmladdnormallink{{\tt http://www.mcs.anl.gov/mpi/mpich/}}
+{http://www.mcs.anl.gov/mpi/mpich/}
+and follow the instructions required
+to build the MPI/MPE libraries for your system.  After the installation
+process is complete, the necessary libraries will be contained in a
+library archive, for example \mbox{\tt /usr/local/mpi/lib/libmpi.a} and
+\mbox{\tt /usr/local/mpe/lib/libmpe.a}.  The path to these libraries
+is set in the file {\tt SiteSpecific} by means of the variable {\tt
+MPI\_LIBS}.  A typical line in {\tt SiteSpecific} might then read:\\
+\mbox{\tt MPI\_LIBS=-L/usr/local/mpi/lib -lmpi -lmpe}.\\
+You must also set {\tt BUILD\_MPI= true } in {\tt SiteSpecific}.
+Finally, in order to include appropriate header files in any MPI programs,
+you will need to include a path to these header files in the file {\tt
+SiteSpecific}.  You can do this by setting {\tt MPI\_INCLUDES} in the
+file {\tt SiteSpecific}.  A typical installation might have \\
+{\tt MPI\_INCLUDES = -I/usr/local/mpi/include}.\\
+NOTE: If you don't want to use {\it any} of the MPI code, just set:\\
+{\tt BUILD\_MPI= false}\\ in {\tt SiteSpecific}.  All the other
+MPI-specific defines are then ignored.  
+ 
+\subsubsection{Accessing {\it MESA} libraries}
+Currently one of the routines available in GRASP, {\tt plottf()},
+requires the Mesa library to display the time-frequency maps on the
+screen. 
+Mesa is a 3-D graphics library with an 
+API which is very similar to
+that of OpenGL. Mesa is distributed under the terms of
+the GNU Library General Public License. The Mesa library 
+may be downloaded from
+\htmladdnormallink{{\tt http://www.mesa3d.org/}}.
+If you are not interested in using the {\tt plottf()}
+routine, you may set {\tt HAVE\_GL= false} in {\tt SiteSpecific} and
+ignore the rest of this section.
+
+
+The Installation is extremely simple. Download the file 
+{\tt MesaLib-3.0.tar.gz}. The ungzipped untarred 
+file produces a directory tree under {\tt Mesa-3.0}. Enter the 
+directory {\tt Mesa-3.0}, and key in {\tt make}. This lists a variety
+of systems on which the Mesa library has been compiled. Select the one
+which most accurately describes your system and key in, 
+{\tt make my\_system},
+where {\tt my\_system} is what you have selected from the list. 
+This will compile the programs and create the Mesa libraries in the
+directory, {\tt Mesa-3.0/lib}. Copy the libraries to a common location
+such as {\tt /usr/local/lib} and copy the include files in
+{\tt Mesa-3.0/include-} to  a common location such as {\tt
+/usr/local/include}. (The files {\tt README} and {\tt README.*} files
+have detailed instructions to install the software, if required.)
+
+\subsubsection{Accessing CLAPACK libraries}
+As mentioned above GRASP uses routines form CLAPACK to perform 
+the numerical linear algebra required in some of the environmental
+correlation routines. The routines that require these libraries are
+those which `clean up' one channel based on an analysis of the
+correlations between a number of channels.
+ In the case of the data stream from an
+interferometric gravitational radiation detector, the primary interest 
+would be in the cleaning the signal determining the differential
+displacement  of suspended test masses using information from
+environmental channels.  If you are not interested in such routines
+you may set\\ {\tt WITH\_CLAPACK= false}\\ in {\tt SiteSpecific} and
+ignore the rest of this section.
+
+The CLAPACK routines may be downloaded from\\
+\htmladdnormallink{{\tt http://www.netlib.org/clapack/}}
+{http://www.netlib.org/clapack/}.  It is simplest to download the 
+complete package
+\linebreak[4]
+{\tt clapack/clapack.tgz} although it is possible
+to download individual elements if disk space is at a premium 
+(the complete package includes testing and timing routines which may
+be discarded after successful installation). The ungzipped untarred 
+file produces a directory tree under CLAPACK.   The directory
+ CLAPACK contains LAPACK make include file {\tt make.inc} where
+compiler flags etc are set.  You may wish to change the lines
+\begin{verbatim}
+BLASLIB      = ../../blas$(PLAT).a
+LAPACKLIB    = lapack$(PLAT).a
+\end{verbatim}
+to 
+\begin{verbatim}
+BLASLIB      = ../../libblas$(PLAT).a
+LAPACKLIB    = liblapack$(PLAT).a
+\end{verbatim}
+CLAPACK uses the f2c libraries so the first step is to create these by
+typing {\tt cd F2CLIBS/libF77; make} and {\tt cd F2CLIBS/libI77; make}
+each time starting from the CLAPACK directory.  Next one builds the
+BLAS (Basic Linear Algebra Subprograms) libraries with {\tt cd
+BLAS/SRC; make}.  Finally one builds the CLAPACK library with {\tt cd
+SRC; make}.  The f2c libraries {\tt libF77.a} and {\tt libI77.a} and 
+include file {\tt f2c.h} are now in the subdirectory F2CLIBS of
+CLAPACK while the libraries {\tt libblas\$(PLAT).a} and {\tt liblapack\$(PLAT).a}
+are in the directory CLAPACK. From here they may be installed into appropriate
+directories.  Fuller details, including the building and running of the
+test and timing programs may be found in the {\tt README} file in the
+CLAPACK directory.  As for the Numerical Recipes
+libraries it can be convenient to have both optimised and debugging
+versions of the libraries available for development work.
+
+\subsubsection{Accessing FRAME libraries}
+The LIGO and VIRGO detector projects have recently decided to
+standardize the format which their data will be recorded in (see
+Section~\ref{ss:dataformats}).  The standard is called the FRAME format,
+and is still under development.  It appears quite possible that a number
+of other gravitational-wave detector groups will also adopt this same
+format.  The GRASP package contains, for every example program, both FRAME
+format and old format versions.  It also contains an translation program
+which converts data from the ``old 1994" format into the new FRAME format.
+
+Unless you are in one of the small number of groups with access to
+the old-format data, you will need to obtain the FRAME libraries.
+These are available from the VIRGO project; they may be downloaded from
+the site
+\htmladdnormallink{{\tt http://wwwlapp.in2p3.fr/virgo/FrameL/}.}
+{http://wwwlapp.in2p3.fr/virgo/FrameL/}
+Contact Benoit
+Mours
+\linebreak[4]
+{\tt mours@lapp.in2p3.fr} for further information.  In the {\tt
+SiteSpecific} file, if you need the FRAME libraries, set a pointer to the
+directory containing them.  NOTE: If you don't need the FRAME libraries,
+just set:\\ {\tt BUILD\_FRAME = false}\\ in {\tt SiteSpecific}.  All the
+other FRAME-specific defines are then ignored.
+
+The GRASP interface to the FRAME library should work properly with
+every version of the FRAME library from 2.30 onwards.  The GRASP
+interface to the FRAME library looks to see which version of the FRAME
+library you are using, and then generates the appropriate code.  The
+FRAME library is designed to be backwards-compatible.  For example,
+version 3.42 of the FRAME library can read files written with version
+2.37 of the FRAME library. GRASP has been tested with versions of the FRAME
+$\le 3.72$.
+
+
+\subsubsection{Real-time 40-meter analysis}
+The analysis tools in the GRASP package can be used to analyze data
+in real-time, as it is recorded by the DAQ system.  This facility is
+primarily for the use of experimenters working in the Caltech 40-meter lab.
+and will probably not be of use to anyone outside of that group.
+
+In order to use the GRASP tools in real time, one needs to link to
+a set of EPICS (Experimental Physics and Industrial Control System)
+libraries, that are not otherwise needed.  These permit the GRASP code
+to interrogate the EPICS system to find out the names and locations of
+the most-recently written FRAMES of data.
+
+\subsubsection{The Matlab Interface}
+\label{sss:GRtoolboxInstall}
+The Gravitational Radiation Toolbox provides a
+Matlab interface to both GRASP and the Frame Library.
+The Gravitational Radiation Toolbox links these two packages with
+Matlab---simultaneously exposing data to a familiar, commercially developed,
+problem solving environment and efficient algorithms designed specifically for
+analyzing gravitational radiation data.
+
+\subsubsection{Making the GRASP binaries and libraries}
+\label{ss:buildit}
+To make the GRASP libraries and executables described in this manual,
+please follow these directions.  It should only take a few minutes to
+do this.
+\begin{enumerate}
+\item
+Within the main GRASP directory is a file called {\tt SiteSpecific}.
+Make a copy of {\tt SiteSpecific} called {\tt SiteSpecific.save}.  This
+way, if you mess up the installation, you can start over easily.
+(Alternatively, copy {\tt SiteSpecific} to a file called {\tt
+SiteSpecific.mysite} and, everywhere below, when we refer to editing
+the {\tt SiteSpecific} file, edit {\tt
+SiteSpecific.mysite} instead.)  Note: you can find a number of example
+{\tt SiteSpecific} files in the directory {\tt
+Examples\_SiteSpecific/ }.
+These are for different installation sites and machine types (Sun,
+DEC, Intel Paragon, IBM SP2, Linux) -- you
+may find them helpful if you are stuck or the instructions below are
+ambiguous or unclear.  Once you have customized the {\tt SiteSpecific}
+file for your own installation, if you wish you can email it to
+us and we will include it in future releases of GRASP.
+\item
+Now edit {\tt SiteSpecific} so that {\tt GRASP\_HOME} has the correct
+path, for example \\ 
+\mbox{\tt GRASP\_HOME=/usr/local/GRASP}.\\  
+This must be the
+name of the directory on your system in which GRASP resides.  If you
+are not the superuser and are installing GRASP only for your own use,
+you can set this path to point somewhere in your own home directory,
+and install GRASP there.
+\item
+Find out where {\it Numerical Recipes in C} is installed on your
+system.  Within {\tt SiteSpecific} set {\tt RECIPES\_LIB} to point to
+the directory containing these libraries.  For example\\
+\mbox{\tt RECIPES\_LIB=/usr/local/numerical\_recipes/lib}.\\  If {\it Numerical
+Recipes in C} is not installed on your system, you will have to obtain
+a copy, and install it, following the directions to create the library
+file {\tt librecipes\_c.a}.  Note that as described above, you might
+also want to create debugging libraries {\tt librecipes\_cg.a} and
+profiling libraries {\tt librecipes\_cp.a}.
+\item
+Within {\tt SiteSpecific} set {\tt LRECIPES} to the name of the {\it
+Numerical Recipes in C} library you wish to use, for example \\
+\mbox{\tt LRECIPES=recipes\_c}.
+\item
+If you intend to use the MPI code, set {\tt BUILD\_MPI= true}, otherwise
+set it to {\tt false}.  In this latter case, any MPI-specific defines
+are ignored, and no code that makes use of MPI/MPE function calls is
+compiled.  (This is a shame -- these are some of the nicest programs in
+the GRASP package.  We urge you to reconsider building the {\tt mpich}
+package on your system!)
+\item
+Within {\tt SiteSpecific} set {\tt MPI\_LIBS} to point to the directory
+containing the MPI/MPE libraries, and to specify the names of the link
+archives, for example\\
+\mbox{\tt MPI\_LIB=-L/usr/local/mpi/lib -lmpi -lmpe}.\\
+Note that if you use the version of {\tt mpicc} which is distributed
+with {\tt mpich} you may not need to have any of the MPI libraries
+referenced here; the compiler may find them automatically.
+\item
+Within {\tt SiteSpecific} set {\tt MPI\_INCLUDES} to point to the
+directory which contains the MPI and MPE header ({\tt *.h}) files, for
+example\\
+\mbox{\tt MPI\_INCLUDES = -I/usr/local/mpi/include}.
+\item
+Within {\tt SiteSpecific} set {\tt MPICC} to the name of your
+local MPI C compiler, for example:\\
+\mbox{\tt MPICC = /usr/local/bin/mpicc}.\\
+You can include any compilation flags (say, {\tt -g}) on this line also.
+\item
+If you have the MESA or GL library installed set {\tt HAVE\_GL= true}, otherwise
+set it to {\tt false}.  In this latter case, the routines making GL/MESA calls 
+will not be compiled. 
+\item
+Within {\tt SiteSpecific} set {\tt GL\_LIBS} to point to the directory
+containing the GL/MESA libraries, and to specify the names of the link
+archives, for example\\
+\mbox{\tt GL\_LIBS= -L/usr/local/lib -lMesaGLU -lMesaGL \$(XLIBS)}.\\
+Note that the functions in the MESA/GL library make calls to the X library
+and you will have to specify the location of the X libraries for example\\
+\mbox{ XLIBS = -L/usr/X11/lib -L/usr/X11R6/lib -lX11 -lXext -lXmu -lXt -lXi -lSM -lICE
+}.
+\item
+Within {\tt SiteSpecific} set {\tt GL\_I} to point to the
+directory which contains the GL/MESA header ({\tt *.h}) files, for
+example\\
+\mbox{\tt GL\_I = -I/usr/local/include/GL}.
+\item
+If you intend to use CLAPACK, set {\tt WITH\_CLAPACK = true},
+otherwise set it to false.  Within {\tt SiteSpecific} set {\tt
+CLAPACK\_LIB} to point to the directory containing the CLAPACK
+libraries and {\tt LCLAPACK} and {\tt LBLAS} to the
+(platform-specific) names of the clapack and blas libraries
+respectively excluding the leading `lib'. Further set {\tt F2C\_LIB}
+to point to the directory containing the f2c libraries and {\tt
+F2C\_INC} to point to the directory containing the f2c.h include file.
+\item
+If you intend to use the FRAME code, set {\tt BUILD\_FRAME = true},
+otherwise set it to false.  In this latter case, any FRAME-specific defines
+are ignored, and no code that makes use of FRAME function calls is
+compiled.
+\item
+Within {\tt SiteSpecific} set {\tt FRAME\_DIR} to point to the directory
+which contains the LIGO/VIRGO format FRAME software, for example\\
+{\tt FRAME\_DIR=/usr/local/frame}.\\  
+This directory should contain {\tt lib/libFrame.a} and {\tt include/FrameL.h}. 
+If you don't need the FRAME
+libraries, just leave this entry blank.
+\item 
+Within {\tt SiteSpecific}, if you want to use GRASP for real-time
+analysis in the Caltech 40-meter lab, set {\tt EPICS\_INCLUDES} to point to the directory
+containing the EPICS {\tt *.h} include files, and set {\tt EPICS\_LIBS} to point
+to the directory containig the EPICS libraries.  Finally, you need to uncomment
+the {\tt BUILD\_REALTIME} define statement.  If you do not intend to use
+your GRASP installation for real-time analysis in the 40-meter lab, simply leave
+these three definitions commented out with a hash sign ({\tt \#}).
+\item
+At the bottom of {\tt SiteSpecific} are several define statements,
+which are currently commented out.  These are primarily intended for
+production code; by undefining these lines you replace a cube root
+function and some trig functions in the code with faster (but less
+accurate) in-line approximations.  We suggest that you leave these
+commented out.  (You might want to consider uncommenting them if you
+are burning thousands of node hours on a large parallel machine - but
+you do so at your own risk!)
+\item
+There are also lines that are currently commented out, which allow you
+to overload functions defined in the libraries and reference libraries
+of optimized functions.  Once again, leave these commented out unless you
+want to replace standard {\it Numerical Recipes} functions with optimized
+versions.  Currently, we support several sets of optimized libraries:
+\begin{itemize}
+\item
+The CLASSPACK optimized FFT's for the Intel Paragon.
+\item
+The Sun Performance Library's optimized FFT for the Sun SPARC
+architecture.  Note: believe it or not, this is {\it slower} than the
+public domain equivalent.  We recommend that you use the FFTW package
+instead!
+\item
+The Cray/SGI optimized FFT for the RS10000 and other MIPS architectures.
+Note: believe it or not, this is {\it slower} than the
+public domain equivalent.  We recommend that you use the FFTW package
+instead!
+\item
+The DEC extended math library (DXML) optimized FFT for the DEC AXP
+architecture.  [This is slightly faster, or slightly slower, than FFTW,
+depending upon the array size.]
+\item
+The FFTW (Fastest Fourier Transform in the West), which will run on
+any computer.  This is a public domain optimized FFT package, available
+from the web site:\\
+\htmladdnormallink{{\tt http://www.fftw.org/}.}{http://www.fftw.org/}
+If you don't have an optimized FFT routine for your computer, we highly
+recommend this -- it is a factor of three (or more) faster than {\it
+Numerical Recipes}. We include glue routines for both FFTW version 1 and
+version 2.  The latter is simpler to install and fractionally more efficient.
+\item
+The IBM Extended Scientific Subroutine Library (ESSL) optimized FFT routine. 
+Note: this has only been tested on the IBM SP2 machine. 
+\end{itemize}
+Further details may be found in the {\tt src/optimization} subdirectory
+of GRASP.  If you want to use these optimized library routines, first
+go into the appropriate subdirectory of {\tt src/optimization} and build
+the optimized library routine using the {\tt makefiles}'s that you find
+there, then uncomment the appropriate lines in {\tt SiteSpecific} and
+follow the instructions given here.
+\item
+To install the Gravitational Radiation Toolbox which provides an interface between
+GRASP and Matlab, comment out the line {\tt BUILD\_GRTOOLBOX = false} and
+uncomment {\tt BUILD\_GRTOOLBOX = true}. Then edit the variables
+{\tt MEX}, {\tt MEXFLAGS}, and {\tt EXT} appropriately. You will then have add the
+directories {\tt src/GRtoolbox} and {\tt src/examples/examples\_GRtoolbox} to your Matlab path.
+\item
+Now, in the top level GRASP directory, execute the shell script {\tt
+InstallGRASP}, by typing the commands:\\
+{\tt chmod +x InstallGRASP\\
+./InstallGRASP SiteSpecific} (or {\tt SiteSpecific.mysite} if appropriate)\\
+From here on, the remainder of the installation should proceed
+automatically.  The {\tt InstallGRASP} script takes information contained
+in the {\tt SiteSpecific} file (or in the file named in the first
+argument of {\tt InstallGRASP} such as {\tt SiteSpecific.mysite})
+and uses it to create {\tt Makefile}'s
+in each {\tt src} subdirectory, and runs {\tt make} in each of those
+directories.
+\item
+If you want to ``uninstall'' GRASP so that you can begin the
+installation procedure again, cleanly, a script has been provided
+for this purpose.  To execute it, type:\\
+{\tt ./RemoveGRASP}\\
+and wait until the script reports that it has finished.
+Note: when you have sucessfully completed this process, please email
+us
+a copy of your {\tt SiteSpecific} file and we will put it into the
+{\tt Examples\_SiteSpecific/ } directory of future GRASP releases.
+\end{enumerate}
+The {\tt Makefile} in each directory is
+constructed by concatenating the file named in the first argument
+of {\tt InstallGRASP} (typically {\tt SiteSpecific}) with a file
+called {\tt Makefile.tail} in each individual directory.  If you want to
+try changing the compilation procedure, you can modify the {\tt Makefile}
+in a given directory.  However this will be created each time that you
+run {\tt InstallGRASP}; for changes to become permanent they should
+either be made in {\tt SiteSpecific} or in the {\tt Makefile.tail}'s.
+
+Note that this installation procedure and code has been tested on the
+following types of machines:  Sun 4 (Solaris), DEC AXP (OSF), IBM SP2
+(AIX), HP 700 (HPUX), Intel (Linux), Intel Paragon.  
+There is a problem on some SGI (IRIX) machines.  If you get error messages
+reading:
+\begin{verbatim}
+   ...
+   if: Expression Syntax.
+   *** Error code 1 (bu21)
+   GRASP did NOT complete installation successfully
+\end{verbatim}
+this can be fixed by setting the shell to {\tt bash} before running
+InstallGRASP:
+\begin{verbatim}
+   SGI> setenv SHELL /usr/local/bin/bash
+   SGI> ./InstallGRASP SiteSpecific
+\end{verbatim}
+If you run into
+problems with our installation scripts, please let us know so that we
+can fix them.
+
+If you want to experiment with GRASP or to write code of your own, a
+good way to start is to copy the {\tt Makefile} and the example ({\tt
+*.c}) programs from the \mbox{\tt src/examples} directory into a directory
+of your own.  You can then edit one of the example programs, and type
+``{\tt make}" within your directory to compile a modified version of
+the program.
+
+If you wish to modify the code and libraries distributed with GRASP (in
+other words, modify the functions described in this manual!) the best
+idea is to use {\tt cp -r} to recursively copy the entire GRASP
+directory structure (and all associated files) into a private directory
+which you own.  You can then install your personal copy of GRASP, by
+following the directions above.  This will permit you to modify source
+code within any of the {\tt src} subdirectories; typing {\tt make}
+within that directory will automatically re-build the GRASP libraries
+that you are using.  By the way, if you are modifying these functions
+to fix bugs or repair problems, or if you have a ``better way" of doing
+something, please let us know so that we can consider incorporating
+those changes in the general GRASP distribution.
+
+\subsubsection{Stupid Pet Tricks}
+There are a number of simple things that one can do during or after the
+installation process that may make GRASP easier to maintain and/or use at your
+site. For example, if is often extremely convenient for debugging
+purposes to have a GRASP library ({\tt libgrasp.a}) constructed with all the
+symbol table information turned on, and another library constructed
+with all the optimization switches turned on.  Users who want their
+code to run as fast as possible can link to the optimized library.
+Users who want to track down problems within GRASP, or to step through
+internal GRASP functions can link to the debug library.  You can accomplish this
+easily by building two separate GRASP libraries, as follows.  (Note: since the
+normal C-compiler debugging option is {\tt -g} the debug library has
+a {\tt \_g} appended to its name.)
+\begin{itemize}
+\item
+Edit your {\tt SiteSpecific.mysite} file so that the debugging
+switches are turned on ({\tt CFLAGS = -g}, typically).  You may also
+want to build the GRASP example programs with the ``debug'' versions
+of the Numerical Recipes libraries, in which case you should set 
+{\tt LRECIPES=recipes\_cg} in {\tt SiteSpecific.mysite}. In simiilar
+fashion you might also choose to link to FRAME libraries compiled with debugging
+turned on.
+\item
+Build GRASP as described above, by running\\
+{\tt InstallGRASP SiteSpecific.mysite}.
+\item
+Make a copy of the GRASP library:\\
+{\tt cp /usr/local/GRASP/lib/libgrasp.a
+/usr/local/GRASP/lib/libgrasp\_g.a}
+\item
+Make a copy of the ``debug'' GRASP example programs:\\
+{\tt cp -r /usr/local/GRASP/bin /usr/local/GRASP/bin\_g}\\
+Note: the {\tt /usr/local/GRASP/bin} directory contains {\it links}
+to the actual executables, but for most unix systems this copy command
+will copy the actual files.  Your mileage may vary -- choose the copy
+option
+which copies the files {\it not} the links!
+\item
+{\it Remove} your GRASP installation (i.e. everything but the
+library and the executables, and original GRASP package) by typing:\\
+{\tt RemoveGRASP}
+\item
+Modify {\tt SiteSpecific.mysite} so that the optimization options are
+turned on (typically, {\tt CFLAGS = -O}).  You should also set the
+Numerical Recipes library to the optimized versions, typically via
+{\tt LRECIPES=recipes\_c} in {\tt SiteSpecific.mysite}.  In simiilar
+fashion you might also choose to link to FRAME libraries compiled with optimization
+turned on.
+\item
+Install GRASP again:\\
+{\tt InstallGRASP SiteSpecific.mysite}
+\end{itemize}
+Your GRASP installation will now contain {\it two} GRASP libraries:
+{\tt /usr/local/GRASP/lib/libgrasp.a} and 
+{\tt /usr/local/GRASP/lib/libgrasp\_g.a} and two sets of
+executables, in 
+\linebreak[4]
+{\tt /usr/local/GRASP/bin} and 
+{\tt /usr/local/GRASP/bin\_g}.
+
+Another useful trick is if you are building versions of GRASP for
+several different architectures, on a shared {\tt /usr/local/} disk.
+Here the procedure is the following:
+\begin{itemize}
+\item
+Create a {\tt SiteSpecific.arch1} file for the first machine
+type.
+\item
+Install GRASP in the usual way:\\
+{\tt InstallGRASP SiteSpecific.arch1}
+\item
+Copy the libraries:\\
+{\tt cp /usr/local/GRASP/lib/libgrasp.a
+/usr/local/GRASP/lib/libgrasp\_arch1.a}
+\item
+Make a copy of the GRASP example programs:\\
+{\tt cp -r /usr/local/GRASP/bin /usr/local/GRASP/bin\_arch1}\\
+Note: the {\tt /usr/local/GRASP/bin} directory contains {\it links}
+to the actual executables, but for most unix systems this copy command
+will copy the actual files.  Your mileage may vary -- choose the copy
+option
+which copies the files {\it not} the links!
+\item
+{\it Remove} your GRASP installation (i.e. everything but the
+library and the executables, and original GRASP package) by typing:\\
+{\tt RemoveGRASP}
+\item
+Return to the first step above, and begin this process again, but this
+time for the second machine architecture (i.e. change {\tt
+arch1} to {\tt arch2} above).
+\end{itemize}
+This method will avoid duplication of source files, documentation,
+etc, while still providing a set of libraries and executables for
+different machine types.
+
+\subsection{Conventions used in this manual}
+The conventions used in this manual are not strict ones.  However we do
+observe a few general rules:
+\begin{enumerate}
+\item
+Words or lines that you might type on a computer (commands, filenames,
+names of C-language functions, and so are) are generally indicated
+in {\tt teletype font}.
+\item
+When a function is described, the arguments which are {\it inputs} and those
+which are {\it outputs} (or those which are both) are indicated.  Thus,
+for example the (fictional!) addition function\\ \mbox{\tt add(int a, int b,int* c)} which sets
+{\tt *c = a+b} is described by:
+\begin{description}
+\item{\tt a:} Input. One of the two integers that are added together.
+\item{\tt b:} Input. The second of these integers.
+\item{\tt c:} Output. Set to the sum of {\tt a} and {\tt b}.
+\end{description}
+Note that technically this is incorrect, because of course in C even
+the ``output arguments" are really just inputs; they are pointers to an
+address in memory that the routine is supposed to modify.  And
+technically, the statement that ``c is set to..." is not correct, since
+in fact it is the integer pointed to by c (denoted *c) that is set.
+However we find that this convention makes it much easier to read the
+function descriptions!
+\item
+Most of the time, the example programs using GRASP functions are given
+explicitly in the manual, so you can see the GRASP functions ``in use".
+Because these examples are illustrative, they are generally ``pared down"
+as much as possible (for example, default values of adjustable parameters
+are hard-wired in, rather than prompted for).
+\item
+Routines and example programs in GRASP generally begin with
+the line:\\
+{\tt \#include "grasp.h"}\\
+which includes the prototypes for all GRASP functions as well as
+the library header files {\tt stdio.h}, {\tt stdlib.h},
+{\tt math.h}, {\tt values.h}, and {\tt time.h}.  The GRASP include
+file {\tt "grasp.h"} can be found in the {\tt include} subdirectory
+of GRASP.
+\end{enumerate}
+
+\subsection{How to add your contributions to future GRASP releases.}
+As we have explained, the general idea of GRASP is to have a
+collection
+of documented and tested code available for use by the
+gravitational-wave
+detection community.  Many people have made significant contributions
+to this package, and we would welcome any additional contributions.
+
+In order to minimize the effort involved in making additions to GRASP,
+and in order to ensure that they are properly included and available
+to
+all, here are some guidelines about how to contribute:
+
+\begin{itemize}
+\item
+The contributions must be structured in such a way that they
+    can be installed using the standard GRASP installation scripts, and
+    they respect the GRASP file hierarchy.
+\item
+The contributions must be documented in {\bf TeX}, following
+    the same general style as this manual (we try not 
+    to be {\it too} nit-picky!).
+\item
+In general, be sure that you are using (and modifying!) the
+current
+release of GRASP.  This makes it much easier for me to merge your
+additions in with the existing code.
+The danger is that if you modify files from an old release of GRASP,
+where other corrections/changes have subsequently been made, then I need
+to try and merge these changes into what you have done.  It's easier for
+everyone if you are modifying the most current files.
+If you contact me in advance, I
+can also give you some idea about how many changes have already been
+made to the current release, and what the schedule is for the next release.
+One way to find the absolute ``most current" version of a file is
+to get it from the GRASP development source tree, which is at\\
+\htmladdnormallink{{\tt http://www.lsc-group.phys.uwm.edu/$\sim$ballen/grasp-distribution/GRASP/}}
+{http://www.lsc-group.phys.uwm.edu/~ballen/grasp-distribution/GRASP/}.\\
+Before sending me
+a revised file to incorporate in GRASP, please {\tt diff} it with the corresponding file in this
+directory, to make sure that the only differences are ones that you have deliberately made!
+\end{itemize}
+
+If you want to make "small" changes to GRASP, for example to modify a function to add
+extra functionality, to repair something that is broken, or to add some additional
+functions in one section, then please do the following:
+\begin{enumerate}
+\item
+Provide documentation in the form of a modified file:
+    {\tt doc/man\_*.tex}.  I will merge your changes into the general GRASP
+    distribution.  For clarity, let's assume that you have added a
+    utility function, and have modified {\tt doc/man\_utility.tex} by adding
+    a description of your function(s) to it.  Remember, {\it software can never
+    be better than its documentation}.
+\item
+In any modifications of the documentation {\tt *.tex} files, please be sure to
+{\it spell-check} the files before you send them to me.  Use either the {\tt spell}
+or {\tt ispell} utilities, or some other alternative.
+\item
+ You should provide additional lines to add to {\tt doc/make\_tex\_from\_C}.
+    This is a script that automatically converts any {\tt *.c} example files
+    that you would like to include in the manual into {\tt .tex} files.  In
+    general, you should have an example program which shows a very
+    simple use of your function.
+\item
+You should provide any figures which have been included in your
+    "modified" {\tt doc/man\_*.tex} file in postscript:
+    {\tt doc/Figures/MYPACKAGE1.ps}, {\tt doc/Figures/MYPACKAGE2.ps}, and so on.
+Note that the postscript files produced by many plotting packages are 
+excessively large, often several MB.   For figures produced from
+programs like this, it is more efficient to use a bitmap to describe the entire image. 
+Full details of how to produce such bitmaps may be found at\\
+\htmladdnormallink{{\tt
+    http://xxx.lanl.gov/help/bitmap}}{http://xxx.lanl.gov/help/bitmap}.
+The following extract describes `the easiest way to do bitmapping'
+using XV: 
+
+``First display the original figure on the screen somehow (e.g. with
+ghostview). Then use the `Grab' button in XV to snatch a copy of the
+displayed image into XV's buffer (after selecting `Grab' you can do
+this either by clicking the left mouse button on the desired window
+(which grabs the whole window), or by holding down the middle mouse
+button and dragging (which selects a region)).
+
+Once the image is in XV's buffer, you can manipulate it. You should
+use `Autocrop' or `Crop' to remove any excess margins around the
+figure. Then save it (as gif, jpeg, color postscript or greyscale
+postscript). If resaving as postscript you must click the XV
+`compress' box for extra compression.'' 
+\item
+You should provide a modified version of (for example) {\tt src/utility/utility.c}
+    (this modified source contains your additions, merged into the
+    standard GRASP release) and additional example programs
+    demonstrating your functions in\\
+    {\tt src/examples/examples\_utility/example1.c}, \\
+    {\tt src/examples/examples\_utility/example2.c}, and so on.
+\item
+You should provide a modified version of {\tt include/grasp.h} (or the
+additional lines to merge into this header file).  This header should contain
+proto-types for any functions which you have added to GRASP, which you would
+like to make publicly-available. In general, please try to avoid putting
+``documentation" in this header file: it should go into the manual and into
+the source files.
+\end{enumerate}
+If you are doing this (modifying or extending existing GRASP
+functions) please
+do a search of the existing GRASP source code to verify that
+your changes do not break existing code.  Or, if necessary, make
+modifications to the existing code, and send me those modified files
+as well as the materials above.
+
+On the other hand, you might have grander plans!  You might not want
+to make ``small'' changes - you
+might want to include a major new section in GRASP, for modelling
+another type of source, or for a type of analysis which is different
+than anything currently in the package.  Let's assume that you
+want to provide a major new GRASP package or facility called
+MYPACKAGE.  In this case:
+\begin{enumerate}
+\item
+You should provide documentation in the form of a file:
+    {\tt doc/man\_MYPACKAGE.te}x, which has the same format as (for example)
+    {\tt doc/man\_inspiral.tex}.  I will modify {\tt doc/manual.tex}
+    by putting a line:\\
+    {\tt include\{man\_MYPACKAGE\}}\\
+    into {\tt doc/manual.tex}, to include your
+    contribution to the manual. Reference should be in the same format
+    as the existing ones, and will be added to the {\it references} section of
+    {\tt manual.tex}.  Make sure that you modify {\tt doc/man\_intro.tex} to describe any
+    additional directories that you have added to the {\tt src} tree.  Remember, {\it
+    software can never
+    be better than its documentation}.
+
+\item
+In any modifications of or additions to the documentation {\tt *.tex} files, please be sure to
+{\it spell-check} the files before you send them to me.  Use either the {\tt spell}
+or {\tt ispell} utilities, or some other alternative.
+\item
+You should provide additional lines to add to {\tt doc/make\_tex\_from\_C}.
+    This is a script that automatically converts any {\tt *.c} example files
+    that you would like to include in the manual into {\tt .tex} files.
+\item
+You should provide figures in postscript form with names derived from
+    your package name if that is possible.  For example: {\tt
+    doc/Figures/MYPACKAGE1.ps},
+    {\tt doc/Figures/MYPACKAGE2.ps}.  These figures should be included in your
+    {\tt doc/man\_MYPACKAGE.tex} file.
+\item
+You should provide source code in {\tt src/MYPACKAGE/MYPACKAGE.c} and
+    example programs in\\
+    {\tt src/examples/examples\_MYPACKAGE/example1.c},\\
+    {\tt src/examples/examples\_MYPACKAGE/example2.c}, and so on.  The code
+    in \linebreak[4] {\tt src/MYPACKAGE/MYPACKAGE.c} contains the actual functions that
+    you have provided.  Any executable example programs that use these
+    functions should be in the {\tt src/examples} path.
+\item
+You should provide a modified header file {\tt include/grasp.h} or
+additional lines to merge into this, declaring prototypes for any
+publicly-available functions.
+\item
+You should provide ``tail" parts of the Makefiles:\\
+    {\tt src/examples/examples\_MYPACKAGE/Makefile.tail}, and \\
+    {\tt src/MYPACKAGE/Makefile.tail}.  You can see\\
+    {\tt src/examples/examples\_inspiral/Makefile.tail} for an example.
+    Please follow the syntax of this fairly closely: the structure is there for good
+    reasons.  If you provide a file that works on your own system it may not
+    work on other people's systems -- but if you follow our style it probably will.
+\item
+Be sure to modify the {\tt InstallGRASP} utility to include a ``build"
+in any directories that you have added to the {\tt src} tree.
+\end{enumerate}
+In general, the ``rule of thumb'' here is that you should try not to
+add functions which substantially overlap existing GRASP functions.
+Either modify the existing GRASP functions (as described below) to add
+the extra functionality or use them ``as is''.
+
+I would be grateful for a bit of advanced warning about any additions to
+GRASP (but a uuencoded gzipped tarfile or shar file dropped in my mailbox
+{\it will} get my rapid attention, if it contains these different items,
+because that makes it {\it easy} for me to incorporate it!)  The best
+format for this file is to make it contain only the files that you are
+adding to GRASP, or those files from the most current GRASP distribution
+that are being modified, {\it with exactly the correct directory tree
+structure}.  This makes it easy for me to unpack your contributions and
+merge them into the general GRASP distribution.
+One way to find the absolute ``most current" version of a file is
+to get it from the GRASP development source tree, which can be reached from\\
+\htmladdnormallink{{\tt http://www.lsc-group.phys.uwm.edu/$\sim$ballen/grasp-distribution/GRASP/}}
+{http://www.lsc-group.phys.uwm.edu/~ballen/grasp-distribution/GRASP/}.  Before sending me
+a revised file to incorporate in GRASP, please {\tt diff} it with the file in this
+directory, to make sure that the only differences are ones that you have deliberately made!
+
+Note: it is a good idea to check your code in the following ways:
+\begin{itemize}
+\item Error messages in your code should not be done with
+{\tt fprintf(stderr,$\cdots$)}, but should be dealt with
+by calling the GRASP error handler.  Look at any of the current
+GRASP code to see how this is done, or read Section \ref{ss:errors}
+on the error handler.
+\item Make sure that it passes by {\tt lint} cleanly.
+\item Stick to POSIX operating systems calls, only.  Remember that
+your code needs to run on {\it other} platforms.  The fact that the
+code works correctly on your platform does not guarantee similar
+behavior on other types of machines.  This item, and the previous one,
+will go a long way towards ensuring that.
+\item If you are using the {\tt gcc} compiler, make sure that
+the {\tt -Wall} option (which enables all warnings) does not issue any
+warnings.
+\item If you have access to more than one type of machine, please test
+your code on both a 32-bit and 64-bit machine if possible.
+\item If you have access to both big-endian and little-endian
+machines, please test you code on both of those also.
+\end{itemize}
+Please remember that many people will be running {\it your} code on
+platforms which are different than yours.  The fact that your code
+runs properly on your platform does not mean that it will run properly
+on other ones as well.  The best way to ensure this is to eliminate
+the types of problematic constructions that {\tt lint} and {\tt -Wall}
+warn about, and to test your code on a couple of different machines.
+
+One final ({\bf important}) note.  When your code has been sucessfully
+integrated into the GRASP package, we will issue a new release of
+GRASP as quickly as possible.  As soon as this release is available,
+we {\it strongly} recommend that you {\it throw away} your ``personal"
+working copies of the files that you have been creating or modifying,
+install this latest release of GRASP, and make {\it new} copies of
+the various files to work from.  The reason is this: in the
+process of including your material into GRASP we have probably made
+a number of changes to it.  If you {\it don't} follow our suggestion,
+make additional changes to your own files and send them to us, we will
+not be very receptive (as you are forcing us to perform the unpleasant
+task of merging your changes with our earlier ones).
+
+\subsection{How to use the GRASP library from ROOT.}
+
+ROOT is an interactive public-domain environment for data analysis developed
+at CERN.  Details about it can be found at
+\htmladdnormallink{{\tt http://root.cern.ch/}}
+{http://root.cern.ch/}.
+Within the root environment, you can make use of the GRASP library.
+To do this, however, you need to produce a shared-object version of the
+GRASP library, and then load it into ROOT.  The following instructions
+on how to do this were contributed by Damir Buskulic ({\tt buskulic@lapp.in2p3.fr}),
+and have been tested under Linux.
+\begin{enumerate}
+\item
+In building {\tt libgrasp.a} and {\tt librecipes\_c.a} be sure that you have
+a {\it position independent code} option.  For the {\tt gcc} compiler this
+is {\tt -fPIC}.  This is needed to build a proper shared library.
+\item
+The ROOT environment variables should have been set during install,
+especially {\tt \$ROOTSYS}.
+\item
+Issue the following three commands:
+\begin{itemize}
+\item
+To build the interface functions for the ROOT C interpreter:\\
+{\tt cint -w1 -zlibgrasp -nG\_\_cpp\_grasp.cc -D\_\_MAKECINT\_\_
+-DG\_\_MAKECINT\\
+-c-1 -DG\_\_REGEXP -DG\_\_SHAREDLIB -DG\_\_OSFDLL
+-D\_\_cplusplus \\ -I\$ROOTSYS/include -I<path\_to\_GRASP>/include/grasp.h}\\
+
+This will create files {\tt G\_\_cpp\_grasp.cc} and {\tt G\_\_cpp\_grasp.h}
+which need to be compiled.
+\item
+Compile these files with:\\
+{\tt gcc -O -fPIC -DG\_\_REGEXP -DG\_\_SHAREDLIB -DG\_\_OSFDLL\\
+-I\$ROOTSYS/include -c G\_\_cpp\_grasp.cc}\\
+\item
+Build the shared library with the command:\\
+{\tt gcc -shared -o libgrasp.so ./G\_\_c\_grasp.o
+<path-to-libgrasp.a>/libgrasp.a <path-to-numrecipes>/librecipes\_c.a}\\
+creating a {\tt libgrasp.so} file.  You can put this file anywhere that you wish.
+\end{itemize}
+Note: it is important to put the files and libraries in the order given
+above.
+\item
+Launch ROOT and use the command {\tt gSystem->Load("libgrasp");} to have the routines
+from the GRASP library available within ROOT.
+\end{enumerate}
+Note that {\tt cint} has some trouble with prototypes for variable-length-argument (varargs) functions. 
+These types of functions are used to implement the GRASP error handler \ref{ss:errors}.
+For this reason
+the GRASP include file {\tt include/grasp.h} has some lines which are
+automatically {\it not} included if the file is being read by {\tt cint}.  Thus the
+GRASP error-handling functions can't be called from within ROOT (but you
+wouldn't want to do this anyway).
+
+Note that one can compile the Frame library for use with ROOT in exactly the
+same way.  You replace {\tt grasp.h} by {\tt FrameL.h} and {\tt libgrasp.a} by {\tt libFrame.a}
+(always compiled with {\tt -fPIC}). There is no need for {\tt librecipes} in the
+Framelib case, because it does not make use of {\it Numerical Recipes}.
+\clearpage
+
+
+

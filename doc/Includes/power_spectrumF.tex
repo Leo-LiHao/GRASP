@@ -1,0 +1,92 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_frame\1power\_spectrumF.c},{13:53},{Jun 30 1999}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{\K{\#define}_\V{NPOINT}_65536}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}()_\{}}
+\L{\LB{___\K{void}_\V{realft}(\K{float}\*,\K{unsigned}_\K{long},\K{int});}}
+\L{\LB{___\K{float}_\V{response}[\V{NPOINT}+2],\V{data}[\V{NPOINT}],\V{freq};}}
+\L{\LB{___\K{float}_\V{res\_real},\V{res\_imag},\V{dl\_real},\V{dl\_imag},\V{c0\_real},\V{c0\_imag},\V{spectrum},\V{srate},\V{factor};}}
+\L{\LB{___\K{int}_\V{i},\V{npoint};}}
+\L{\LB{___\K{short}_\V{datas}[\V{NPOINT}];}}
+\L{\LB{___\K{struct}_\V{fgetinput}_\V{fgetinput};}}
+\L{\LB{___\K{struct}_\V{fgetoutput}_\V{fgetoutput};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* We need only the IFO output \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{nchan}=1;}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* use utility function framefiles() to retrieve file names \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{files}=\V{framefiles};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* storage for channel names, data locations, points returned, ratios \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{chnames}=(\K{char}_\*\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{char}_\*));}}
+\L{\LB{___\V{fgetinput}.\V{locations}=(\K{short}_\*\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{short}_\*));}}
+\L{\LB{___\V{fgetoutput}.\V{npoint}=(\K{int}_\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{int}));}}
+\L{\LB{___\V{fgetoutput}.\V{ratios}=(\K{int}_\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{int}));}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* set channel name \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{chnames}[0]=\S{}\"IFO\_DMRO\"\SE{};}}
+\L{\LB{}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* are we in the 40-meter lab? \*\1\CE{}}}
+\L{\LB{___\K{if}_(\V{NULL}!=\V{getenv}(\S{}\"GRASP\_REALTIME\"\SE{}))_\{}}
+\L{\LB{______\C{}\1\* for Caltech 40-meter lab \*\1\CE{}}}
+\L{\LB{______\V{fgetinput}.\V{inlock}=0;}}
+\L{\LB{___\}}}
+\L{\LB{___\K{else}_\{}}
+\L{\LB{______\C{}\1\* for Nov 1994 data set \*\1\CE{}}}
+\L{\LB{______\V{fgetinput}.\V{inlock}=1;}}
+\L{\LB{___\}}}
+\L{\LB{___\C{}\1\* number of points to sample and fft (power of 2) \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{npoint}=\V{npoint}=\V{NPOINT};}}
+\L{\LB{___\V{fgetinput}.\V{calibrate}=1;}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* the array where we want the data to be put \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{locations}[0]=\V{datas};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* skip 200 seconds into locked region (just seek, no need for data) \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{seek}=1;}}
+\L{\LB{___\V{fgetoutput}.\V{tstart}=\V{fgetoutput}.\V{lastlock}=0.0;}}
+\L{\LB{___\K{while}_(\V{fgetoutput}.\V{tstart}\-\V{fgetoutput}.\V{lastlock}\<200.0)}}
+\L{\LB{______\V{fget\_ch}(\&\V{fgetoutput},\&\V{fgetinput});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* and get next stretch of data (don\'t seek, we need data) \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{seek}=0;}}
+\L{\LB{___\V{fget\_ch}(\&\V{fgetoutput},\&\V{fgetinput});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* the sample rate \*\1\CE{}}}
+\L{\LB{___\V{srate}=\V{fgetoutput}.\V{srate};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* convert gw signal (ADC counts) from shorts to floats \*\1\CE{}}}
+\L{\LB{___\K{for}_(\V{i}=0;\V{i}\<\V{NPOINT};\V{i}++)_\V{data}[\V{i}]=\V{datas}[\V{i}];}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* FFT the data  \*\1\CE{}}}
+\L{\LB{___\V{realft}(\V{data}\-1,\V{npoint},1);}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* get normalization R(f) using swept sine calibration information from frame \*\1\CE{}}}
+\L{\LB{___\V{GRnormalize}(\V{fgetoutput}.\V{fri},\V{fgetoutput}.\V{frinum},\V{npoint},\V{srate},\V{response});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* one-sided power-spectrum normalization, to get meters\1rHz \*\1\CE{}}}
+\L{\LB{___\V{factor}=\V{sqrt}(2.0\1(\V{srate}\*\V{npoint}));}}
+\L{\LB{___\C{}\1\* compute dl.  Leave off DC (i=0) or Nyquist (i=npoint\12) freq \*\1\CE{}}}
+\L{\LB{___\K{for}_(\V{i}=1;\V{i}\<\V{npoint}\12;\V{i}++)_\{}}
+\L{\LB{______\C{}\1\* frequency \*\1\CE{}}}
+\L{\LB{______\V{freq}=\V{i}\*\V{srate}\1\V{npoint};}}
+\L{\LB{______\C{}\1\* real and imaginary parts of tilde c0 \*\1\CE{}}}
+\L{\LB{______\V{c0\_real}=\V{data}[2\*\V{i}];}}
+\L{\LB{______\V{c0\_imag}=\V{data}[2\*\V{i}+1];}}
+\L{\LB{______\C{}\1\* real and imaginary parts of R \*\1\CE{}}}
+\L{\LB{______\V{res\_real}=\V{response}[2\*\V{i}];}}
+\L{\LB{______\V{res\_imag}=\V{response}[2\*\V{i}+1];}}
+\L{\LB{______\C{}\1\* real and imaginary parts of tilde dl \*\1\CE{}}}
+\L{\LB{______\V{dl\_real}=\V{c0\_real}\*\V{res\_real}\-\V{c0\_imag}\*\V{res\_imag};}}
+\L{\LB{______\V{dl\_imag}=\V{c0\_real}\*\V{res\_imag}+\V{c0\_imag}\*\V{res\_real};}}
+\L{\LB{______\C{}\1\* \|tilde dl\| \*\1\CE{}}}
+\L{\LB{______\V{spectrum}=\V{factor}\*\V{sqrt}(\V{dl\_real}\*\V{dl\_real}+\V{dl\_imag}\*\V{dl\_imag});}}
+\L{\LB{______\C{}\1\* output freq in Hz, noise power in meters\1rHz \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"\%e\2t\%e\2n\"\SE{},\V{freq},\V{spectrum});}}
+\L{\LB{___\}}}
+\L{\LB{___\K{return}_0;}}
+\L{\LB{\}}}

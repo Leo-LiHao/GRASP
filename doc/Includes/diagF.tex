@@ -1,0 +1,168 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_frame\1diagF.c},{13:52},{Jun 30 1999}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{\K{\#define}_\V{NPOINT}_2048________\C{}\1\* determines frequency resolution \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{SHIFT}_1024_________\C{}\1\* determines time resolution \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{CHANNEL}_0__________\C{}\1\* channel number \*\1\CE{}________}}
+\L{\LB{\K{\#define}_\V{AVG\_TIME}_10.0______\C{}\1\* seconds \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{THRESHOLD}_6.0______\C{}\1\* for outputting a point \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{INCLUDE}_10.0_______\C{}\1\* threshold for including in averaging \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{SEC\_INTO\_LOCK}_60.0_\C{}\1\* number of seconds into locked segment to start analysis \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}(\K{int}_\V{argc},\K{char}_\*\*\V{argv})_\{}}
+\L{\LB{}\Tab{8}{\K{void}_\V{realft}(\K{float}\*,\K{unsigned}_\K{long},\K{int});}}
+\L{\LB{}\Tab{8}{\K{void}_\V{clear}(\K{float}\*,\K{int},\K{int});}}
+\L{\LB{}\Tab{8}{\V{FILE}_\*\V{fpout}=\V{NULL};}}
+\L{\LB{}\Tab{8}{\K{short}_\*\V{datas};}}
+\L{\LB{}\Tab{8}{\K{int}_\V{i},\V{code},\V{npoint},\V{im},\V{re},\V{initialize}=10,\V{filenumber}=0;}}
+\L{\LB{}\Tab{8}{\K{float}_\V{spec},\V{srate},\V{tstart},\*\V{meanp},\*\V{meanv},\*\V{data},\*\V{windata},\V{decaytime};}}
+\L{\LB{}\Tab{8}{\K{float}_\V{win},\V{freq},\V{deviation},\V{var},\*\V{window};}}
+\L{\LB{}\Tab{8}{\K{double}_\V{decay}=0.0,\V{delta},\V{norm},\V{lastnorm}=0.0;}}
+\L{\LB{}\Tab{8}{\K{char}_\V{name}[64],\*\V{title};}}
+\L{\LB{}\Tab{8}{\V{time\_t}_\V{labtime};}}
+\L{\LB{}\Tab{8}{\K{struct}_\V{fgetinput}_\V{fgetinput};}}
+\L{\LB{}\Tab{8}{\K{struct}_\V{fgetoutput}_\V{fgetoutput};}}
+\L{\LB{}}
+\L{\LB{}\Tab{8}{\C{}\1\* number of points to sample and fft (power of 2) \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{npoint}=\V{NPOINT};}}
+\L{\LB{}}
+\L{\LB{}\Tab{8}{\C{}\1\* create arrays \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{datas}=(\K{short}\*)\V{malloc}(\K{sizeof}(\K{short})\*\V{SHIFT});}}
+\L{\LB{}\Tab{8}{\V{data}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{npoint});}}
+\L{\LB{}\Tab{8}{\V{windata}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{npoint});}}
+\L{\LB{}\Tab{8}{\V{window}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{npoint});}}
+\L{\LB{}\Tab{8}{\V{meanp}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{npoint}\12);}}
+\L{\LB{}\Tab{8}{\V{meanv}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{npoint}\12);}}
+\L{\LB{}}
+\L{\LB{}\Tab{8}{\C{}\1\* set up fgetinput for getting needed quantities \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{fgetinput}.\V{nchan}=1;}}
+\L{\LB{}\Tab{8}{\V{fgetinput}.\V{files}=\V{framefiles};}}
+\L{\LB{}\Tab{8}{\V{fgetinput}.\V{chnames}=(\K{char}_\*\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{char}_\*));}}
+\L{\LB{}\Tab{8}{\V{fgetinput}.\V{locations}=(\K{short}_\*\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{short}_\*));}}
+\L{\LB{}\Tab{8}{\V{fgetoutput}.\V{npoint}=(\K{int}_\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{int}));}}
+\L{\LB{}\Tab{8}{\V{fgetoutput}.\V{ratios}=(\K{int}_\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{int}));}}
+\L{\LB{}\Tab{8}{\V{fgetinput}.\V{npoint}=\V{SHIFT};}}
+\L{\LB{}\Tab{8}{\V{fgetinput}.\V{seek}=0;}}
+\L{\LB{}\Tab{8}{\V{fgetinput}.\V{calibrate}=0;}}
+\L{\LB{}\Tab{8}{\V{fgetinput}.\V{locations}[0]=\V{datas};}}
+\L{\LB{}}
+\L{\LB{}\Tab{8}{\C{}\1\* channel names \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{fgetinput}.\V{chnames}[0]=\S{}\"IFO\_DMRO\"\SE{};}}
+\L{\LB{}}
+\L{\LB{}\Tab{8}{\C{}\1\* set up different cases \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\K{if}_(\V{NULL}!=\V{getenv}(\S{}\"GRASP\_REALTIME\"\SE{}))_\{}}
+\L{\LB{}\Tab{16}{\C{}\1\* 40-meter lab \*\1\CE{}}}
+\L{\LB{}\Tab{16}{\V{fgetinput}.\V{inlock}=0;}}
+\L{\LB{}\Tab{16}{\V{fgetinput}.\V{chnames}[0]=\V{getenv}(\S{}\"GRASP\_REALTIME\"\SE{});}}
+\L{\LB{}\Tab{8}{\}}}
+\L{\LB{}\Tab{8}{\K{else}_\{}}
+\L{\LB{}\Tab{16}{\C{}\1\* Nov 1994 data set \*\1\CE{}}}
+\L{\LB{}\Tab{16}{\V{fgetinput}.\V{inlock}=1;}}
+\L{\LB{}\Tab{8}{\}}}
+\L{\LB{}}
+\L{\LB{}\Tab{8}{\C{}\1\* compute Welch window, once \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\K{for}_(\V{i}=0;\V{i}\<\V{npoint};\V{i}++)_\{}}
+\L{\LB{}\Tab{16}{\V{win}=(2.0\*\V{i})\1\V{npoint}\-1.0;}}
+\L{\LB{}\Tab{16}{\V{window}[\V{i}]=1.0\-\V{win}\*\V{win};}}
+\L{\LB{}\Tab{8}{\}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* This is the main program loop, which aquires data, then filters it \*\1\CE{}}}
+\L{\LB{\K{while}_((\V{code}=\V{fget\_ch}(\&\V{fgetoutput},\&\V{fgetinput})))_\{}}
+\L{\LB{}\Tab{8}{\V{tstart}=\V{fgetoutput}.\V{dt};}}
+\L{\LB{}\Tab{8}{\V{srate}=\V{fgetoutput}.\V{srate};}}
+\L{\LB{}}
+\L{\LB{}\Tab{8}{\C{}\1\* if just entering a new locked stretch \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\K{if}_(\V{code}==1)_\{}}
+\L{\LB{}\Tab{16}{\C{}\1\* decaying exponential average of spectrum: \*\1\CE{}}}
+\L{\LB{}\Tab{16}{\V{decaytime}=\V{AVG\_TIME};_\C{}\1\* seconds! \*\1\CE{}}}
+\L{\LB{}\Tab{16}{\V{decay}=\V{exp}(\-1.0\*\V{SHIFT}\1(\V{srate}\*\V{decaytime}));}}
+\L{\LB{}\Tab{16}{\V{initialize}=10;}}
+\L{\LB{}}
+\L{\LB{}\Tab{16}{\C{}\1\* resets averaging over power spectrum \*\1\CE{}}}
+\L{\LB{}\Tab{16}{\V{lastnorm}=0.0;}}
+\L{\LB{}\Tab{16}{\V{clear}(\V{meanp},\V{npoint}\12,1);}}
+\L{\LB{}\Tab{16}{\V{clear}(\V{meanv},\V{npoint}\12,1);}}
+\L{\LB{}}
+\L{\LB{}\Tab{16}{\C{}\1\* clear stored data \*\1\CE{}}}
+\L{\LB{}\Tab{16}{\V{clear}(\V{data},\V{npoint},1);}}
+\L{\LB{}}
+\L{\LB{}\Tab{16}{\K{if}_(\V{fpout}!=\V{NULL})_\V{fclose}(\V{fpout});}}
+\L{\LB{}\Tab{16}{\V{sprintf}(\V{name},\S{}\"ch\%ddiag.\%03d\"\SE{},\V{CHANNEL},\V{filenumber});}}
+\L{\LB{}\Tab{16}{\V{fpout}=\V{fopen}(\V{name},\S{}\"w\"\SE{});}}
+\L{\LB{_}\Tab{16}{\V{fprintf}(\V{fpout},\S{}\"@_sets_linestyle_0\2n\"\SE{});}}
+\L{\LB{_}\Tab{16}{\V{fprintf}(\V{fpout},\S{}\"@_sets_symbol_1\2n\"\SE{});}}
+\L{\LB{_}\Tab{16}{\V{fprintf}(\V{fpout},\S{}\"@_s\%d_symbol_color_\%d\2n\"\SE{},\V{CHANNEL},\V{CHANNEL}+1);}}
+\L{\LB{}\Tab{16}{\V{fprintf}(\V{fpout},\S{}\"@_subtitle_\2\"Time\1Frequency_statistics_for_channel_\%d\2\"\2n\"\SE{},\V{CHANNEL});}}
+\L{\LB{}\Tab{16}{\V{fprintf}(\V{fpout},\S{}\"@_xaxis_label_\2\"Time_(sec)\2\"\2n\"\SE{});}}
+\L{\LB{}\Tab{16}{\V{fprintf}(\V{fpout},\S{}\"@_yaxis_label_\2\"Frequency_(Hz)\2\"\2n\"\SE{});}}
+\L{\LB{}\Tab{16}{\K{if}_(\V{NULL}!=\V{getenv}(\S{}\"GRASP\_REALTIME\"\SE{}))_\{}}
+\L{\LB{}\Tab{24}{\V{time}(\&\V{labtime});}}
+\L{\LB{}\Tab{24}{\V{fprintf}(\V{fpout},\S{}\"@_title_\2\"40\-meter_Lab_\%.24s\2\"\2n\"\SE{},\V{ctime}(\&\V{labtime}));}}
+\L{\LB{}\Tab{16}{\}}}
+\L{\LB{}\Tab{16}{\K{else}_\K{if}_((\V{title}=\V{getenv}(\S{}\"GRASP\_FRAMEPATH\"\SE{})))}}
+\L{\LB{}\Tab{24}{\V{fprintf}(\V{fpout},\S{}\"@_title_\2\"\%s\2\"\2n\"\SE{},\V{title});}}
+\L{\LB{}\Tab{16}{\V{filenumber}++;}}
+\L{\LB{_}\Tab{8}{\}}}
+\L{\LB{}}
+\L{\LB{}\Tab{8}{\C{}\1\* shift older-time data up to start of array \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\K{for}_(\V{i}=0;\V{i}\<\V{npoint}\-\V{SHIFT};\V{i}++)}}
+\L{\LB{}\Tab{16}{\V{data}[\V{i}]=\V{data}[\V{i}+\V{SHIFT}];}}
+\L{\LB{}}
+\L{\LB{}\Tab{8}{\C{}\1\* put in the most recent time data \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\K{for}_(\V{i}=0;\V{i}\<\V{SHIFT};\V{i}++)}}
+\L{\LB{}\Tab{16}{\V{data}[\V{i}+\V{npoint}\-\V{SHIFT}]=\V{datas}[\V{i}];}}
+\L{\LB{}}
+\L{\LB{}\Tab{8}{\C{}\1\* wait a certain amount of time into lock \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\K{if}_(\V{fgetoutput}.\V{tstart}\-\V{fgetoutput}.\V{lastlock}\<\V{SEC\_INTO\_LOCK})_\K{continue};}}
+\L{\LB{}}
+\L{\LB{}\Tab{8}{\C{}\1\* then window it \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\K{for}_(\V{i}=0;\V{i}\<\V{npoint};\V{i}++)}}
+\L{\LB{}\Tab{16}{\V{windata}[\V{i}]=\V{window}[\V{i}]\*\V{data}[\V{i}];}}
+\L{\LB{}}
+\L{\LB{}\Tab{8}{\C{}\1\* find the FFT \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{realft}(\V{windata}\-1,\V{npoint},1);}}
+\L{\LB{}}
+\L{\LB{}\Tab{8}{\C{}\1\* average the (one-sided) power spectra \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{norm}=1.0+\V{decay}\*\V{lastnorm};}}
+\L{\LB{}\Tab{8}{\V{delta}=\V{decay}\*\V{lastnorm}\1\V{norm};}}
+\L{\LB{}\Tab{8}{\K{for}_(\V{i}=0;\V{i}\<\V{npoint}\12;\V{i}++)_\{}}
+\L{\LB{}\Tab{16}{\V{im}=(\V{re}=\V{i}+\V{i})+1;}}
+\L{\LB{}\Tab{16}{\V{spec}=\V{windata}[\V{re}]\*\V{windata}[\V{re}]+\V{windata}[\V{im}]\*\V{windata}[\V{im}];}}
+\L{\LB{}}
+\L{\LB{}\Tab{16}{\K{if}_(\V{initialize})_\{}}
+\L{\LB{}\Tab{24}{\V{meanp}[\V{i}]\*=\V{delta};}}
+\L{\LB{}\Tab{24}{\V{meanp}[\V{i}]+=\V{spec}\1\V{norm};}}
+\L{\LB{}\Tab{24}{\V{deviation}=\V{spec}\-\V{meanp}[\V{i}];}}
+\L{\LB{}\Tab{24}{\V{var}=\V{fabs}(\V{deviation});}}
+\L{\LB{}\Tab{24}{\V{meanv}[\V{i}]\*=\V{delta};}}
+\L{\LB{}\Tab{24}{\V{meanv}[\V{i}]+=\V{var}\1\V{norm};}}
+\L{\LB{}\Tab{16}{\}}}
+\L{\LB{_}\Tab{16}{\K{else}_\{}}
+\L{\LB{}\Tab{24}{\V{deviation}=\V{spec}\-\V{meanp}[\V{i}];}}
+\L{\LB{}\Tab{24}{\V{var}=\V{fabs}(\V{deviation});}}
+\L{\LB{}}
+\L{\LB{}\Tab{24}{\V{freq}=\V{i}\*\V{srate}\1\V{npoint};}}
+\L{\LB{}\Tab{24}{\C{}\1\* if we are far from norm \*\1\CE{}}}
+\L{\LB{_}}
+\L{\LB{}\Tab{24}{\K{if}_(\V{var}\>\V{THRESHOLD}\*\V{meanv}[\V{i}])_\{}}
+\L{\LB{}\Tab{32}{\V{fprintf}(\V{fpout},\S{}\"\%.2f\2t\%.2f\2n\"\SE{},\V{tstart},\V{freq});}}
+\L{\LB{}\Tab{24}{\}}}
+\L{\LB{}\Tab{24}{\K{if}_(\V{var}\<\V{INCLUDE}\*\V{meanv}[\V{i}])_\{}}
+\L{\LB{}\Tab{32}{\V{meanp}[\V{i}]\*=\V{delta};}}
+\L{\LB{}\Tab{32}{\V{meanp}[\V{i}]+=\V{spec}\1\V{norm};}}
+\L{\LB{}\Tab{32}{\V{meanv}[\V{i}]\*=\V{delta};}}
+\L{\LB{}\Tab{32}{\V{meanv}[\V{i}]+=\V{var}\1\V{norm};}}
+\L{\LB{}\Tab{24}{\}}}
+\L{\LB{}\Tab{16}{\}}}
+\L{\LB{}\Tab{8}{\}}}
+\L{\LB{}}
+\L{\LB{}\Tab{8}{\K{if}_(\V{initialize})_\V{initialize}\-\-;}}
+\L{\LB{}\Tab{8}{\C{}\1\* set averaging constant for next time \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{lastnorm}=\V{norm};}}
+\L{\LB{}}
+\L{\LB{}\Tab{8}{\V{fflush}(\V{fpout});}}
+\L{\LB{\}}}
+\L{\LB{\K{return}_0;}}
+\L{\LB{\}}}

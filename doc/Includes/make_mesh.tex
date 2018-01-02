@@ -1,0 +1,67 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_template\_bank\1make\_mesh.c},{19:33},{Feb  3 1998}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}(\K{int}_\V{argc},_\K{char}_\*\*\V{argv})}}
+\L{\LB{\{}}
+\L{\LB{__\K{struct}_\V{chirp\_space}_\V{space};}}
+\L{\LB{__\K{double}_\V{mag};}}
+\L{\LB{__\K{int}_\V{i},\V{code},\V{plot\_boundary},\V{plot\_patches},\V{plot\_ellipses},\V{plot\_flags};}}
+\L{\LB{__\V{FILE}_\*\V{fpout};}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* Set the chirp space parameters. \*\1\CE{}}}
+\L{\LB{__\V{space}.\V{m\_mn}=1.0;}}
+\L{\LB{__\V{space}.\V{m\_mx}=3.0;}}
+\L{\LB{__\V{space}.\V{angle}=0.318;}}
+\L{\LB{__\V{space}.\V{ftau}=140.0;}}
+\L{\LB{__\V{space}.\V{match}=0.98;}}
+\L{\LB{__\V{space}.\V{n\_bound}=600;}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* Set the plotting parameters. \*\1\CE{}}}
+\L{\LB{__\V{mag}=4200.0;_________\C{}\1\* Magnification factor. \*\1\CE{}}}
+\L{\LB{__\V{plot\_boundary}=1;____\C{}\1\* Do show the boundary. \*\1\CE{}}}
+\L{\LB{__\V{plot\_patches}=1;_____\C{}\1\* Do show the patches. \*\1\CE{}}}
+\L{\LB{__\V{plot\_ellipses}=0;____\C{}\1\* Don\'t show the circumscribed ellipses. \*\1\CE{}}}
+\L{\LB{__\V{plot\_flags}=1;_______\C{}\1\* Do indicate any flagged templates. \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* Generate the parameter space boundary. \*\1\CE{}}}
+\L{\LB{__\V{get\_chirp\_boundary}(\&\V{space});}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* Print out the boundary points. \*\1\CE{}}}
+\L{\LB{__\V{fpout}=\V{fopen}(\S{}\"boundary.ascii\"\SE{},\S{}\"w\"\SE{});}}
+\L{\LB{__\K{for}(\V{i}=0;\V{i}\<=\V{space}.\V{n\_bound};\V{i}++)}}
+\L{\LB{____\V{fprintf}(\V{fpout},\S{}\"\%f_\%f\2n\"\SE{},\V{space}.\V{x\_bound}[\V{i}],\V{space}.\V{y\_bound}[\V{i}]);}}
+\L{\LB{__\V{fclose}(\V{fpout});}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* Get the match function parameters over the space. \*\1\CE{}}}
+\L{\LB{__\K{if}(\V{get\_chirp\_grid}(\&\V{space},\S{}\"cubic\_coef\_40meter\_m=0.8\-3.2.ascii\"\SE{}))}}
+\L{\LB{____\K{return}_1;}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* Generate the template mesh. \*\1\CE{}}}
+\L{\LB{__\V{code}=\V{get\_chirp\_templates}(\&\V{space});}}
+\L{\LB{__\V{fprintf}(\V{stdout},\S{}\"\%s:_get\_chirp\_templates_generated_\%i_templates_and\"\SE{}}}
+\L{\LB{}\Tab{8}{__\S{}\"_exited_with_code_\%i.\2n\"\SE{},\V{argv}[0],\V{space}.\V{n\_templates},\V{code});}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* Print a list of template positions in mass space. \*\1\CE{}}}
+\L{\LB{__\V{fpout}=\V{fopen}(\S{}\"templates.ascii\"\SE{},\S{}\"w\"\SE{});}}
+\L{\LB{__\K{for}(\V{i}=0;\V{i}\<\V{space}.\V{n\_templates};\V{i}++)}}
+\L{\LB{____\V{fprintf}(\V{fpout},\S{}\"\%f_\%f\2n\"\SE{},\V{space}.\V{templates}[\V{i}].\V{m1},}}
+\L{\LB{}\Tab{8}{____\V{space}.\V{templates}[\V{i}].\V{m2});}}
+\L{\LB{__\V{fclose}(\V{fpout});}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* Flag every template, so that their centres will be marked with}}
+\L{\LB{_____dots on the plot.  Normally, a template will be flagged only if}}
+\L{\LB{_____an error occured while generating it. \*\1\CE{}}}
+\L{\LB{__\K{for}(\V{i}=0;\V{i}\<\V{space}.\V{n\_templates};\V{i}++)}}
+\L{\LB{____\V{space}.\V{templates}[\V{i}].\V{flag}=1;}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* Plot a postscript diagram of the parameter space. \*\1\CE{}}}
+\L{\LB{__\V{code}=\V{plot\_chirp\_templates}(\V{space},\V{mag},\V{plot\_boundary},\V{plot\_patches},}}
+\L{\LB{}\Tab{24}{____\V{plot\_ellipses},\V{plot\_flags},\S{}\"templates.ps\"\SE{});}}
+\L{\LB{__\V{fprintf}(\V{stdout},\S{}\"\%s:_plot\_chirp\_templates_generated_\%i_pages_of\"\SE{}}}
+\L{\LB{}\Tab{8}{__\S{}\"_postscript_output.\2n\"\SE{},\V{argv}[0],\V{code});}}
+\L{\LB{}}
+\L{\LB{__\K{return}_0;}}
+\L{\LB{\}}}

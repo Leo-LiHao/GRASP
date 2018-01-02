@@ -1,0 +1,34 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_galaxy\1caltech\_lst.c},{11:59},{Jan 23 1998}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{}}
+\L{\LB{\K{\#define}_\V{LONGITUDE}_118.133__\C{}\1\* degrees West: Caltech \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}(\K{int}_\V{argc},_\K{char}_\*\V{argv}[\,])}}
+\L{\LB{\{}}
+\L{\LB{__\V{time\_t}_\V{now};}}
+\L{\LB{__\K{double}_\V{lst\_h},\V{lst\_m},\V{lst\_s};}}
+\L{\LB{__\K{double}_\V{gst\_h},\V{gst\_m},\V{gst\_s};}}
+\L{\LB{__\K{float}_\V{lst},\V{gst},\V{longitude}=\V{LONGITUDE};}}
+\L{\LB{__\K{char}_\V{loc}[128],\V{utc}[128];}}
+\L{\LB{}}
+\L{\LB{__\K{if}_(\V{argc}==2)_\V{now}_=_(\V{time\_t})\V{atoi}(\V{argv}[1]);}}
+\L{\LB{__\K{else}_\V{time}(\&\V{now});}}
+\L{\LB{}}
+\L{\LB{__\V{strftime}(\V{loc},128,\S{}\"\%H:\%M:\%S_\%Z_\%a_\%d_\%b_\%Y\"\SE{},\V{localtime}(\&\V{now}));}}
+\L{\LB{__\V{strftime}(\V{utc},128,\S{}\"\%H:\%M:\%S_UTC_\%a_\%d_\%b_\%Y\"\SE{},\V{gmtime}(\&\V{now}));}}
+\L{\LB{__\V{lst}_=_\V{local\_sidereal\_time}(\V{now},\V{longitude});}}
+\L{\LB{__\V{gst}_=_\V{local\_sidereal\_time}(\V{now},0);}}
+\L{\LB{__\V{lst\_s}_=_60\*\V{modf}(60\*\V{modf}(\V{lst},\&\V{lst\_h}),\&\V{lst\_m});}}
+\L{\LB{__\V{gst\_s}_=_60\*\V{modf}(60\*\V{modf}(\V{gst},\&\V{gst\_h}),\&\V{gst\_m});}}
+\L{\LB{}}
+\L{\LB{__\V{printf}(\S{}\"\%ld_seconds_since_0h_UTC_1_Jan_1970\2n\%s\2n\%s\2n\"\SE{},(\K{long})\V{now},\V{loc},\V{utc});}}
+\L{\LB{__\V{printf}(\S{}\"\%02u:\%02u:\%02u_(\%09.6f_h)_Local_Sidereal_Time\2n\"\SE{},}}
+\L{\LB{}\Tab{8}{_(\K{char})\V{lst\_h},(\K{char})\V{lst\_m},(\K{char})\V{lst\_s},\V{lst});}}
+\L{\LB{__\V{printf}(\S{}\"\%02u:\%02u:\%02u_(\%09.6f_h)_Greenwitch_Sidereal_Time\2n\"\SE{},}}
+\L{\LB{}\Tab{8}{_(\K{char})\V{gst\_h},(\K{char})\V{gst\_m},(\K{char})\V{gst\_s},\V{gst});}}
+\L{\LB{}}
+\L{\LB{__\K{return}_0;}}
+\L{\LB{\}}}

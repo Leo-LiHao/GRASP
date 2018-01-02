@@ -1,0 +1,55 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_40meter\1locklist.c},{17:34},{Oct  1 1998}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}()_\{}}
+\L{\LB{___\K{float}_\V{tstart},\V{tend},\V{srate},\V{totaltime},\V{begin},\V{end};}}
+\L{\LB{___\K{int}_\V{start\_offset},\V{start\_block},\V{end\_offset},\V{end\_block},\V{points},\V{zero}=0;}}
+\L{\LB{___\K{struct}_\V{ld\_mainheader}_\V{mh};}}
+\L{\LB{___\K{struct}_\V{ld\_binheader}_\V{bh};}}
+\L{\LB{___\K{double}_\V{doubleutc};}}
+\L{\LB{___\V{FILE}_\*\V{fplock};}}
+\L{\LB{___\V{time\_t}_\V{unixtime};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* Open the file for reading \*\1\CE{}}}
+\L{\LB{___\V{fplock}=\V{grasp\_open}(\S{}\"GRASP\_DATAPATH\"\SE{},\S{}\"channel.10\"\SE{},\S{}\"r\"\SE{});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* print the absolute start time (in UTC) of the run \*\1\CE{}}}
+\L{\LB{___\V{read\_block}(\V{fplock},\V{NULL},\&\V{zero},\&\V{tstart},\&\V{srate},0,\&\V{zero},1,\&\V{bh},\&\V{mh});}}
+\L{\LB{___\V{doubleutc}=\V{mh}.\V{epoch\_time\_sec}+0.001\*\V{mh}.\V{epoch\_time\_msec};}}
+\L{\LB{___\V{printf}(\S{}\"Starting_time_of_first_frame:_\%13f_Unix\-C_time\2n\"\SE{},\V{doubleutc});}}
+\L{\LB{___\V{printf}(\S{}\"Starting_time_of_first_frame:_\%13f_GPS_time\2n\"\SE{},\V{doubleutc}\-\V{UTCTOGPS});}}
+\L{\LB{___\V{unixtime}=\V{mh}.\V{epoch\_time\_sec};}}
+\L{\LB{___\V{printf}(\S{}\"_\~____UTC_time_\%s\"\SE{},\V{asctime}(\V{utctime}(\&\V{unixtime})));}}
+\L{\LB{___\V{printf}(\S{}\"_\~_Unix_gmtime_\%s\2n\"\SE{},\V{asctime}(\V{gmtime}(\&\V{unixtime})));}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* rewind the file pointer \*\1\CE{}}}
+\L{\LB{___\V{rewind}(\V{fplock});}}
+\L{\LB{}}
+\L{\LB{___\K{while}_(1)_\{}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* find the next locked section of the data \*\1\CE{}}}
+\L{\LB{______\V{points}=\V{find\_locked}(\V{fplock},\&\V{start\_offset},}}
+\L{\LB{_____________________\&\V{start\_block},\&\V{end\_offset},\&\V{end\_block},\&\V{tstart},\&\V{tend},\&\V{srate});}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* if no data remains, then exit \*\1\CE{}}}
+\L{\LB{______\K{if}_(\V{points}==0)}}
+\L{\LB{_________\K{break};}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* calculate start and end of lock times \*\1\CE{}}}
+\L{\LB{______\V{begin}=\V{tstart}+\V{start\_offset}\1\V{srate};}}
+\L{\LB{______\V{end}=\V{tend}+\V{end\_offset}\1\V{srate};}}
+\L{\LB{______\V{totaltime}=\V{end}\-\V{begin};}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* print out info for lock intervals \> 30 seconds \*\1\CE{}_}}
+\L{\LB{______\K{if}_(\V{totaltime}\>30.0)_\{}}
+\L{\LB{_________\V{printf}(\S{}\"Locked_from_t_=_\%f_to_\%f_for_\%f_sec\2n\"\SE{},\V{begin},\V{end},\V{totaltime});}}
+\L{\LB{_________\V{printf}(\S{}\"Number_of_data_points_is_\%d\2n\"\SE{},\V{points});}}
+\L{\LB{_________\V{printf}(\S{}\"Start_block:_\%d__End_block:_\%d\2n\"\SE{},\V{start\_block},\V{end\_block});}}
+\L{\LB{_________\V{printf}(\S{}\"Start_offset:_\%d_End_offset_\%d\2n\2n\"\SE{},\V{start\_offset},\V{end\_offset});}}
+\L{\LB{______\}}}
+\L{\LB{___\}}}
+\L{\LB{___\K{return}_0;}}
+\L{\LB{\}}}

@@ -1,0 +1,45 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_40meter\1reader.c},{17:29},{Feb 27 1998}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}()\{}}
+\L{\LB{___\V{FILE}_\*\V{fp};}}
+\L{\LB{___\K{short}_\*\V{data};}}
+\L{\LB{___\K{float}_\V{tblock},\V{time},\V{srate};}}
+\L{\LB{___\K{int}_\V{code},\V{num},\V{size}=0,\V{count}=0,\V{which}=100;}}
+\L{\LB{___\K{struct}_\V{ld\_binheader}_\V{bheader};}}
+\L{\LB{___\K{struct}_\V{ld\_mainheader}_\V{mheader};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* open the IFO channel for reading \*\1\CE{}}}
+\L{\LB{___\V{fp}=\V{grasp\_open}(\S{}\"GRASP\_DATAPATH\"\SE{},\S{}\"channel.0\"\SE{},\S{}\"r\"\SE{});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* read the first 20 blocks of lock data \*\1\CE{}}}
+\L{\LB{___\K{while}_(\V{count}_\<20)_\{}}
+\L{\LB{______\C{}\1\* read a block of data \*\1\CE{}}}
+\L{\LB{______\V{code}=_\V{read\_block}(\V{fp},\&\V{data},\&\V{num},\&\V{tblock},\&\V{srate},1,\&\V{size},0,\&\V{bheader},\&\V{mheader});}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* if there is no data left, then break \*\1\CE{}}}
+\L{\LB{______\K{if}_(\V{code}==0)_\K{break};}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* print some information about the data.\*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"Data_block_\%d_from_file_channel.0_starts_at_t_=_\%f_sec.\2n\"\SE{},\V{count},\V{tblock});}}
+\L{\LB{______\V{printf}(\S{}\"This_block_sampled_at_\%f_Hz_and_contains_\%d_shorts.\2n\"\SE{},\V{srate},\V{num});}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* print out some information about a single data point from block \*\1\CE{}}}
+\L{\LB{______\V{time}=\V{tblock}+(\V{which}\-1.0)\1\V{srate};}}
+\L{\LB{______\V{printf}(\S{}\"Data_item_\%d_at_time_\%f_is_\%d.\2n\"\SE{},\V{which},\V{time},\V{data}[\V{which}\-1]);}}
+\L{\LB{______\V{printf}(\S{}\"The_next_block_of_data_contains_\%d_shorts.\2n\2n\"\SE{},\V{code});}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* increment count of \# of blocks read.\*\1\CE{}}}
+\L{\LB{______\V{count}++;}}
+\L{\LB{___\}}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* print information about the largest memory block allocated \*\1\CE{}}}
+\L{\LB{___\V{printf}(\S{}\"The_largest_memory_block_allocated_by_read_block()_was_\%d_shorts_long\2n\"\SE{},\V{size});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* free the array allocated by read\_block() \*\1\CE{}}}
+\L{\LB{___\V{free}(\V{data});}}
+\L{\LB{___\K{return}_0;}}
+\L{\LB{\}}}

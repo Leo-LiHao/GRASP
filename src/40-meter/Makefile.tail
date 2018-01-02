@@ -1,0 +1,9 @@
+#############################################################################
+#  THE REGION ABOVE THIS SPACE IS FILLED IN BY InstallGRASP                 #
+#############################################################################
+
+INCLUDES= -I$(GRASP_I)
+
+read_40meter.o: read_40meter.c $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) -c read_40meter.c
+	ar -vr $(GRASP_HOME)/lib/libgrasp.a read_40meter.o

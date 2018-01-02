@@ -1,0 +1,49 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_inspiral\1compare\_chirps.c},{13:53},{Jun 30 1999}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\C{}\1\* compare\_chirps.c: by Benjamin Owen, 1997 \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{}}
+\L{\LB{\K{\#define}_\V{FSTART}_40.______\C{}\1\* GW starting frequency, in Hz                   \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{SRATE}_10000.____\C{}\1\* Sample rate, in Hz                             \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{LENGTH}_32768____\C{}\1\* Twice no of freq bins = samples in time domain \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{MASS1}_10.0______\C{}\1\* mass of first body, in solar masses            \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{MASS2}_10.0______\C{}\1\* mass of second body, in solar masses           \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}()_\{}}
+\L{\LB{__\V{FILE}_\*\V{fp};}}
+\L{\LB{__\K{float}_\V{t\_c},_\V{f\_c},_\*\V{sp},_\*\V{td},_\*\V{dummy};}}
+\L{\LB{__\K{int}_\V{i},\V{pn\_order};}}
+\L{\LB{__\K{void}_\V{realft}(\K{float}\*,\K{unsigned}_\K{long},\K{int});}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* Allocate memory for chirps \*\1\CE{}}}
+\L{\LB{__\V{sp}_=_(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{LENGTH});}}
+\L{\LB{__\V{td}_=_(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{LENGTH});}}
+\L{\LB{__\V{dummy}_=_(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{LENGTH});}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* order of (v\1c) used in chirp calculation comparison \*\1\CE{}}}
+\L{\LB{__\V{pn\_order}=4;}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* Generate time-domain chirp for comparison purposes \*\1\CE{}}}
+\L{\LB{__\V{make\_filters}(\V{MASS1},_\V{MASS2},_\V{td},_\V{dummy},_\V{FSTART},_\V{LENGTH},_\V{SRATE},_\&\V{i},_\&\V{t\_c},_2000,\V{pn\_order});}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* Generate stationary phase chirp in frequency domain \*\1\CE{}}}
+\L{\LB{__\V{f\_c}_=_\V{pow}(6,\-1.5)\1\V{M\_PI}\1(\V{MASS1}+\V{MASS2})\1\V{TSOLAR};}}
+\L{\LB{__\V{sp\_filters}(\V{MASS1},_\V{MASS2},_\V{sp},_\V{dummy},_\V{FSTART},_\V{LENGTH},_\V{SRATE},_\V{f\_c},_\V{t\_c},_\V{pn\_order});}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* Transform stationary phase chirp to the time domain \*\1\CE{}}}
+\L{\LB{__\V{realft}(\V{sp}\-1,_\V{LENGTH},_\-1);}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* Graph both chirps in the time domain.  First output file. \*\1\CE{}}}
+\L{\LB{__\V{fp}_=_\V{fopen}(\S{}\"compare\_chirps.output\"\SE{},_\S{}\"w\"\SE{});}}
+\L{\LB{__\K{for}_(\V{i}=0;_\V{i}\<\V{LENGTH};_\V{i}++)}}
+\L{\LB{____\V{fprintf}(\V{fp},_\S{}\"\%f_\%f_\%f\2n\"\SE{},_\V{i}\1\V{SRATE},_\V{td}[\V{i}],_\V{sp}[\V{i}]\*2\*\V{SRATE}\1\V{LENGTH});}}
+\L{\LB{__\V{fclose}(\V{fp});}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* Now graph the contents of the file using xmgr \*\1\CE{}}}
+\L{\LB{__\V{system}(\S{}\"xmgr_\-nxy_compare\_chirps.output_\&\"\SE{});}}
+\L{\LB{}}
+\L{\LB{__\K{return}_0;}}
+\L{\LB{\}}}

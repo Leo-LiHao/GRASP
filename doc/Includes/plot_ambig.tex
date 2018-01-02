@@ -1,0 +1,184 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_testmass\1plot\_ambig.c},{16:09},{Aug 25 1998}
+\L{\LB{\C{}\1\* plot\_ambig.c}}
+\L{\LB{___Calculate a series of values of the ambiguity function,}}
+\L{\LB{___using 2 pN waveforms as templates and a mode calculated from}}
+\L{\LB{___black hole perturbation theory as signal.}}
+\L{\LB{_____}}
+\L{\LB{___Author: S. Droz (droz at physics.uoguelph.ca)}}
+\L{\LB{\*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* Prototypes: \*\1\CE{}}}
+\L{\LB{\K{void}_\V{realft}(\K{float}_\*,_\K{unsigned}_\K{long},_\K{int});_}}
+\L{\LB{\K{float}_\V{norm}(\K{float}\*_\V{T},\K{float}\*_\V{twice\_inv\_noise},\K{int}_\V{npoint});}}
+\L{\LB{}}
+\L{\LB{\K{float}_\V{norm}(\K{float}\*_\V{That},\K{float}\*_\V{twice\_inv\_noise},\K{int}_\V{npoint})}}
+\L{\LB{\C{}\1\* Calculate \$\2int df \1 S(\|f\|) T(f) \* T\^\*(f)\$  or, in the notaion}}
+\L{\LB{___of the manual (T\1Sh , T\1Sh) = \<T,T\>. \*\1\CE{}}}
+\L{\LB{\{}}
+\L{\LB{____\K{int}_\V{i},\V{im},\V{re};}}
+\L{\LB{}\Tab{8}{\K{float}_\V{real},_\V{imag},\V{c}=0;}}
+\L{\LB{}\Tab{8}{}}
+\L{\LB{}\Tab{8}{\C{}\1\* This loop is equivalent to (but faster than!) }}
+\L{\LB{}\Tab{16}{correlate(output0,That,That,twice\_inv\_noise,npoint);}}
+\L{\LB{}\Tab{16}{c=output0[0]; \*\1\CE{}}}
+\L{\LB{_____}\Tab{16}{}}
+\L{\LB{}\Tab{8}{\K{for}_(\V{i}=1;\V{i}\<\V{npoint}\12;\V{i}++)__\C{}\1\* Negclect the DC and fc values \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\{}}
+\L{\LB{}\Tab{16}{\V{im}=(\V{re}=\V{i}+\V{i})+1;}}
+\L{\LB{}\Tab{16}{\V{real}=\V{That}[\V{re}];}}
+\L{\LB{}\Tab{16}{\V{imag}=\V{That}[\V{im}];}}
+\L{\LB{}\Tab{16}{\V{c}+=\V{twice\_inv\_noise}[\V{i}]\*(\V{real}\*\V{real}+\V{imag}\*\V{imag});}}
+\L{\LB{}\Tab{8}{\}}}
+\L{\LB{}\Tab{8}{\K{return}_\V{sqrt}(\V{c});__\C{}\1\* Note that the 2 from 2\1S compensates for the fact that}}
+\L{\LB{}\Tab{8}{____________________we only sum over positive frequencies. \*\1\CE{}}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{}\Tab{8}{_}}
+\L{\LB{\K{int}_\V{main}()}}
+\L{\LB{\{}}
+\L{\LB{___\K{int}_\V{NoPo}_=0;_______________\C{}\1\* Read in as many data points as possible  \*\1\CE{}____}}
+\L{\LB{___\K{float}_\*\V{x}_=_\V{NULL};___________\C{}\1\* We let GRASP take care of all the memory \*\1\CE{}}}
+\L{\LB{___\K{float}_\*\V{Phase}_=_\V{NULL};_______\C{}\1\* allocation.                              \*\1\CE{}}}
+\L{\LB{___\K{float}_\*\V{hplus}_=_\V{NULL};}}
+\L{\LB{___\K{float}_\*\V{hcross}_=_\V{NULL};}}
+\L{\LB{___\K{float}_\V{hNorm};}}
+\L{\LB{___\K{int}_\V{Npoints}_=_32768;_______________\C{}\1\* 2\^20 points \*\1\CE{}}}
+\L{\LB{___\K{int}_\V{NoOfWavePoints}_=_10000;________\C{}\1\* The number of points we want saved  \*\1\CE{}}}
+\L{\LB{___\K{int}_\V{NoOfPointsGen};}}
+\L{\LB{___\K{float}_\*\V{f}_=_\V{NULL};}}
+\L{\LB{___\K{float}_\V{fend},\V{dt};}}
+\L{\LB{___\K{int}___\V{error},_\V{i},\V{j};}}
+\L{\LB{___\V{FILE}__\*\V{fp};}}
+\L{\LB{___\K{float}_\V{m1}_=_4.5;____________\C{}\1\* Mass of the first body in solar masses \*\1\CE{}_}}
+\L{\LB{___\K{float}_\V{m2}_=_4.5;____________\C{}\1\* Mass of the second body in solar masses \*\1\CE{}_}}
+\L{\LB{___\K{float}_\V{eta},\V{Mc},\V{e},\V{m},\V{xx},\V{yy};}}
+\L{\LB{___\K{float}_\V{fstart}_=_70.0;________\C{}\1\* Starting ORBITAL frequency. \*\1\CE{}___}}
+\L{\LB{___\K{float}_\V{theta}_=_1.2;__________\C{}\1\* Pick an angle \*\1\CE{}}}
+\L{\LB{___\K{float}_\V{phi}_=_0.0;______________}}
+\L{\LB{___\K{float}_\*\V{pN0},_\*\V{pN90},\V{n0},\V{n90},\V{c0},\V{c90},\*\V{output0},\*\V{output90};}}
+\L{\LB{___\K{float}_\V{SNR},\V{var};}}
+\L{\LB{___\K{int}_\V{offset};}}
+\L{\LB{___\K{float}_\*\V{twice\_inv\_noise};}}
+\L{\LB{___\K{double}_\*\V{temp};}}
+\L{\LB{___\K{float}_\V{t\_coal}=0;}}
+\L{\LB{___\K{float}_\V{MaxAmb}_=_0.0;_}}
+\L{\LB{___\K{float}_\V{Mx}=0.0,\V{My}=0.0;__}}
+\L{\LB{___}}
+\L{\LB{___\C{}\1\* Which modes should we include? (1 include, 0 omit) \*\1\CE{}_________}}
+\L{\LB{___\C{}\1\*          m = -5 -4 -3 -2 -1  1  2  3  4  5 }\Tab{56}{   l     \*\1\CE{}}}
+\L{\LB{___\K{int}_\V{modes}[28]_=_\{_________1,_1,_1,_1,}\Tab{64}{\C{}\1\* l = 2 \*\1\CE{}}}
+\L{\LB{__________________________1,_1,_1,_1,_1,_1,_________\C{}\1\* l = 3 \*\1\CE{}}}
+\L{\LB{_______________________0,_0,_0,_0,_0,_0,_0,_0,______\C{}\1\* l = 4 \*\1\CE{}}}
+\L{\LB{____________________0,_0,_0,_0,_0,_0,_0,_0,_0,_0_\};_\C{}\1\* l = 5 \*\1\CE{}}}
+\L{\LB{___}}
+\L{\LB{___\C{}\1\* First we have to read in the data file. This will only work if you\'ve}}
+\L{\LB{_____set the environment variable GRASP\_PARAMETERS. We just read in the default}}
+\L{\LB{_____files, so we can give NULL as filenames. x[0.\,.NoPo-1] will contain all the}}
+\L{\LB{_____v - values. This routine sets up memory for the A\_\{lm\}(v)\'s and }}
+\L{\LB{_____P(v) internally. It will also calculate V(t) and save it.           \*\1\CE{}___}}
+\L{\LB{___\V{printf}(\S{}\"_Reading_data_.\,.\,.\2n\"\SE{});}}
+\L{\LB{___\V{error}_=_\V{ReadData}(\V{NULL},_\V{NULL},_\&\V{x},_\&\V{NoPo});}}
+\L{\LB{___\K{if}_(_\V{error}_)_\K{return}_\V{error};}}
+\L{\LB{___}}
+\L{\LB{___\C{}\1\* We now have to calculate the phase function }}
+\L{\LB{______Phi(f\_0,v). This function already knows}}
+\L{\LB{______how many points to calculate; the same number }}
+\L{\LB{______as we\'ve read datapoints. Since we are interested in freqencies }}
+\L{\LB{______of a couple of  100 Hz we set f\_0 = 200.0 \*\1\CE{}}}
+\L{\LB{___\V{printf}(\S{}\"_Calculating_the_phase_.\,.\,.\2n\"\SE{});}}
+\L{\LB{___\V{error}_=_\V{calculate\_testmass\_phase}(200.0,_(\V{m1}+\V{m2})_,\&\V{Phase});}}
+\L{\LB{___\K{if}_(_\V{error}_)_\V{printf}(\S{}\"Error_calculating_the_phase\2n\"\SE{});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* We\'re now ready to calculate the chirp itself. \*\1\CE{}}}
+\L{\LB{___\V{printf}(\S{}\"_Calculating_the_chirp_.\,.\,.\2n\"\SE{});}}
+\L{\LB{___\V{printf}(\S{}\"_MaxF_=_\%f_\-\!\>_T_=__\%e\2n\"\SE{},\V{Get\_Fmax}(\V{m1},\V{m2}),\V{Get\_Duration}(\V{fstart},_\V{Get\_Fmax}(\V{m1},\V{m2}),\V{m1},\V{m2}));}}
+\L{\LB{___\V{dt}_=_\V{Get\_Duration}(\V{fstart},_\V{Get\_Fmax}(\V{m1},\V{m2}),\V{m1},\V{m2})\1(\V{NoOfWavePoints}\-1);_\C{}\1\* Set the timestep in seconds \*\1\CE{}}}
+\L{\LB{___\V{printf}(\S{}\"_dt_=_\%e\2n\"\SE{},_\V{dt});}}
+\L{\LB{___\V{NoOfWavePoints}_=_\V{Npoints};}}
+\L{\LB{___}}
+\L{\LB{___\V{testmass\_chirp}(\V{m1},_\V{m2},_\V{theta},_\V{phi}_,_\V{Phase},_\V{fstart}_,\V{Get\_Fmax}(\V{m1},\V{m2})\-10,_\&\V{fstart},_\&\V{fend},_}}
+\L{\LB{_______________\V{dt},__\&\V{hplus},_\&\V{hcross},_\&\V{f},__\&\V{NoOfWavePoints},_3,__\V{modes});______}}
+\L{\LB{___\V{Clean\_Up\_Memory}(\V{Phase});_\C{}\1\* Clean up all the memory which was used internally. \*\1\CE{}}}
+\L{\LB{___\V{free}(\V{hcross});_\C{}\1\* We don\'t need htimes. \*\1\CE{}}}
+\L{\LB{___\V{printf}(\S{}\"_Calculated_\%d__data_points\2n_in_the_frequency_intervall_[\%f,_\%f].\2n\"\SE{},}}
+\L{\LB{___________\V{NoOfWavePoints},\V{fstart},_\V{fend});}}
+\L{\LB{___\V{printf}(\S{}\"_The_cirp_lasted_\%f_seconds.\2n\"\SE{},\V{dt}\*\V{NoOfWavePoints});}\Tab{64}{_}}
+\L{\LB{___\C{}\1\* Zero out the remaining points \*\1\CE{}}}
+\L{\LB{___\V{clear}(\V{hplus}_+__\V{NoOfWavePoints},_\V{Npoints}\-\V{NoOfWavePoints},1);}}
+\L{\LB{___}}
+\L{\LB{___\C{}\1\* Get the spectral desnity \*\1\CE{}}}
+\L{\LB{___}}
+\L{\LB{___\V{twice\_inv\_noise}_=_(\K{float}_\*)\V{malloc}((\V{Npoints}\12+1)\*\K{sizeof}(\K{float}));}}
+\L{\LB{___\V{temp}_=_(\K{double}_\*)\V{malloc}((\V{Npoints}\12+1)\*\K{sizeof}(\K{double}));}}
+\L{\LB{___\K{if}_(_!_(_\V{temp}_\&\&_\V{twice\_inv\_noise}_))_\K{return}_\-1;_\C{}\1\* Not enough memory \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{___\V{noise\_power}(\S{}\"noise\_40smooth.dat\"\SE{},_\V{Npoints}\12,_1.0\1(\V{Npoints}\*\V{dt}),_\V{temp});}}
+\L{\LB{___\K{for}_(\V{i}=0;_\V{i}\<_\V{Npoints}\12_;_\V{i}++)_\V{twice\_inv\_noise}[\V{i}]_=_(\K{float})(2.0e\-31\1\V{temp}[\V{i}]);}}
+\L{\LB{___\V{free}(\V{temp});}}
+\L{\LB{___}}
+\L{\LB{___\C{}\1\* Allocate memory for the templates, etc.  \*\1\CE{}}}
+\L{\LB{___\V{pN0}__=_(\K{float}_\*)\V{malloc}(\V{Npoints}\*\K{sizeof}(\K{float}));}}
+\L{\LB{___\V{pN90}__=_(\K{float}_\*)\V{malloc}(\V{Npoints}\*\K{sizeof}(\K{float}));}}
+\L{\LB{___\V{output0}__=_(\K{float}_\*)\V{malloc}(\V{Npoints}\*\K{sizeof}(\K{float}));}}
+\L{\LB{___\V{output90}_=_(\K{float}_\*)\V{malloc}(\V{Npoints}\*\K{sizeof}(\K{float}));}}
+\L{\LB{___\K{if}_(_!_(_\V{pN0}_\&\&_\V{pN90}_\&\&_\V{output0}_\&\&_\V{output90}))_\K{return}_\-1;_\C{}\1\* Not enough memory \*\1\CE{}}}
+\L{\LB{_____}}
+\L{\LB{___}}
+\L{\LB{___\V{realft}(\V{hplus}\-1,\V{Npoints},1);___\C{}\1\* FFT the signal \*\1\CE{}}}
+\L{\LB{___\V{hNorm}_=_\V{norm}(\V{hplus},_\V{twice\_inv\_noise},_\V{Npoints});_\C{}\1\* Get the signal\'s norm \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{_}}
+\L{\LB{___\C{}\1\* Now get ready to loop over the mass range. We use the chirp mass and}}
+\L{\LB{______mass ratio eta as parameters. \*\1\CE{}}}
+\L{\LB{___\V{Mc}_=_\V{pow}(\V{m1}\*\V{m1}\*\V{m1}\*\V{m2}\*\V{m2}\*\V{m2}\1(\V{m1}+\V{m2}),1.0\15.0);}}
+\L{\LB{___\V{eta}_=_\V{m1}\*\V{m2}\1\V{pow}(\V{m1}+\V{m2},2);_}}
+\L{\LB{___\V{printf}(\S{}\"_Chirpmass_Mc_=_\%e_Msun,_eta_=_\%e\2n\"\SE{},\V{Mc},\V{eta});}}
+\L{\LB{___\V{fp}_=_\V{fopen}(\S{}\"scan.dat\"\SE{},\S{}\"w\"\SE{});}}
+\L{\LB{___\K{for}_(\V{i}_=_0;_\V{i}\<=50;_\V{i}++)}}
+\L{\LB{___\{}}
+\L{\LB{_____\K{for}_(\V{j}_=_0;_\V{j}\<=50;\V{j}++)}}
+\L{\LB{_____\{}}
+\L{\LB{________\V{xx}_=_(0.25_+_\V{j}\*(1.0_\-_0.25)\150.0);____\C{}\1\* Deviation from the {`}true\' value \*\1\CE{}}}
+\L{\LB{________\V{yy}_=_(1.00_+_\V{i}\*(1.3_\-_1.0)\150.0);}}
+\L{\LB{________\V{e}_=_\V{eta}\*\V{xx};}}
+\L{\LB{________\V{m}_=_\V{Mc}\*\V{yy};}}
+\L{\LB{________\V{m1}_=_0.5\*\V{m}\*\V{pow}(\V{e},\-3.0\15.0)\*(1\-\V{sqrt}(1\-4.0\*\V{e}));}}
+\L{\LB{________\V{m2}_=_0.5\*\V{m}\*\V{pow}(\V{e},\-3.0\15.0)\*(1+\V{sqrt}(1\-4.0\*\V{e}));_}}
+\L{\LB{________\C{}\1\* Use make\_filters to make the templates, then FFT and orthonormalize. \*\1\CE{}}}
+\L{\LB{}\Tab{16}{\V{make\_filters}(\V{m1},_\V{m2},_\V{pN0},_\V{pN90},_2.0\*\V{fstart},_\V{Npoints},_1.0\1\V{dt}_,\&\V{NoOfPointsGen},_}}
+\L{\LB{__________\&\V{t\_coal},_2000,_4);__}}
+\L{\LB{________\V{realft}(\V{pN0}\-1,\V{Npoints},1);}}
+\L{\LB{________\V{realft}(\V{pN90}\-1,\V{Npoints},1);}}
+\L{\LB{_____}\Tab{8}{\V{orthonormalize}(\V{pN0},\V{pN90},_\V{twice\_inv\_noise},_\V{Npoints},\&\V{n0},\&\V{n90});_}}
+\L{\LB{________}}
+\L{\LB{}\Tab{16}{\V{find\_chirp}(\V{hplus},\V{pN0},\V{pN90},\V{twice\_inv\_noise},\V{n0},\V{n90},\V{output0},_\V{output90}_,_\V{Npoints},_\V{NoOfWavePoints},_}}
+\L{\LB{______________\&\V{offset},_\&\V{SNR},_\&\V{c0},\&\V{c90},\&\V{var});}}
+\L{\LB{________\K{if}_(_\V{SNR}_\>_\V{MaxAmb})_}}
+\L{\LB{________\{}}
+\L{\LB{__________\V{MaxAmb}_=_\V{SNR};}}
+\L{\LB{__________\V{Mx}_=_\V{xx};}}
+\L{\LB{__________\V{My}_=_\V{yy};}}
+\L{\LB{________\}}}
+\L{\LB{________\V{fprintf}(\V{fp},_\S{}\"\%e_\%e_\%e\2n\"\SE{},\V{xx},\V{yy},_\V{SNR}\1\V{hNorm});_\C{}\1\* Save \{\2cal A\} \*\1\CE{}}\Tab{80}{}}
+\L{\LB{______\}}}
+\L{\LB{______\V{fprintf}(\V{fp},\S{}\"\2n\"\SE{});\V{fflush}(\V{fp});__}}
+\L{\LB{______\V{printf}(\S{}\".\"\SE{});\V{fflush}(\V{stdout});}}
+\L{\LB{____\}__}}
+\L{\LB{___\V{fclose}(\V{fp});}}
+\L{\LB{___\V{MaxAmb}_\1=_\V{hNorm};}}
+\L{\LB{______}}
+\L{\LB{___\C{}\1\* Clean up the remaining memory and exit \*\1\CE{}}}
+\L{\LB{___\V{free}(\V{hplus});____________\C{}\1\* Get rid of the waveforms \*\1\CE{}}}
+\L{\LB{___\V{free}(\V{pN0});}}
+\L{\LB{___\V{free}(\V{pN90});}}
+\L{\LB{___\V{free}(\V{output0});}}
+\L{\LB{___\V{free}(\V{output90});}}
+\L{\LB{___\V{free}(\V{twice\_inv\_noise});}}
+\L{\LB{___\V{printf}(\S{}\"\2n_The_maximum_of_A\_i_in_the_scaned_intervall_was_\%4.1f\%\%_and_occured_at_eta\*=\%4.3f,_Mc\*=\%4.3f_\2n\"\SE{},100\*\V{MaxAmb},\V{Mx},\V{My});_}}
+\L{\LB{___\V{printf}(\S{}\"\2nGoodbye.\,.\,.\2n\"\SE{});_\C{}\1\* That\'s it folks. \*\1\CE{}}}
+\L{\LB{___\K{return}_\V{error};}}
+\L{\LB{\}}}

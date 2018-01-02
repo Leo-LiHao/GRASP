@@ -1,0 +1,162 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_frame\1animateF.c},{18:07},{May 12 1999}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}(\K{int}_\V{argc},\K{char}_\*\*\V{argv})_\{}}
+\L{\LB{___\K{void}_\V{graphout}(\K{float},\K{float},\K{int},\K{char}\*);}}
+\L{\LB{___\K{float}_\V{tstart}=1.e35,\V{srate}=1.e\-30,\V{tmin},\V{tmax},\V{dt};}}
+\L{\LB{___\K{double}_\V{time}=0.0;}}
+\L{\LB{___\K{int}_\V{i},\V{seq}=0,\V{code},\V{npoint}=4096;}}
+\L{\LB{___\K{short}_\*\V{data};}}
+\L{\LB{___\K{struct}_\V{fgetinput}_\V{fgetinput};}}
+\L{\LB{___\K{struct}_\V{fgetoutput}_\V{fgetoutput};}}
+\L{\LB{___\K{char}_\*\V{nstring};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* number of channels \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{nchan}=1;}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* number of samples per update \*\1\CE{}}}
+\L{\LB{___\K{if}_(\V{NULL}!=(\V{nstring}=\V{getenv}(\S{}\"GRASP\_NSAMPLE\"\SE{})))_\{}}
+\L{\LB{______\V{npoint}=\V{atoi}(\V{nstring});}}
+\L{\LB{______\V{fprintf}(\V{stderr},\S{}\"Display_points_set_to_environment_variable:_GRASP\_NSAMPLE_=_\%d\2n\"\SE{},\V{npoint});}}
+\L{\LB{___\}}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* source of files \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{files}=\V{framefiles};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* storage for channel names, data locations, points returned, ratios \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{chnames}=(\K{char}_\*\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{char}_\*));}}
+\L{\LB{___\V{fgetinput}.\V{locations}=(\K{short}_\*\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{short}_\*));}}
+\L{\LB{___\V{fgetoutput}.\V{npoint}=(\K{int}_\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{int}));}}
+\L{\LB{___\V{fgetoutput}.\V{ratios}=(\K{int}_\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{int}));}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* set up channel names, etc. for different cases \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{chnames}[0]=\S{}\"IFO\_DMRO\"\SE{};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* set up for different cases \*\1\CE{}}}
+\L{\LB{___\K{if}_(\V{NULL}!=\V{getenv}(\S{}\"GRASP\_CHANNEL\"\SE{}))_\{}}
+\L{\LB{______\C{}\1\* 40 meter lab \*\1\CE{}}}
+\L{\LB{______\V{fgetinput}.\V{chnames}[0]=\V{getenv}(\S{}\"GRASP\_CHANNEL\"\SE{});}}
+\L{\LB{______\V{fgetinput}.\V{inlock}=0;}}
+\L{\LB{___\}}}
+\L{\LB{___\K{else}_\{}}
+\L{\LB{______\C{}\1\* Nov 1994 data set \*\1\CE{}}}
+\L{\LB{______\V{fgetinput}.\V{inlock}=1;}}
+\L{\LB{___\C{}\1\* fgetinput.inlock=0; \*\1\CE{}}}
+\L{\LB{___\}}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* number of points to get \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{npoint}=\V{npoint};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* don\'t seek, we need the sample values! \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{seek}=0;}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* but we don\'t need calibration information \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{calibrate}=0;}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* allocate storage space for data \*\1\CE{}}}
+\L{\LB{___\V{data}=(\K{short}_\*)\V{malloc}(\K{sizeof}(\K{short})\*\V{npoint});}}
+\L{\LB{___\V{fgetinput}.\V{locations}[0]=\V{data};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* handle case where user has supplied t or dt arguments \*\1\CE{}}}
+\L{\LB{___\K{if}_(\V{argc}==1)_\{}}
+\L{\LB{______\V{tmin}=\-1.e30;}}
+\L{\LB{______\V{dt}=2.e30;}}
+\L{\LB{______\V{argc}=\-1;}}
+\L{\LB{___\}}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* now loop .\,.\,. \*\1\CE{}}}
+\L{\LB{___\V{seq}=\V{argc};}}
+\L{\LB{___\K{while}_(\V{argc}!=1)_\{}}
+\L{\LB{______\C{}\1\* get the next start time and dt \*\1\CE{}}}
+\L{\LB{______\K{if}_(\V{argc}!=\-1)_\{}}
+\L{\LB{_________\V{sscanf}(\V{argv}[\V{seq}\-\V{argc}+1],\S{}\"\%f\"\SE{},\&\V{tmin});}}
+\L{\LB{_________\V{sscanf}(\V{argv}[\V{seq}\-\V{argc}+2],\S{}\"\%f\"\SE{},\&\V{dt});}}
+\L{\LB{_________\V{argc}\-=2;}}
+\L{\LB{______\}}}
+\L{\LB{______\C{}\1\* calculate the end of the observation interval, and get data \*\1\CE{}}}
+\L{\LB{______\V{tmax}=\V{tmin}+\V{dt};}}
+\L{\LB{______\K{while}_(1)_\{}}
+\L{\LB{_________\C{}\1\* decide whether to skip (seek) or get sample values \*\1\CE{}}}
+\L{\LB{_________\K{if}_(\V{tstart}\<\V{tmin}\-(\V{npoint}+20.)\1\V{srate})}}
+\L{\LB{____________\V{fgetinput}.\V{seek}=1;}}
+\L{\LB{_________\K{else}}}
+\L{\LB{____________\V{fgetinput}.\V{seek}=0;}}
+\L{\LB{}}
+\L{\LB{_________\C{}\1\* seek, or get the sample values \*\1\CE{}}}
+\L{\LB{_________\V{code}=\V{fget\_ch}(\&\V{fgetoutput},\&\V{fgetinput});}}
+\L{\LB{}}
+\L{\LB{_________\C{}\1\* elapsed time, sample rate \*\1\CE{}_________\V{tstart}=\V{fgetoutput}.\V{dt};}}
+\L{\LB{_________\V{srate}=\V{fgetoutput}.\V{srate};}}
+\L{\LB{}\Tab{16}{}}
+\L{\LB{_________\C{}\1\* if no data left, return \*\1\CE{}}}
+\L{\LB{_________\K{if}_(\V{code}==0)_\K{return}_0;}}
+\L{\LB{}}
+\L{\LB{_________\C{}\1\* we need to be outputting now.\,.\,. \*\1\CE{}}}
+\L{\LB{_________\K{if}_(\V{tmin}\<=\V{tstart})\{}}
+\L{\LB{____________\K{for}_(\V{i}=0;\V{i}\<\V{npoint};\V{i}++)_\{}}
+\L{\LB{_______________\V{time}=\V{tstart}+\V{i}\1\V{srate};}}
+\L{\LB{_______________\V{printf}(\S{}\"\%f\2t\%d\2n\"\SE{},\V{time},\V{data}[\V{i}]);}}
+\L{\LB{____________\}}}
+\L{\LB{}}
+\L{\LB{____________\C{}\1\* put out information for the graphing program \*\1\CE{}}}
+\L{\LB{____________\V{graphout}(\V{tstart},\V{tstart}+\V{npoint}\1\V{srate},(\V{argc}==1_\&\&_\V{time}\>=\V{tmax}),\V{fgetinput}.\V{chnames}[0]);}}
+\L{\LB{_________\}}}
+\L{\LB{_________\C{}\1\* if we are done with this interval, try next one \*\1\CE{}}}
+\L{\LB{_________\K{if}_(\V{time}\>=\V{tmax})_\K{break};}}
+\L{\LB{______\}}}
+\L{\LB{___\}}}
+\L{\LB{___\K{return}_0;}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* This routine is pipes output into the xmgr graphing program \*\1\CE{}}}
+\L{\LB{\K{void}_\V{graphout}(\K{float}_\V{x1},\K{float}_\V{x2},\K{int}_\V{last},\K{char}\*_\V{ch\_name})_\{}}
+\L{\LB{___\K{static}_\K{int}_\V{count}=0;}}
+\L{\LB{___\V{printf}(\S{}\"\&\2n\"\SE{});____________________________\C{}\1\* end of set marker             \*\1\CE{}}}
+\L{\LB{___\C{}\1\* first time we draw the plot \*\1\CE{}}}
+\L{\LB{___\K{if}_(\V{count}==0)_\{}}
+\L{\LB{______\V{printf}(\S{}\"@doublebuffer_true\2n\"\SE{});_______\C{}\1\* keeps display from flashing    \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@s0_color_3\2n\"\SE{});______________\C{}\1\* IFO graph is green             \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@view_0.1,_0.1,_0.9,_0.45\2n\"\SE{});_\C{}\1\* set the viewport for IFO       \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@with_g1\2n\"\SE{});_________________\C{}\1\* reset the current graph to FFT \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@view_0.1,_0.6,_0.9,_0.95\2n\"\SE{});\C{}\1\* set the viewport FFT           \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@with_g0\2n\"\SE{});_________________\C{}\1\* reset the current graph to IFO \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@world_xmin_\%f\2n\"\SE{},\V{x1});________\C{}\1\* set min x                      \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@world_xmax_\%f\2n\"\SE{},\V{x2});________\C{}\1\* set max x                      \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@autoscale\2n\"\SE{});_______________\C{}\1\* autoscale first time through   \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@focus_off\2n\"\SE{});_______________\C{}\1\* turn off the focus markers     \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@xaxis_label_\2\"t_(sec)\2\"\2n\"\SE{});_\C{}\1\* IFO axis label                 \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@fft(s0,_1)\2n\"\SE{});______________\C{}\1\* compute the spectrum           \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@s1_color_2\2n\"\SE{});______________\C{}\1\* FFT is red                     \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@move_g0.s1_to_g1.s0\2n\"\SE{});_____\C{}\1\* move FFT to graph 1            \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@with_g1\2n\"\SE{});_________________\C{}\1\* set the focus on FFT           \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@g1_type_logy\2n\"\SE{});____________\C{}\1\* set FFT to log freq axis       \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@autoscale\2n\"\SE{});_______________\C{}\1\* autoscale FFT                  \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@subtitle_\2\"Spectrum\2\"\2n\"\SE{});___\C{}\1\* set the subtitle               \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@xaxis_label_\2\"f_(Hz)\2\"\2n\"\SE{});__\C{}\1\* FFT axis label                 \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@with_g0\2n\"\SE{});_________________\C{}\1\* reset the current graph IFO    \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@subtitle_\2\"IFO_output_\%d\2\"\2n\"\SE{},\V{count}++);\C{}\1\* set IFO subtitle       \*\1\CE{}}}
+\L{\LB{______\K{if}_(!\V{last})_\V{printf}(\S{}\"@kill_s0\2n\"\SE{});______\C{}\1\* kill IFO; ready to read again  \*\1\CE{}}}
+\L{\LB{___\}}}
+\L{\LB{___\K{else}_\{}}
+\L{\LB{______\C{}\1\* other times we redraw the plot \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@s0_color_3\2n\"\SE{});______________\C{}\1\* set IFO green                   \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@fft(s0,_1)\2n\"\SE{});______________\C{}\1\* FFT it                          \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@s1_color_2\2n\"\SE{});______________\C{}\1\* set FFT red                     \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@move_g0.s1_to_g1.s0\2n\"\SE{});_____\C{}\1\* move FFT to graph 1             \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@subtitle_\2\"\%s_\%d\2\"\2n\"\SE{},\V{ch\_name},\V{count}++);\C{}\1\* set IFO subtitle        \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@world_xmin_\%f\2n\"\SE{},\V{x1});________\C{}\1\* set min x                       \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@world_xmax_\%f\2n\"\SE{},\V{x2});________\C{}\1\* set max x                       \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@autoscale_yaxes\2n\"\SE{});_________\C{}\1\* autoscale IFO                   \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@clear_stack\2n\"\SE{});_____________\C{}\1\* clear the stack                 \*\1\CE{}}}
+\L{\LB{______\K{if}_(!\V{last})_\V{printf}(\S{}\"@kill_s0\2n\"\SE{});______\C{}\1\* kill IFO data                   \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@with_g1\2n\"\SE{});_________________\C{}\1\* switch to FFT                   \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@g1_type_logy\2n\"\SE{});____________\C{}\1\* set FFT to log freq axis       \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@clear_stack\2n\"\SE{});_____________\C{}\1\* clear stack                     \*\1\CE{}}}
+\L{\LB{______\K{if}_(!\V{last})_\V{printf}(\S{}\"@kill_s0\2n\"\SE{});______\C{}\1\* kill FFT                        \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@with_g0\2n\"\SE{});_________________\C{}\1\* ready to read IFO again         \*\1\CE{}}}
+\L{\LB{___\}}}
+\L{\LB{___\K{return};}}
+\L{\LB{\}}}

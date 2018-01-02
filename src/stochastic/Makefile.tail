@@ -1,0 +1,20 @@
+#############################################################################
+#  THE REGION ABOVE THIS SPACE IS FILLED IN BY InstallGRASP                 #
+#############################################################################
+
+INCLUDES= -I$(GRASP_I)
+
+all: signal_analysis.o detector_info.o signal_generation.o
+
+signal_analysis.o: signal_analysis.c $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) -c signal_analysis.c
+	ar -vr $(GRASP_HOME)/lib/libgrasp.a signal_analysis.o
+
+detector_info.o: detector_info.c $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) -c detector_info.c
+	ar -vr $(GRASP_HOME)/lib/libgrasp.a detector_info.o
+
+signal_generation.o: signal_generation.c $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) -c signal_generation.c
+	ar -vr $(GRASP_HOME)/lib/libgrasp.a signal_generation.o
+

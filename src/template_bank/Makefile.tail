@@ -1,0 +1,47 @@
+#############################################################################
+#  THE REGION ABOVE THIS SPACE IS FILLED IN BY InstallGRASP                 #
+#############################################################################
+
+INCLUDES= -I$(GRASP_I) 
+
+all: postscript.o temp_loc.o temp_area.o match_tools.o cubic.o chirp_templates.o tiling_2d.o
+
+chirp_templates.o: chirp_templates.c $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) -c chirp_templates.c
+	ar -vr $(GRASP_HOME)/lib/libgrasp.a chirp_templates.o
+
+tiling_2d.o: tiling_2d.c $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) -c tiling_2d.c
+	ar -vr $(GRASP_HOME)/lib/libgrasp.a tiling_2d.o
+
+cubic.o: cubic.c $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) -c cubic.c
+	ar -vr $(GRASP_HOME)/lib/libgrasp.a cubic.o
+
+postscript.o: postscript.c $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) -c postscript.c
+	ar -vr $(GRASP_HOME)/lib/libgrasp.a postscript.o
+
+temp_loc.o: temp_loc.c $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) -c temp_loc.c
+	ar -vr $(GRASP_HOME)/lib/libgrasp.a temp_loc.o
+
+temp_area.o: temp_area.c $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) -c temp_area.c
+	ar -vr $(GRASP_HOME)/lib/libgrasp.a temp_area.o
+
+match_tools.o: match_tools.c $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(DEFINES) $(INCLUDES) -c match_tools.c
+	ar -vr $(GRASP_HOME)/lib/libgrasp.a match_tools.o
+
+
+
+
+
+
+
+
+
+
+
+

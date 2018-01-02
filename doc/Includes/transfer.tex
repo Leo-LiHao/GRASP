@@ -1,0 +1,56 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_40meter\1transfer.c},{17:29},{Feb 27 1998}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\K{\#include}_\<\V{stdio}.\V{h}\>}}
+\L{\LB{\K{\#include}_\<\V{memory}.\V{h}\>}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{\K{\#define}_\V{HSCALE}_1.e20}}
+\L{\LB{\K{\#define}_\V{NBINS}_16384}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}()_\{}}
+\L{\LB{___\K{float}_\V{fstart},\V{srate},\V{tcoal},\*\V{c0},\*\V{c90},\*\V{response};}}
+\L{\LB{___\K{int}_\V{filled},\V{i};}}
+\L{\LB{___\K{void}_\V{realft}(\K{float}\*,\K{unsigned}_\K{long},_\K{int});}}
+\L{\LB{___\V{FILE}_\*\V{fp};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* allocate memory \*\1\CE{}}}
+\L{\LB{___\V{c0}=(\K{float}\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{NBINS});}}
+\L{\LB{___\V{c90}=(\K{float}\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{NBINS});}}
+\L{\LB{___\V{response}=(\K{float}\*)\V{malloc}(\K{sizeof}(\K{float})\*(\V{NBINS}+1));}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* set start frequency, sample rate, make chirp \*\1\CE{}}}
+\L{\LB{___\V{make\_filters}(1.4,1.4,\V{c0},\V{c90},\V{fstart}=140.0,\V{NBINS},\V{srate}=9868.0,\&\V{filled},\&\V{tcoal},4000,4);}}
+\L{\LB{___\V{printf}(\S{}\"Chirp_length_is_\%d.\2n\"\SE{},\V{filled});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* Uncomment this line to see the impulse response of the instrument \*\1\CE{}}}
+\L{\LB{___\C{}\1\* for (i=0;i\<NBINS;i++) c0[i]=0.0; c0[100]=1.0; \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* put chirps into frequency domain \*\1\CE{}}}
+\L{\LB{___\V{realft}(\V{c0}\-1,\V{NBINS},1);}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* open file containing calibration data, get response, and scale \*\1\CE{}}}
+\L{\LB{___\V{fp}=\V{grasp\_open}(\S{}\"GRASP\_DATAPATH\"\SE{},\S{}\"swept\-sine.ascii\"\SE{},\S{}\"r\"\SE{});}}
+\L{\LB{___\V{normalize\_gw}(\V{fp},\V{NBINS},\V{srate},\V{response});}}
+\L{\LB{___\K{for}_(\V{i}=0;\V{i}\<\V{NBINS};\V{i}++)_\V{response}[\V{i}]\*=\V{HSCALE};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* avoid floating point errors in inversion \*\1\CE{}}}
+\L{\LB{___\V{response}[0]=\V{response}[1]=1.e10;}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* determine IFO channel0 input which would have produced waveform \*\1\CE{}}}
+\L{\LB{___\V{ratio}(\V{c0},\V{c0},\V{response},\V{NBINS}\12);}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* invert FFT \*\1\CE{}}}
+\L{\LB{___\V{realft}(\V{c0}\-1,\V{NBINS},\-1);}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* make a graph showing channel.0 \*\1\CE{}}}
+\L{\LB{___\V{printf}(\S{}\"File_temp.graph_contains_channel.0_produced_by_2_x_1.4_solar_masses.\2n\"\SE{});}}
+\L{\LB{___\V{graph}(\V{c0},\V{NBINS},1);}}
+\L{\LB{}}
+\L{\LB{___\K{return}_0;}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{}}
+\L{\LB{}}
+\L{\LB{}}
+\L{\LB{}}

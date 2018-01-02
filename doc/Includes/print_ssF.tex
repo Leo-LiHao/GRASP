@@ -1,0 +1,59 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_frame\1print\_ssF.c},{13:53},{Jun 30 1999}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{\K{\#define}_\V{NPOINT}_4096}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}()_\{}}
+\L{\LB{___\K{float}_\V{cplx}[\V{NPOINT}+2],\V{srate},\V{freq};}}
+\L{\LB{___\K{int}_\V{npoint},\V{i};}}
+\L{\LB{___\K{struct}_\V{fgetoutput}_\V{fgetoutput};}}
+\L{\LB{___\K{struct}_\V{fgetinput}_\V{fgetinput};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* we need to ask for some sample values, even though all we want is calibration \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{npoint}=256;}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* number of channels \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{nchan}=1;}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* storage for channel names, data locations, points returned, ratios \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{chnames}=(\K{char}_\*\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{char}_\*));}}
+\L{\LB{___\V{fgetoutput}.\V{npoint}=(\K{int}_\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{int}));}}
+\L{\LB{___\V{fgetoutput}.\V{ratios}=(\K{int}_\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{int}));}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* use utility function framefiles() to retrieve file names \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{files}=\V{framefiles};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* don\'t care if IFO is in lock \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{inlock}=0;}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* don\'t need data anyway, so might as well seek \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{seek}=1;}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* but we DO need the calibration information \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{calibrate}=1;}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* set the channel name \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{chnames}[0]=\S{}\"IFO\_DMRO\"\SE{};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* number of points of (imagined) FFT \*\1\CE{}}}
+\L{\LB{___\V{npoint}=\V{NPOINT};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* now get the data (none) and calibration (what we want) \*\1\CE{}}}
+\L{\LB{___\V{fget\_ch}(\&\V{fgetoutput},\&\V{fgetinput});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* the fast-channel sample rate \*\1\CE{}}}
+\L{\LB{___\V{srate}=\V{fgetoutput}.\V{srate};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* swept sine calibration array is first argument \*\1\CE{}}}
+\L{\LB{___\V{GRcalibrate}(\V{fgetoutput}.\V{fri},\V{fgetoutput}.\V{frinum},\V{npoint},\V{cplx},\V{srate},2,0);}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* print out frequency, real, imaginary interpolated values \*\1\CE{}}}
+\L{\LB{___\V{printf}(\S{}\"\#_Freq_(Hz)\2tReal\2t\2tImag\2n\"\SE{});}}
+\L{\LB{___\K{for}_(\V{i}=0;\V{i}\<=\V{NPOINT}\12;\V{i}++)_\{}}
+\L{\LB{______\V{freq}=\V{i}\*\V{srate}\1\V{NPOINT};}}
+\L{\LB{______\V{printf}(\S{}\"\%e\2t\%e\2t\%e\2n\"\SE{},\V{freq},\V{cplx}[2\*\V{i}],\V{cplx}[2\*\V{i}+1]);}}
+\L{\LB{___\}}}
+\L{\LB{___\K{return}_0;}}
+\L{\LB{\}}}

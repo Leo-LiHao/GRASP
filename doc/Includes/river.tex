@@ -1,0 +1,63 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_utility\1river.c},{17:30},{Feb 27 1998}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{\K{\#include}_\<\V{unistd}.\V{h}\>__\C{}\1\* need the header for the sleep() function \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}()_\{}}
+\L{\LB{___\K{int}_\V{i},\V{num\_points},\V{num\_win},\V{num\_freq},\V{padded\_length},\V{max\_lines},\V{num\_removed};}}
+\L{\LB{___\K{float}_\V{nwdt},\*\V{data},\*\V{mtap\_spec\_init},\*\V{mtap\_spec\_final},\V{freq},\V{fnyquist};}}
+\L{\LB{___\K{struct}_\V{removed\_lines}_\*\V{line\_list};}}
+\L{\LB{___\V{FILE}_\*\V{fpriver};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* data length, padded length, num frequencies including DC, Nyquist \*\1\CE{}}}
+\L{\LB{___\V{num\_points}=395;}}
+\L{\LB{___\V{padded\_length}=1024;}}
+\L{\LB{___\V{num\_freq}=1+\V{padded\_length}\12;}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* number of taper windows to use, and time-freq bandwidth \*\1\CE{}}}
+\L{\LB{___\V{num\_win}=5;}}
+\L{\LB{___\V{nwdt}=4.0;}}
+\L{\LB{___}}
+\L{\LB{___\C{}\1\* maximum number of lines to remove \*\1\CE{}}}
+\L{\LB{___\V{max\_lines}=8;}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* allocate arrays \*\1\CE{}}}
+\L{\LB{___\V{data}=_(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{num\_points});}}
+\L{\LB{___\V{mtap\_spec\_init}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{num\_freq});}}
+\L{\LB{___\V{mtap\_spec\_final}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{num\_freq});}}
+\L{\LB{___\V{line\_list}=(\K{struct}_\V{removed\_lines}_\*)\V{malloc}(\K{sizeof}(\K{struct}_\V{removed\_lines})\*\V{max\_lines});}}
+\L{\LB{___}}
+\L{\LB{___\C{}\1\* Read Willamette River data from Percival \& Walden example, pg 505 \*\1\CE{}}}
+\L{\LB{___\V{fpriver}=\V{grasp\_open}(\S{}\"GRASP\_PARAMETERS\"\SE{},\S{}\"willamette\_river.dat\"\SE{},\S{}\"r\"\SE{});}}
+\L{\LB{___\K{for}_(\V{i}=0;\V{i}\<395;\V{i}++)_\V{fscanf}(\V{fpriver},\S{}\"\%f\"\SE{},\V{data}+\V{i});}}
+\L{\LB{___\V{fclose}(\V{fpriver});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* Since the data is sampled once per month, fnyquist = 6 cyles\1year \*\1\CE{}}}
+\L{\LB{___\V{fnyquist}=0.5\*12;}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* pop up a graph of the original data \*\1\CE{}}}
+\L{\LB{___\V{graph}(\V{data},\V{num\_points},1);_\V{sleep}(5);}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* now remove the spectral lines from the data set \*\1\CE{}}}
+\L{\LB{___\V{remove\_spectral\_lines}(\V{data},\V{num\_points},\V{padded\_length},\V{nwdt},\V{num\_win},}}
+\L{\LB{__________\V{max\_lines},500,\&\V{num\_removed},\V{line\_list},\V{mtap\_spec\_init},\V{mtap\_spec\_final},1,0,\V{num\_freq});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* pop up a graph of the original multitapered spectrum \*\1\CE{}}}
+\L{\LB{___\V{graph}(\V{mtap\_spec\_init},\V{num\_freq},1);_\V{sleep}(5);}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* pop up a graph of the line-removed data and multitapered spectrum \*\1\CE{}}}
+\L{\LB{___\V{graph}(\V{data},\V{num\_points},1);_\V{sleep}(5);}}
+\L{\LB{___\V{graph}(\V{mtap\_spec\_final},\V{num\_freq},1);_\V{sleep}(5);}}
+\L{\LB{______}}
+\L{\LB{___\C{}\1\* print out a list of lines removed \*\1\CE{}}}
+\L{\LB{___\V{printf}(\S{}\"Total_number_of_lines_removed:_\%d\2n\"\SE{},\V{num\_removed});}}
+\L{\LB{___\K{for}_(\V{i}=0;\V{i}\<\V{num\_removed};\V{i}++)_\{}}
+\L{\LB{______\V{freq}=\V{line\_list}[\V{i}].\V{index}\*\V{fnyquist}\1\V{num\_freq};}}
+\L{\LB{______\V{printf}(\S{}\"Removed_line_of_amplitude_\%f_+_i_\%f_at_freq_\%f_cycles\1year\2t\"\SE{},}}
+\L{\LB{________________\V{line\_list}[\V{i}].\V{re},\V{line\_list}[\V{i}].\V{im},\V{freq});}}
+\L{\LB{______\V{printf}(\S{}\"(F\-test_value_\%f)\2n\"\SE{},\V{line\_list}[\V{i}].\V{fvalue});}}
+\L{\LB{___\}}}
+\L{\LB{___\K{return}_0;}}
+\L{\LB{\}}}

@@ -1,0 +1,49 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_transient\1LS\_filter.c},{19:49},{Apr  1 1998}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\C{}\1\*}}
+\L{\LB{_\* This program is an example of how one uses the LS\_waveform}}
+\L{\LB{_\* routine. It simply sets initial values, allocates memory for the wave}}
+\L{\LB{_\* form, and then allows LS\_waveform to do the work!}}
+\L{\LB{_\*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}()}}
+\L{\LB{\{}}
+\L{\LB{__\K{int}_\V{i},\V{n\_samps};}}
+\L{\LB{__\K{float}_\*\V{h},\V{dt};}}
+\L{\LB{__\K{struct}_\V{LS\_physical\_constants}_\V{phys\_const};}}
+\L{\LB{__\K{float}_\V{sky\_theta},\V{sky\_phi},\V{polarization};}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* Length and sample rate for filter waveform. \*\1\CE{}__}}
+\L{\LB{__\V{n\_samps}_=_1048576;}}
+\L{\LB{__\V{dt}_=_0.0001;}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* Beam pattern parameters. \*\1\CE{}__}}
+\L{\LB{__\V{sky\_theta}_=_0.0;}}
+\L{\LB{__\V{sky\_phi}_=_0.0;}}
+\L{\LB{__\V{polarization}_=_0.125\*\V{M\_PI};}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* Physical parameters of system whose waveform is being modelled. \*\1\CE{}}}
+\L{\LB{__\V{phys\_const}.\V{mass}_=_1.4;_\C{}\1\* solar masses \*\1\CE{}}}
+\L{\LB{__\V{phys\_const}.\V{radius}_=_10.0;_\C{}\1\* kilometers \*\1\CE{}}}
+\L{\LB{__\V{phys\_const}.\V{distance}_=_10.0;_\C{}\1\* megaparsecs \*\1\CE{}}}
+\L{\LB{__\V{phys\_const}.\V{fmax}_=_800.0;_\C{}\1\* Hz \*\1\CE{}}}
+\L{\LB{__\V{phys\_const}.\V{inclination}_=_0.0;}}
+\L{\LB{__\V{phys\_const}.\V{Phi\_0}_=_0.0;}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* Allocate waveform memory. \*\1\CE{}}}
+\L{\LB{__\V{h}=(\K{float}_\*)\V{malloc}(\V{n\_samps}\*\K{sizeof}(\K{float}));}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* Produce waveform \*\1\CE{}}}
+\L{\LB{__\V{LS\_waveform}(\V{h},\V{phys\_const},\V{sky\_theta},\V{sky\_phi},\V{polarization},\V{dt},\V{n\_samps});}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* Output waveform. \*\1\CE{}}}
+\L{\LB{__\K{for}(\V{i}=0;\V{i}\<\V{n\_samps};\V{i}++)}}
+\L{\LB{__\V{printf}(\S{}\"\%f\2t\%e\2n\"\SE{},\V{i}\*\V{dt},\V{h}[\V{i}]);_}}
+\L{\LB{_}}
+\L{\LB{\K{return}_0;}}
+\L{\LB{\}}}

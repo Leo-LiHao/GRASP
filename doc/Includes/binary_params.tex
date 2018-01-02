@@ -1,0 +1,58 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_binary\-search\1binary\_params.h},{12:21},{Mar 30 1999}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\C{}\1\* Parameters that describe the size of the segments of data analyzed                     \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{NPOINT}____262144_______\C{}\1\* The size of our segments of data (\~26 seconds)          \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{CHIRPLEN}___24000_______\C{}\1\* length of longest allowed chirp 23293 points            \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{PRESAFETY}__65536_______\C{}\1\* ignore PRESAFETY points at beginning of correlation     \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{POSTSAFETY}_(\V{PRESAFETY}_+_\V{CHIRPLEN})__\C{}\1\* ignore POSTSAFETY at end of correlation     \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{SPEC\_TRUNC}_\V{PRESAFETY}}}
+\L{\LB{\C{}\1\* \#define SPEC\_TRUNC 0 \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* Parameters that describe the data aquisition \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{MIN\_INTO\_LOCK}_3.0_____\C{}\1\* Number of minutes to skip into each locked section       \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{DATA\_SEGMENTS}_16384___\C{}\1\* largest number of data segments to process               \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* Parameter that defines format of data being used                                       \*\1\CE{}}}
+\L{\LB{\C{}\1\* 0: old format data                                                                     \*\1\CE{}}}
+\L{\LB{\C{}\1\* 1: new (frame) format data                                                             \*\1\CE{}}}
+\L{\LB{\C{}\1\* 2: simulated data                                                                      \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{DATA\_FORMAT}_1}}
+\L{\LB{\K{\#define}_\V{RANDOMIZE}_0___________\C{}\1\* Randomizes the phases                                    \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* Parameters that describe the interferometer \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{FLO}_120.0_____________\C{}\1\* The low frequency cutoff for filtering (Hz)              \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{HSCALE}_1.e21__________\C{}\1\* A convenient scaling factor; results independent of it   \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{SRATE}_9868.4208984375_\C{}\1\* sample rate in HZ of IFO\_DMRO channel                    \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* Parameters that describe the filter bank and the filter signals \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{NUM\_TEMPLATES}_687_____\C{}\1\* number of templates read from an ascii file              \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{STORE\_TEMPLATES}_0_____\C{}\1\* 0: slaves recompute templates. 1: slaves save templates. \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{NSIGNALS}_8____________\C{}\1\* number of signal values computed for each template       \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{THRESHOLD}_5.0_________\C{}\1\* threshold above which a splitup veto test is done        \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{PBINS}_20______________\C{}\1\* Number of frequency bands for the r\^2 discriminator      \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* Parameters controlling optional MPI and MPE code \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{DEBUG\_COMM}_0__________\C{}\1\* print lots of statements to help debug communication     \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{DBX}_0_________________\C{}\1\* start up dbx windows for each process                    \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{ISMPE}_0_______________\C{}\1\* 0: no mpe calls.  1: mpe calls                           \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{SMALL\_MPELOG}_1________\C{}\1\* 0: detailed MPE logging. 1: minimal MPE logging          \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{RENICE}_1______________\C{}\1\* Priority. 1: processes run NICED  0: not NICED           \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{NPERSLAVE}_15___________\C{}\1\* The number of segments analyzed in parallel by slave     \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* Parameters for analysing a particular segment and a particular template \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{PART\_TEMPLATE}_\-1______\C{}\1\* template to be investigated (numbered 0,1,.\,.\,.)           \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{COMPARE}_0_____________\C{}\1\* 0: records impulse offset. 1: records peak offset        \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* parameters for type of filtering \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{INSERT\_CHIRP}_0________\C{}\1\* 0: don\'t insert a chirp.  1: insert chirp into data      \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{REMOVE\_LINE\_BINS}_0____\C{}\1\* implement Whitcomb\'s idea of dropping bins near lines    \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{INJECT\_TIME\_REVERSE}_0_\C{}\1\* inject time-reversed chirps                              \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{REVERSE\_FILTERS}_0_____\C{}\1\* analyze data with time-reversed filters                  \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{WINDOW}_2______________\C{}\1\* power spectrum: 0=rectangular 1=Hann 2=Welch 3=Bartlett  \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{NORM\_CF}_1_____________\C{}\1\* 0: GRASP snr\1distance norm  1: Cutler\1Flanagan norms     \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{TWO\_PHASE\_R2}_1________\C{}\1\* 1: Use two-phase r\^2 test, 0: use single-phase test      \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* Utility parameters  \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{HEADER\_COMMENT\_SIZE}_16384__\C{}\1\* bytes in the comment part of signal.header file     \*\1\CE{}}}

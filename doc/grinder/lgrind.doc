@@ -1,0 +1,267 @@
+%
+%% LaTeX lgrind environment
+%
+% $Id: lgrind.doc,v 1.1.1.1 1997/03/18 00:44:36 cvs Exp $
+%
+% Based on Van Jacobson's ``tgrindmac'', a macro package for TeX grinding
+% Our job here is to simplify it quite a bit and make it conform to LaTeX
+%
+% Modified, 8-Oct-87 by Jerry Leichter to work with various changes made
+% while adapting to VMS.  Made all the internal variables contain an "@".
+%
+% Modified, 17-Jan-87 by Jerry Leichter.  Many changes to correspond to
+% modifications in tgrind.exe.
+%
+% Modified, 6-Sep-91 by George Reilly.  Changed the name from tgrind to lgrind.
+% Minor changes to get rid of superfluous spaces.
+
+\newif\ifc@mment			%True when setting a comment
+\newif\ifstr@ng				%True when setting a string constant
+\newif\ifright@				%In comments, \" => '' (else ``)
+\newif\ifLGd@fault			%True after default \LGbegin
+\newcount\lc@unt			%Line counter
+\newcount\ln@xt				%Next line to get numbered
+\newbox\ls@far				%Stores lines so far for tabbing
+\newdimen\TBw@d				%Tabwidth when tabbing
+\newbox\tb@x				%Tab positioning
+\newdimen\@ts				%Width of listing space
+%
+% _ marks a point where the pre-processor wants a fixed-width space (of
+% width \@ts).
+{\catcode`\_=\active \gdef\@setunder{\let_=\sp@ce}}
+
+\def\BGfont{\sf}			%"Background" font
+\def\CMfont{\rm}			%Comment font
+\def\KWfont{\bf}			%Keyword font
+\def\STfont{\tt}			%String font
+\def\VRfont{\it}			%Variable name font
+\def\LGsize{\small}			%Size to use in displayed code
+\def\LGfsize{\footnotesize}		%Size to use in \lgrindfile
+\newif\ifLGinline			%True for in-line code
+\newif\ifLGleftnum			%Put line numbers on the left
+\newcount\LGnuminterval			%Line numbering interval
+\LGnuminterval=10
+\newskip\LGindent			%Indentation for displayed lines
+\LGindent=1.6667\parindent
+%
+% Default commands to open and close a code example.  \LGend is a no-op
+% unless \LGbegin was executed, so the user can provide explicit open code
+% on the %[ or %( line without providing any special code on the matching
+% %] or %) line.
+%
+\def\LGbegin{\ifLGinline$\hbox\else$$\vbox\fi\bgroup\LGd@faulttrue}
+\def\LGend{\ifLGd@fault\egroup\ifLGinline$\else$$\fi\LGd@faultfalse\fi}
+
+%
+% Warning:  \lgrind may be executed in horizontal mode; it's very important
+% that there be no random spaces in it.  That's why so many of the lines
+% end in "%".
+\def\lgrind{%
+\def\Line##1{\L{\LB{##1}}}%		%For use with %=
+%
+% Stuff we ignore --- meant for stand-alone listings.
+%
+\let\Head=\@gobble			%Header information (-h)
+\def\File##1,##2,##3{}%			%File specification info
+\let\Proc=\@gobble			%Marks procedure def beginning
+\let\ProcCont=\@gobble			%Marks end of nested procedure def
+%
+% Each formfeed in the input is replaced by a "\NewPage" macro.  If
+% you really want a page break here, define this as "\vfill\eject".
+%
+\def\NewPage{\filbreak\bigskip}%
+%
+% Each line of displayed program text is enclosed by a "\L{...}".  We turn
+% each line into an hbox.  Every \LGnuminterval lines we output a small line
+% number in past the right edge.
+%
+\ifLGinline
+ \def\L##1{\setbox\ls@far\null\CF\strut##1\ignorespaces}%
+\else
+ \let\r@ghtlno\relax\let\l@ftlno\relax
+ \ifnum\LGnuminterval>\z@
+  \ifLGleftnum
+   \def\l@ftlno{\ifnum\lc@unt>\ln@xt\global\advance\ln@xt by\LGnuminterval
+     \llap{{\scriptsize\the\lc@unt\quad}}\fi}%
+  \else
+  \def\r@ghtlno{\ifnum\lc@unt>\ln@xt\global\advance\ln@xt by\LGnuminterval
+     \rlap{{\scriptsize\enspace\the\lc@unt}}\fi}%
+  \fi
+ \fi
+ \def\L##1{\@@par\setbox\ls@far=\null\CF\strut
+  \global\advance\lc@unt by1%
+  \hbox to\hsize{\hskip\LGindent\l@ftlno ##1\hfil\r@ghtlno}\ignorespaces}%
+\fi
+%
+\lc@unt=0\ln@xt=\LGnuminterval\advance\ln@xt by-1%
+%
+% The following weirdness is to deal with tabs.  "Pieces" of a line
+% between tabs are output as "\LB{...}".  E.g., a line with a tab at
+% column 16 would be output as "\LB{xxx}\Tab{16}\LB{yyy}".  (Actually, to
+% reduce the number of characters in the .tex file the \Tab macro
+% supplies the 2nd & subsequent \LB's.) We accumulate the LB stuff in an
+% hbox.  When we see a Tab, we grab this hbox (using "\lastb@x") and turn
+% it into a box that extends to the tab position.  We stash this box in
+% "\ls@far" & stick it on in front of the next piece of the line.  (There must
+% be a better way of doing tabs [cf., the Plain.tex tab macros] but I'm not
+% not enough of a TeX wizard to come up with it.  Suggestions would be
+% appreciated.)
+\def\LB{\CF\hbox\bgroup\box\ls@far\let\next=}%
+\def\Tab##1{\setbox\tb@x=\lastbox\TBw@d=\wd\tb@x\advance\TBw@d by 1\@ts
+ \ifdim\TBw@d>##1\@ts
+  \setbox\ls@far=\hbox{\box\ls@far \box\tb@x \sp@ce}\else
+  \setbox\ls@far=\hbox to ##1\@ts{\box\ls@far \box\tb@x \hfil}\fi\LB}%
+%
+%
+% A normal space is too thin for code listings.  We make spaces & tabs
+% be in "\@ts" units, which for displays are the width of a "0" in the tt
+% font.  For inline stuff, on the other hand, we prefer a somewhat smaller
+% space - actually, the same size as normal inter-word spaces - to help make the included stuff look like a unit.
+%
+% An _ expands to one of these spaces.
+\ifLGinline\def\sp@ce{\hskip .3333em}%
+\else \setbox\tb@x=\hbox{{\tt 0}}\@ts=\wd\tb@x \def\sp@ce{\hskip 1\@ts}\fi
+\catcode`\_=\active \@setunder
+%
+% Font changing stuff for keywords, comments & strings.  We put keywords
+% in boldface, comments in text-italic & strings in typewriter.  Since
+% we're usually changing the font inside of a \LB macro, we remember the
+% current font in \CF & stick a \CF at the start of each new box.
+% Also, the characters " and ' behave differently in comments than in
+% code, and others behave differently in strings than in code.
+\let\CF=\BGfont
+\def\K##1{{\KWfont ##1}\global\futurelet\next\ic@r}%		%Keyword
+\def\V##1{{\VRfont ##1}\global\futurelet\next\ic@r}%		%Variable
+\def\ic@r{\let\@tempa\/\ifx.\next\let\@tempa\relax%		%Optional \/
+ \else\ifx,\next\let\@tempa\relax\fi\fi\@tempa}%
+%
+% Comment Start, End
+%
+\def\C{\CMfont \global\let\CF\CMfont \global\c@mmenttrue \global\right@false}%
+\def\CE{\BGfont \global\let\CF\BGfont \global\c@mmentfalse}%
+%
+% String Start, End
+%
+\def\S{\STfont \global\let\CF\STfont \global\str@ngtrue}%
+\def\SE{\BGfont \global\let\CF\BGfont \global\str@ngfalse}%
+%
+% We need positive and negative thinspaces in both text and math modes, so
+% we re-define \, and \! here.  The definition for \, isn't really needed for
+% LaTex, but we try to be more complete.  Note that in LaTeX terms, the new
+% definition isn't robust, like the old - but nothing we produce here is
+% likely to be robust - or NEED to be! - anyway!
+\def\,{\relax \ifmmode\mskip\thinmuskip \else\thinspace \fi}%
+\def\!{\relax \ifmmode\mskip-\thinmuskip \else\negthinspace \fi}%
+%
+% Special characters.
+% \CH choses its first option alone in math mode; its second option in
+% a string; and its third option, enclosed in $'s, otherwise.  (At the
+% moment, nothing is ever set in math mode, but you never know....)
+%
+\def\CH##1##2##3{\relax\ifmmode ##1\relax
+\else\ifstr@ng ##2\relax\else$##3$\fi\fi }%
+\def\{{\CH\lbrace {\char'173}\lbrace }%
+\def\}{\CH\rbrace {\char'175}\rbrace }%
+\def\1{\CH///}%						%/
+\def\2{\CH\backslash {\char'134}\backslash }%		%\
+\def\|{\CH|{\char'174}|}%
+\def\<{\CH<<<}%
+\def\>{\CH>>>}%
+\def\*{\CH***}\relax					%\relax for DOCSTY
+\def\-{\CH---}%
+\def\_{\ifstr@ng {\char'137}\else
+  \leavevmode \kern.06em \vbox{\hrule width.35em}%
+  \ifdim\fontdimen\@ne\font=\z@ \kern.06em \fi\fi }%
+\def\&{{\sf \char'046}}%
+\def\#{{\STfont \char'043}}%
+\def\%{{\char'045}}%
+\def\~{{\char'176}}%
+\def\"{\ifc@mment\ifright@ ''\global\right@false \else``\global\right@true \fi
+   \else{\tt \char'042}\fi}%
+\def\'{\ifc@mment'\else {\tt \char'015}\fi}%
+\def\^{{\tt \char'136}}%
+\def\${{\ifmmode\sl\else\ifdim\fontdimen\@ne\font>\z@\sl\fi\fi
+  \char'044}}%						%No $ in \it, use \sl
+\parindent\z@\parskip\z@ plus 1pt\hsize\linewidth%
+}
+\def\endlgrind{\@@par}
+%
+% The following are generated as part of opening and closing included
+% code sequences.
+%
+\def\lgrinde{\ifLGinline\else\LGsize\fi\begin{lgrind}}
+\def\endlgrinde{\end{lgrind}}
+
+% \lagrind*[FLOAT]{FILE}{CAPTION}{LABEL}
+%    *		optional
+%    FLOAT	float options
+%    FILE	reads LaTeXgrind input in file FILE
+%    CAPTION	for list of figures
+%    LABEL	for \ref and \pageref
+\def\lagrind{\@ifstar{\@slagrind}{\@lagrind}}
+
+\def\@lagrind{\@ifnextchar[{\@@lagrind}{\@@lagrind[t]}}
+\def\@slagrind{\@ifnextchar[{\@@slagrind}{\@@slagrind[t]}}
+
+\def\@@lagrind[#1]#2#3#4{%
+    \begin{figure}[#1]
+	\hrule
+	\vskip .5\baselineskip
+	\begin{minipage}\columnwidth\LGsize\LGindent\z@
+	    \begin{lgrind}
+		\input #2\relax
+	    \end{lgrind}
+	\end{minipage}
+	\vskip .5\baselineskip plus .5\baselineskip
+	\begingroup
+	    \setbox\z@=\hbox{#4}%
+	    \ifdim\wd\z@>\z@
+		\caption{#3}%
+		\label{#4}%
+	    \else
+		\captcont{#3}%
+	    \fi
+	\endgroup
+	\vskip 2pt
+	\hrule
+    \end{figure}
+}
+
+\def\@@slagrind[#1]#2#3#4{%
+    \begin{figure*}[#1]
+	\hrule
+	\vskip .5\baselineskip
+	\begin{minipage}\textwidth\LGsize\LGindent\z@
+	    \begin{lgrind}
+		\input #2\relax
+	    \end{lgrind}
+	\end{minipage}
+	\vskip .5\baselineskip plus .5\baselineskip
+	\begingroup
+	    \setbox\z@=\hbox{#4}%
+	    \ifdim\wd\z@>\z@
+		\caption{#3}%
+		\label{#4}%
+	    \else
+		\captcont{#3}%
+	    \fi
+	\endgroup
+	\vskip 2pt
+	\hrule
+    \end{figure*}
+}
+
+
+\def\lgrindfile#1{%
+    \par\addvspace{0.1in}
+    %\hrule
+    \vskip .5\baselineskip
+    \begingroup\LGfsize\LGindent\z@
+	\begin{lgrind}
+	    \input #1\relax
+	\end{lgrind}
+    \endgroup
+    \vskip .5\baselineskip
+   %\hrule
+    \addvspace{0.1in}
+}

@@ -1,0 +1,16 @@
+This is Gravitational Radiation Analysis and Simulation Package (GRASP),
+Copyright Bruce Allen, 1997, 1998.
+
+A manual and installation instructions may be found in the doc directory,
+in the postscript file doc/manual.ps, which contains both the b&w and
+color pages.  The b&w pages only are in doc/manual_bw.ps and the color
+pages only are in doc/manual_color.ps .  You can also read the manual from
+within the doc directory, by using the xdvi utility on the file manual.dvi .
+A copy of the manual in PDF format is also available which may be read
+with an Adobe Acrobat viewer; this file is doc/manual.pdf .
+
+The installation procedure involves modifying the SiteSpecific file,
+and is thoroughly documented in the Introduction section of the manual.
+
+Examples of SiteSpecific files for different sites may be found in the
+Examples_SiteSpecific/ directory.

@@ -1,0 +1,11 @@
+This is the directory which contains all the source code for the GRASP
+package. 
+
+The directory examples/ contains subdirectories with all examples in them.
+
+
+The remaining directories contain the source code for the GRASP
+library, and optimization source code modules.
+
+40-meter/      calibration/   optimization/  stochastic/ periodic/
+transient/     inspiral/      ringdown/      utility/

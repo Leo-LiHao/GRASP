@@ -1,0 +1,408 @@
+% GRASP: Copyright 1997,1998,1999,2000  Bruce Allen
+\def\versionnumber{{\bf GRASP RELEASE 1.9.8}}
+% $Id manual.tex,v 1.76 1999/06/25 00:14:01 ballen Exp $
+% GRASP USERS MANUAL COPYRIGHT BRUCE ALLEN, 1997, 1998, 1999
+
+% UNCOMMENT TO INCLUDE ONLY ONE OR MORE SECTIONS
+% \includeonly{comma-separated file list (with no .tex extensions)}
+% \includeonly{man_intro}
+% \includeonly{man_correlation}
+% \includeonly{man_40meter}
+% \includeonly{man_utility}
+% \includeonly{man_inspiral}
+% \includeonly{man_ringdown}
+% \includeonly{man_template}
+% \includeonly{man_transient}
+% \includeonly{man_binary-search}
+% \includeonly{man_stochastic}
+% \includeonly{man_frame}
+% \includeonly{man_GRtoolbox}
+% \includeonly{man_timefrequency}
+
+\makeindex
+
+\documentclass[11pt]{article}
+\usepackage{times,epsfig,lgrind}
+\usepackage[hypertex,pagebackref=true,letterpaper=true,linkcolor=blue]{hyperref}
+\usepackage{fancyhdr}
+
+%define page size
+\setlength{\textheight}{9.0in}
+\setlength{\textwidth}{6.5in}
+\setlength{\topmargin}{-0.25in}
+\setlength{\oddsidemargin}{0in}
+\setlength{\evensidemargin}{0in}
+
+%set up headers and footers on each page
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\bf\begin{tabular}{c}Section\\\thesubsection\end{tabular}}
+\chead{\bf\leftmark}
+\rhead{\bf\begin{tabular}{c}Page\\\thepage\end{tabular}}
+\lfoot{\bf\versionnumber}
+\cfoot{\bf Page~\thepage}
+\rfoot{\bf\today}
+
+% Define marks without the section numbers
+\renewcommand{\sectionmark}[1]{\markboth{#1}{}}
+\renewcommand{\subsectionmark}[1]{\markright{#1}}
+
+% Make equation numbers reset to zero at start of each subsection
+\def\theequation{\thesubsection.\arabic{equation}}
+\renewcommand{\refname}{}
+\date{\today}
+\makeatletter
+\@addtoreset{equation}{subsection}
+\makeatother
+\providecommand{\eth}{\partial\!\!{}^{-}}
+
+
+% Start the document
+\begin{document}
+
+\title{GRASP: a data analysis package for gravitational wave detection}
+\author{Bruce Allen\thanks{\tt ballen@dirac.phys.uwm.edu}\\
+Department of Physics\\
+University of Wisconsin - Milwaukee\\
+PO Box 413\\
+Milwaukee WI 53201, USA}
+
+\maketitle
+
+\begin{center}
+{\bf Contributors:}
+\end{center}
+Warren Anderson,
+R. Balasubramanian,
+Kent Blackburn,
+Patrick Brady,
+Jim Brau,
+Jolien Creighton,
+Teviet Creighton,
+Steve Drasco,
+Serge Droz,
+Eanna Flanagan,
+Wensheng Hua,
+Scott Hughes,
+Dustin Laurence,
+Adrian Ottewill,
+Ben Owen,
+Jorge Pullin,
+Joseph Romano, and
+Alan Wiseman.
+\vskip 1.0 in
+
+\begin{abstract}
+\noindent
+GRASP ({\bf G}ravitational {\bf R}adiation {\bf A}nalysis \& {\bf
+S}imulation {\bf P}ackage) is a public-domain software tool-kit designed
+for analysis and simulation of data from gravitational wave detectors.
+This users manual describes the use and features of this package.
+Note: an up-to-date version of this manual may be obtained at:
+\htmladdnormallink{{\tt http://www.lsc-group.phys.uwm.edu/$\sim$ballen/grasp-distribution/}}
+{http://www.lsc-group.phys.uwm.edu/~ballen/grasp-distribution/}.
+The software package is also available from this site.
+\end{abstract}
+\vskip -6.5 in \centerline{\bf USERS MANUAL}
+\vskip 7.0 in
+
+\begin{center}
+Copyright 1999 \copyright Bruce Allen
+\end{center}
+\vskip 0.5in
+\begin{center}
+{\bf \versionnumber}
+\end{center}
+\clearpage
+\chead{\bf TABLE OF CONTENTS }
+\lhead{\bf\begin{tabular}{c}Section\\0\end{tabular}}
+\tableofcontents
+\clearpage
+\chead{\bf \leftmark}
+\lhead{\bf\begin{tabular}{c}Section\\\thesubsection\end{tabular}}
+
+\section{ACKNOWLEDGEMENTS}
+This work has been partially supported by National Science Foundation
+grants to: the University of Wisconsin - Milwaukee PHY9507740 and PHY9728704, the
+LIGO project PHY9210038 and the LIGO visitors program PHY9603177.
+It has also benefited from the contributions of several individuals.
+Alan Wiseman wrote the chirp generation routines with me in 1995, then
+entirely re-wrote them for GRASP.  Joseph Romano took my (AVS versions of
+the) stochastic background code, helped to fix a number of the problems,
+and produced the stochastic background simulation routines contained in
+GRASP.   Sathyaprakash generously provided me with a copy of his routine
+{\tt grid4.f} which eventually evolved into {\tt template\_grid}.  Jolien
+Creighton wrote and documented the section on black hole ringdown, and
+incorporated the FFTW optimized Fourier transform routines.  
+Teviet Creighton, Ben Owen, Scott Hughes and Patrick Brady contributed
+essential pieces towards the binary-inspiral search performed on the
+Caltech 40-meter data from November 1994. Jim Mason
+was ``instrumental" in helping me to understand and document the data
+format used in the 40-meter prototype experiment.  Fred Raab, Bob Spero,
+Stan Whitcomb, Kent Blackburn and others have contributed many useful
+ideas and insights about how to understand the data stream from a real
+interferometer.  Kip Thorne and his research group provided or called
+attention to many of these ideas.
+\clearpage
+
+\chead{\bf\begin{tabular}{c}\leftmark\\\rightmark\end{tabular}}
+\include{man_intro}
+\include{man_40meter}
+\include{man_frame}
+\include{man_correlation}
+\include{man_inspiral}
+\include{man_testmass}
+\include{man_ringdown}
+\include{man_template}
+\include{man_timefrequency}
+\include{man_stochastic}
+\include{man_galaxy}
+\include{man_binary-search}
+\include{man_transient}
+\include{man_periodic}
+\include{man_utility}
+\include{man_GRtoolbox}
+%%%   References
+%
+\clearpage
+\chead{\bf REFERENCES}
+\section{REFERENCES}
+\begin{thebibliography}{99}
+
+\bibitem{NumRec}
+W.H. Press, B.P. Flannery, S.A. Teukolsky and W.T. Vettering, {\it
+Numerical recipes in C: the art of scientific computing}, 2nd edition,
+Cambridge University Press.
+
+\bibitem{MPI}
+Message Passing Interface Forum, {\it MPI: a message passing interface
+standard}, International Journal of Supercomputer Applications {\bf 8} 3/4 1994.
+
+\bibitem{MPICH}
+W. Gropp and E. Lusk, {\it User's Guide for mpich, a portable implementation
+of MPI}, Technical Report ANL/MCS-TM-ANL-96/6, Argonne National Laboratory.
+
+\bibitem{Bala}
+R. Balasubramanian, B.S. Sathyaprakash, and S.V. Dhurandhar, {\it
+Gravitational waves from coalescing binaries:  detection strategies and
+monte carlo estimation of parameters}, Phys.  Rev.  {\bf D53} (1996)
+3033-3055; Erratum in Phys. Rev. {\bf D54} (1996) 1860.  Originally
+posted as gr-qc/9508011.
+
+\bibitem{Owen}
+B.J. Owen, {\it Search templates for gravitational waves from
+inspiraling binaries:  choice of template spacing}, Phys. Rev. {\bf
+D53} (1996) 6749-6761.  Originally posted as gr-qc/9511032.
+
+\bibitem{OwenSathya}
+B.J. Owen and B.J. Sathyaprakash, {\it Matched filtering of gravitational
+waves from inspiraling compact binaries: Computational cost and template
+placement}, gr-qc/9808076.
+
+\bibitem{biww}
+L. Blanchet, B.R. Iyer, C.M. Will, and A.G. Wiseman,
+{\it Gravitational waveforms from inspiralling compact binaries
+to second-post-Newtonian order},
+Class. Quantum Grav. {\bf 13}, 575-584 (1996).
+
+\bibitem{willwiseman}
+C.M. Will and A.G. Wiseman, {\it Gravitational radiation from compact
+binary systems: Gravitational waveforms and energy loss to second
+post-Newtonian order}, Phys. Rev. {\bf D54} (1996) 4813-4848.
+
+\bibitem{blanchet:1996}
+L. Blanchet, Phys.\ Rev.\  {\bf D54}, 1417 (1996).
+
+\bibitem{cutleretal}
+C. Cutler {\it et al.}, {\it The Last Three Minutes: Issues in 
+Gravitational-Wave Measurements of Coalescing Binaries},
+Phys. Rev. Lett. {\bf 70} (1993) 2984-2987.
+
+\bibitem{lincolnwill}
+C.W. Lincoln and C.M. Will, {\it Coalescing binary systems of compact
+objects to (post)$^{5/2}$-Newtonian order: Late-time evolution and
+gravitational-radiation emission}, Phys. Rev. {\bf D42} (1990) 1123-1143.
+
+\bibitem{bdiww}
+L. Blanchet, T. Damour, B.R. Iyer, C.M. Will, and A.G. Wiseman,
+{\it Gravitational-Radiation Damping of Compact Binary Systems
+to Second Post-Newtonian Order},
+Phys. Rev. Lett. {\bf 74} (1995) 3515-3518.
+
+\bibitem{flanhughes1}
+E. Flanagan and S. Hughes, {\it Measuring gravitational waves from binary
+black hole coalescences.  I. Signal to noise for inspiral, merger,
+and ringdown}, Phys. Rev. {\bf D57}, 4535-4565, (1998).
+
+\bibitem{flanhughes2}
+E. Flanagan and S. Hughes, {\it Measuring gravitational waves from binary
+black hole coalescences.  II. The waves' information and its extraction,
+with and without templates}. Phys. Rev. {\bf D57}, 4566-4587, (1998).
+
+\bibitem{finnandchernoff}
+L. S. Finn and D. Chernoff,  {\it Observing binary inspiral in gravitational
+radiation: one interferometer}. Phys. Rev. {\bf D47}, 2198-2219, (1993).
+
+\bibitem{thornetofinnhughes}
+K. S. Thorne, Private communication to Scott Hughes.
+
+\bibitem{thornefinnerror}
+Thorne's estimate of 1.04 is off by 6\% because it uses a fit to the
+probability distribution $P(\Theta^2 > x^2)$ (defined in
+{\cite{finnandchernoff}}) which is not accurate enough to reliably
+compute the $x^2$ moment of that distribution.
+
+\bibitem{markovic}
+D. Markovi\'c, {\it Possibility of determining cosmological parameters
+from measurements of gravitational waves emitted by coalescing compact
+binaries}, Phys. Rev. {\bf D48} 4738-4756 (1993).
+
+\bibitem{dwhogg}
+D.W. Hogg, notes, {\it Manual on Cosmological Distance Measures},
+available from
+\htmladdnormallink{{\tt http://www.sns.ias.edu/$\sim$hogg}.}
+{http://www.sns.ias.edu/~hogg}
+
+\bibitem{kolbturner}
+E.W. Kolb and M.S. Turner,  {\it The Early Universe},
+published by Addison Wesley, 1990.
+
+\bibitem{cutler:1994}
+C. Cutler and {\'E}.E. Flanagan \emph{Gravitational waves from
+  merging compact binaries: How accurately can one extract the binary's
+  parameters from the inspiral waveform?} Phys. Rev. \textbf{D49}
+  2658--2697 (1994).
+
+\bibitem{droz:1999}
+S.Droz, D.J. Knapp, E. Poisson, B.J. Owen available at\\
+\htmladdnormallink{{\tt http://xxx.lanl.gov/abs/gr-qc/9901076}.}
+{http://xxx.lanl.gov/abs/gr-qc/9901076}
+
+\bibitem{poisson:1995}
+E. Poisson and C.~M. Will, Phys.\ Rev.\  {\bf D52}, 848 (1995).
+
+\bibitem{matthewsandwalker}
+J. Mathews and R.L. Walker, {\it Mathematical Methods of Physics},
+Second Edition, Addison-Wesley, 1970.
+
+\bibitem{echeverria:1989}
+F. Echeverria \emph{Gravitational-wave measurements of the mass
+  and angular momentum of a black hole,} Phys. Rev. \textbf{D40}
+  3194--3203 (1989).
+
+\bibitem{goldberg:1967}
+J.N. Goldberg, A.J. Macfarlane, E.T. Newman, F. Rohrlich, and E.C.G. Sudarshan
+  \emph{Spin-$s$ spherical harmonics and $\eth$,} J. Math. Phys.
+  \textbf{8} 2155--2161 (1967).
+
+\bibitem{leaver:1985}
+E.W. Leaver \emph{An analytic representation for the quasi-normal
+  modes of {K}err black holes,} Proc. Roy. Soc. Lond. \textbf{A402} (1985).
+
+\bibitem{onozawa:1997}
+H. Onozawa \emph{Detailed study of quasinormal frequencies of the
+  {K}err black hole,} Phys. Rev. \textbf{D55} 3593--3602 (1997).
+
+\bibitem{press:1973}
+W.H. Press and S.A. Teukolsky (Oct 1973) \emph{Perturbations of a rotating
+  black hole. {II}. {D}ynamical stability of the {K}err metric,}
+  Astrophys. J. \textbf{185} 649--673 (1973).
+
+\bibitem{teukolsky:1973}
+S.A. Teukolsky \emph{Perturbations of a rotating black hole. {I}.
+  {F}undamental equations for gravitational, electromagnetic, and
+  neutrino-field perturbations,} Astrophys. J. \textbf{185} 635--647 (1973).
+
+\bibitem{Gillespie}
+A.D. Gillespie, {\it Thermal Noise in the Initial LIGO Interferometers},
+Caltech PhD thesis, 1995.
+
+\bibitem{Lyons}
+T.T. Lyons, {\it An optically recombined laser interferometer for
+gravitational wave detection}, Caltech PhD thesis, 1997.
+
+\bibitem{timefreqpap}
+Warren G. Anderson and R. Balasubramanian, {\em Time-Frequency Detection
+of Gravitational Waves},
+Submitted for publication,
+\htmladdnormallink{{\tt
+http://xxx.lanl.gov/abs/gr-qc/9905023/}}
+{http://xxx.lanl.gov/abs/gr-qc/9905023/}.
+
+\bibitem{Stegerscode}C. Steger, {\em {\rm computer code} {\sc detect-lines 1.2}},
+Technische Universitat M\"{u}nchen, M\"{u}nchen Germany, 1996, available from\\
+\htmladdnormallink{{\scriptsize \tt ftp://ftp9.informatik.tu-muenchen.de/pub/detect-lines/detect-lines-1.2.tar.gz}}
+{ftp://ftp9.informatik.tu-muenchen.de/pub/detect-lines/detect-lines-1.2.tar.gz}.
+
+\bibitem{Stegerspap} C. Steger, IEEE Transactions on Pattern Analysis
+and Machine Intelligence, {\bf 20}, 113, (1998).
+
+\bibitem{AllenReview}
+B.~Allen, {\it The stochastic gravity-wave background: sources and
+detection}, in Relativistic Gravitation and Gravitational Radiation,
+Proceedings of the Les Houches School on Astrophysical
+Sources of Gravitational Radiation, eds. J-A. Marck and J-P. Lasota,
+(Cambridge University Press, Cambridge, England, 1997) pages 373-417.
+
+\bibitem{wortz}
+See equations (4.13) and (4.14) in
+{\it Spacecraft attitude determination and control}, 
+Ed.~James R.~Wortz,
+(D.~Reidel Publishing Co., Boston, 1985).
+
+\bibitem{Science92}
+A.~Abramovici et al., 
+{\it Science} {\bf 256}, 325 (1992). 
+
+\bibitem{thomson82}
+D.J. Thomson, {\it Spectrum estimation and harmonic analysis}, 
+Proceedings of the IEEE, {\bf 70}, 1055-96, (1982).
+
+\bibitem{percivalwalden}
+D.B. Percival and A.T. Walden, {\it Spectral analysis for physical applications}, first edition, Cambridge University Press, (1993).
+
+\bibitem{parklees}
+J.M. Lees and J. Park, {\it Multiple-taper spectral analysis: A stand-alone C
+subroutine}, Computers and Geology {\bf 21}, 199-236.
+
+\bibitem{LS95}
+D. Lai and S. L. Shapiro, {\it Astrophys. J.} {\bf 442}, 259-272, (1995).
+
+\bibitem{Chandra69}
+S. Chandrasekhar, {\it Ellipsoidal Figures of Equilibrium}, (Yale University
+Press, New Haven, 1969).
+
+\bibitem{LaiPC}
+Dong Lai, Personal Communication.
+
+\bibitem{ericsfiles} The data files for the amplitueds $A_{lm}(v)$ and the
+luminosity function $P(v)$ were kindly provided by Eric Poisson
+(poisson@physics.uoguelph.ca). 
+
+\bibitem{droz97} S. Droz and E. Poisson, {\it Gravitational waves from
+inspiraling compact binaries: Second post Newtonian waveforms as search
+templates}, Phys.\ Rev.\  {\bf D57}, 4449 (1997).
+
+\bibitem{frame} Benoit Mours, {\it Frame Library User's Manual},
+version 3.60, \htmladdnormallink{{\tt
+http://wwwlapp.in2p3.fr/virgo/FrameL/}}
+{http://wwwlapp.in2p3.fr/virgo/FrameL/}, email: {\tt mours@lapp.in2p3.fr},
+VIR-MAN-LAP-5400-103.
+
+\bibitem{40msearch}
+B.~Allen, K.~Blackburn, P.~Brady, J.~Creighton, T.~Creighton, S.~Droz, A.~Gillespie,
+S.~Hughes, S.~Kawamura, T.~Lyons, J.~Mason, B.J.~Owen, F.~Raab, M.~Regehr, B.~Sathyaprakash,
+R.L.~Savage, Jr., S.~Whitcomb, A.G.~Wiseman,
+{\it Observational limit on gravitational waves from binary neutron stars in the Galaxy},
+Phys.\ Rev.\ Lett.\ {\bf 83}, 1498 (1999).  Also
+available from:
+\htmladdnormallink{{\tt http://xxx.lanl.gov/abs/gr-qc/9903108}}{http://xxx.lanl.gov/abs/gr-qc/9903108}.
+
+\bibitem{ABW}
+Anninos, Brandt, and Walker, {\it New orthogonal body-fitting coordinates
+for colliding black-hole spacetimes},  Phys. Rev. D \textbf{57}
+6158--6167 (1998).
+
+\end{thebibliography}
+\index{alastpage}
+\end{document}

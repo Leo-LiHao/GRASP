@@ -1,0 +1,73 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_utility\1ifo\_clean.c},{17:30},{Feb 27 1998}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}()_\{}}
+\L{\LB{__\K{short}_\*\V{datas};}}
+\L{\LB{__\K{int}_\V{i},\V{num\_points},\V{num\_win},\V{num\_freq},\V{padded\_length},\V{max\_lines},\V{num\_removed},\V{remain};}}
+\L{\LB{__\K{float}_\V{nwdt},\*\V{data},\*\V{mtap\_spec\_init},\*\V{mtap\_spec\_final},\V{freq},\V{tstart},\V{srate},\*\V{initial\_data},\V{amp},\V{phi};}}
+\L{\LB{__\K{struct}_\V{removed\_lines}_\*\V{line\_list};}}
+\L{\LB{__\V{FILE}_\*\V{fpifo},\*\V{fplock},\*\V{fpout1},\*\V{fpout2};}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* open the IFO output file and lock file \*\1\CE{}}}
+\L{\LB{__\V{fpifo}_=\V{grasp\_open}(\S{}\"GRASP\_DATAPATH\"\SE{},\S{}\"channel.0\"\SE{},\S{}\"r\"\SE{});}}
+\L{\LB{__\V{fplock}=\V{grasp\_open}(\S{}\"GRASP\_DATAPATH\"\SE{},\S{}\"channel.10\"\SE{},\S{}\"r\"\SE{});}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* data length, padded length, num frequencies including DC, Nyquist \*\1\CE{}}}
+\L{\LB{__\V{num\_points}=8192;}}
+\L{\LB{__\V{padded\_length}=65536;}}
+\L{\LB{__\V{num\_freq}=1+\V{padded\_length}\12;}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* number of taper windows to use, and time-freq bandwidth \*\1\CE{}}}
+\L{\LB{__\V{num\_win}=5;}}
+\L{\LB{__\V{nwdt}=3.0;}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* maximum number of lines to remove \*\1\CE{}}}
+\L{\LB{__\V{max\_lines}=100;}}
+\L{\LB{}\Tab{8}{}}
+\L{\LB{__\C{}\1\* allocate arrays \*\1\CE{}}}
+\L{\LB{__\V{datas}=(\K{short}_\*)\V{malloc}(\K{sizeof}(\K{short})\*\V{num\_points});}}
+\L{\LB{__\V{data}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{num\_points});}}
+\L{\LB{__\V{mtap\_spec\_init}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{num\_freq});}}
+\L{\LB{__\V{mtap\_spec\_final}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{num\_freq});}}
+\L{\LB{__\V{line\_list}=(\K{struct}_\V{removed\_lines}_\*)\V{malloc}(\K{sizeof}(\K{struct}_\V{removed\_lines})\*\V{max\_lines});}}
+\L{\LB{__\V{initial\_data}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{num\_points});}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* get a section of data.\,.\,. \*\1\CE{}}}
+\L{\LB{__\V{get\_data}(\V{fpifo},\V{fplock},\&\V{tstart},\V{num\_points},\V{datas},\&\V{remain},\&\V{srate},0);}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* copy short data to float data,and save initial data set  \*\1\CE{}}}
+\L{\LB{__\K{for}_(\V{i}=0;\V{i}\<\V{num\_points};\V{i}++)_\V{initial\_data}[\V{i}]=\V{data}[\V{i}]=\V{datas}[\V{i}];}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* remove the spectral lines from the data set \*\1\CE{}}}
+\L{\LB{__\V{remove\_spectral\_lines}(\V{data},\V{num\_points},\V{padded\_length},\V{nwdt},\V{num\_win},}}
+\L{\LB{_____\V{max\_lines},500,\&\V{num\_removed},\V{line\_list},\V{mtap\_spec\_init},\V{mtap\_spec\_final},1,0,\V{num\_freq});}}
+\L{\LB{____}}
+\L{\LB{__\C{}\1\* print out a list of lines removed \*\1\CE{}}}
+\L{\LB{____\V{printf}(\S{}\"Total_number_of_lines_removed:_\%d\2n\"\SE{},\V{num\_removed});}}
+\L{\LB{____\K{for}_(\V{i}=0;\V{i}\<\V{num\_removed};\V{i}++)_\{}}
+\L{\LB{____\V{freq}=0.5\*\V{line\_list}[\V{i}].\V{index}___\*\V{srate}\1\V{num\_freq};}}
+\L{\LB{____\V{amp}=2.0\*\V{sqrt}(\V{line\_list}[\V{i}].\V{re}\*\V{line\_list}[\V{i}].\V{re}+\V{line\_list}[\V{i}].\V{im}\*\V{line\_list}[\V{i}].\V{im});}}
+\L{\LB{____\V{phi}=180\*\V{atan2}(\V{line\_list}[\V{i}].\V{im},\V{line\_list}[\V{i}].\V{re})\1\V{M\_PI};}}
+\L{\LB{____\V{printf}(\S{}\"Removed_line_frequency_\%.3f_Hz_amplitude_\%.2f_phase_\%.2f_(F\-test_\%.1f)\2n\"\SE{},}}
+\L{\LB{}\Tab{16}{\V{freq},\V{amp},\V{phi},\V{line\_list}[\V{i}].\V{fvalue});}}
+\L{\LB{__\}}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* now output a file containing the initial and final data.\,.\,. \*\1\CE{}}}
+\L{\LB{__\V{fpout1}=\V{fopen}(\S{}\"ifo\_clean\_data.out\"\SE{},\S{}\"w\"\SE{});}}
+\L{\LB{__\V{fprintf}(\V{fpout1},\S{}\"\#_Three_columns_are:\2n\#_Time_(sec)__Initial_data__Final_Data\2n\"\SE{});}}
+\L{\LB{__\K{for}_(\V{i}=0;\V{i}\<\V{num\_points};\V{i}++)}}
+\L{\LB{____\V{fprintf}(\V{fpout1},\S{}\"\%f\2t\%f\2t\%f\2n\"\SE{},\V{i}\1\V{srate},\V{initial\_data}[\V{i}],\V{data}[\V{i}]);}}
+\L{\LB{__\V{fclose}(\V{fpout1});}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* .\,.\,. and the initial and final spectra, for graphing by xmgr \*\1\CE{}}}
+\L{\LB{__\V{fpout2}=\V{fopen}(\S{}\"ifo\_clean\_spec.out\"\SE{},\S{}\"w\"\SE{});}}
+\L{\LB{__\V{fprintf}(\V{fpout2},\S{}\"\#_Three_columns_are:\2n\#_Freq_(Hz)__Initial_spectrum__Final_spectrum\2n\"\SE{});}}
+\L{\LB{__\K{for}_(\V{i}=0;\V{i}\<\V{num\_freq};\V{i}++)}}
+\L{\LB{____\V{fprintf}(\V{fpout2},\S{}\"\%f\2t\%f\2t\%f\2n\"\SE{},0.5\*\V{i}\*\V{srate}\1\V{num\_freq},\V{mtap\_spec\_init}[\V{i}],\V{mtap\_spec\_final}[\V{i}]);}}
+\L{\LB{__\V{fclose}(\V{fpout2});}}
+\L{\LB{}}
+\L{\LB{__\K{return}_0;}}
+\L{\LB{\}}}

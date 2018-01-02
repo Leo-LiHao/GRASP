@@ -1,0 +1,47 @@
+#############################################################################
+#  THE REGION ABOVE THIS SPACE IS FILLED IN BY InstallGRASP                 #
+#############################################################################
+
+INCLUDES= -I$(GRASP_I) 
+
+LIBS= $(OPTIMIZED_OBJECTS) -L$(GRASP_HOME)/lib -lgrasp -L$(RECIPES_LIB) -l$(LRECIPES) $(OPTIMIZED_LIBS) -lm
+
+all: binary_reader translate_param test_transform bin_read binary_search
+
+test_transform: test_transform.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) test_transform.c -o test_transform $(LIBS) $(EPICS_LIBS)
+ 
+translate_param: translate_param.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) translate_param.c -o translate_param $(LIBS) $(EPICS_LIBS) 
+
+binary_reader: binary_reader.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) binary_reader.c -o binary_reader $(LIBS) $(EPICS_LIBS)
+
+bin_read: bin_read.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) bin_read.c -o bin_read $(LIBS) $(EPICS_LIBS)
+
+# Note that MPI code should always be compiled in one step then linked in a separate step!
+binary_params.ascii: binary_params.h
+	awk '{ printf ("\"%s\\n\"\n", $$0) }' binary_params.h > binary_params.ascii
+
+binary_routines.o: binary_routines.c $(GRASP_I)/grasp.h
+	$(CC) -c $(CFLAGS) $(INCLUDES) binary_routines.c
+
+binary_get_data.o: binary_get_data.c binary_params.h $(GRASP_I)/grasp.h
+	$(CC) -c $(CFLAGS) $(INCLUDES) binary_get_data.c
+
+binary_search.o: binary_search.c binary_params.h binary_params.ascii binary_string.h $(GRASP_I)/grasp.h
+	if [ '$(BUILD_MPI)' = 'true' ]; then \
+	$(MPICC) $(CFLAGS) -c $(MPI_INCLUDES) $(INCLUDES) binary_search.c ; \
+	fi
+
+binary_search: binary_search.o binary_routines.o binary_get_data.o $(GRASP_HOME)/lib/libgrasp.a
+	if [ '$(BUILD_MPI)' = 'true' ]; then \
+        if [ '$(BUILD_FRAME)' != 'true' ]; then \
+	$(MPICC) $(CFLAGS) binary_search.o binary_routines.o binary_get_data.o \
+	$(LIBS) $(EPICS_LIBS) $(MPI_LIBS) -o binary_search ; \
+	else \
+	$(MPICC) $(CFLAGS) binary_search.o binary_routines.o binary_get_data.o \
+	$(LIBS) $(EPICS_LIBS) $(MPI_LIBS) -L$(FRAME_DIR)/lib -lFrame -o binary_search ;  \
+	fi ; \
+	fi

@@ -1,0 +1,400 @@
+% /* GRASP: Copyright 1997,1998  Bruce Allen */
+% $Id: man_galaxy.tex,v 1.5 1999/07/11 21:22:11 ballen Exp $
+\section{Galactic Modelling}
+\label{s:galaxy}
+\setcounter{equation}0
+Large parts of GRASP were developed using data from the Caltech
+40-meter prototype detector.  This detector is typically sensitive
+to distances of tens of kiloparsecs, roughly the length scale of our
+galaxy.  It was therefore useful to develop a model of the galactic
+distributions of expected sources, for example, of the galactic
+distribution
+of binary star systems.  This section contains a package of routines
+which can be used to simulate the expected distribution of binary
+inspiral
+sources in our galaxy.  Because of the earth's motion about its axis
+and about the sun, the distribution of expected sources (direction,
+distance, orientation) changes as a function of time, with roughly a
+24-hour period.  This section constains routines which model the
+distribution of these parameters as a function of the earth's motion.
+\clearpage
+
+\subsection{Function: \texttt{local\_sidereal\_time()}}
+\label{ss:lst}
+
+\begin{verbatim}
+float local_sidereal_time(time_t time, float longitude)
+\end{verbatim}
+
+Returns the local sidereal time, in decimal hours, for a given calendar time
+and detector longitude.  The arguments are:
+\begin{description}
+\item{\texttt{time}}: Input.  The time as an integer number of seconds since
+  0h 1~January 1970.  This number is returned by the time routines in
+  \texttt{<time.h>}.
+\item{\texttt{longitude}}: Input.  The longitude of the detector in degrees
+  West.
+\end{description}
+
+The local sidereal time is calculated as follows.  Let JD be the Julian date
+of 0h on the desired calendar day.  (This is computed using the Numerical
+Recipes routine \texttt{julday()}, but a value of 0.5 must be subtracted from
+this routine to give the JD at 0h rather than at 12h.)  The
+Universal Time, UT, is computed using the \texttt{gmtime()} function.
+The Greenwich Sidereal Time, GST, is
+\begin{displaymath}
+  \mbox{GST} = T_0 + 1.002\,737\,909\times\mbox{UT}
+\end{displaymath}
+(modulo 24 hours) where
+\begin{displaymath}
+  T_0 = 6.697\,374\,558 + 2\,400.051\,336\times T + 0.000\,025\,862\times T^2
+\end{displaymath}
+and
+\begin{displaymath}
+  T = \frac{\mbox{JD}-2\,451\,545}{36\,525}.
+\end{displaymath}
+The \emph{local} sidereal time is obtained by subtracting the longitude of the
+detector expressed as decimal hours West of Greenwich.
+
+\begin{description}
+\item{Author:} Jolien Creighton, jolien@tapir.caltech.edu
+\item{Comments:}  This routine is adapted from the method given in:
+  Peter Duffet-Smith \emph{Practical Astronomy with Your Calculator,}
+  3rd edition,
+  (Cambridge University Press, 1988).
+\end{description}
+
+\clearpage
+\subsection{Example: \texttt{caltech\_lst} program}
+\label{ss:caltech_lst}
+
+This program is an example of how to use the function
+\texttt{local\_sidereal\_time()} to compute the local sidereal time
+at the Caltech 40-meter laboratory.  The program determines the
+present sidereal time at Caltech if it receives no arguments.  Instead,
+the program can receive a single long integer specifying the number of
+seconds since 0h UTC 1 Jan 1970, and it returns the Caltech sidereal
+time at that time.  Also returned are the number of seconds since
+0h UTC 1 Jan 1970, the local and coordinated universal times, and the
+Greenwitch sidereal time.  Some examples:
+\begin{enumerate}
+\item \verb|caltech_lst|
+\begin{verbatim}
+881889773 seconds since 0h UTC 1 Jan 1970
+17:22:53 PST Thu 11 Dec 1997
+01:22:53 UTC Fri 12 Dec 1997
+22:53:30 (22.891788 h) Local Sidereal Time
+06:46:02 (06.767323 h) Greenwitch Sidereal Time
+\end{verbatim}
+(guess when I wrote this example!)
+\item \verb|caltech_lst 0|
+\begin{verbatim}
+0 seconds since 0h UTC 1 Jan 1970
+16:00:00 PST Wed 31 Dec 1969
+00:00:00 UTC Thu 01 Jan 1970
+22:48:23 (22.806442 h) Local Sidereal Time
+06:40:55 (06.681976 h) Greenwitch Sidereal Time
+\end{verbatim}
+\end{enumerate}
+
+The program can be simply modified to correspond to \emph{your} local
+sidereal time by changing the \verb|#define LONGITUDE| command to your
+local longitude (in degrees West of Greenwitch).
+
+\begin{description}
+\item[author:] Jolien Creighton, jolien@tapir.caltech.edu
+\end{description}
+
+\clearpage
+\lgrindfile{Includes/caltech_lst.tex}
+
+\clearpage
+\subsection{Function: \texttt{galactic\_to\_equatorial()}}
+\label{ss:galactic_to_equatorial}
+
+\begin{verbatim}
+void galactic_to_equatorial(float l, float b, float *alpha, float *delta)
+\end{verbatim}
+
+This routine converts the coordinates of an object from the Galactic
+system---Galactic longitude~$\ell$ and latitude~$b$---to the equatorial
+system---right ascension~$\alpha$ and declination~$\delta$.  The arguments are:
+\begin{description}
+\item{\texttt{l}}: Input.  The Galactic longitude~$\ell$ (radians).
+\item{\texttt{b}}: Input.  The Galactic latitude~$b$ (radians).
+\item{\texttt{alpha}}: Output.  The right ascension~$\alpha_{1950}$ (radians).
+\item{\texttt{delta}}: Output.  The declination~$\delta_{1950}$ (radians).
+\end{description}
+
+The transformation is the following:
+\begin{equation}
+  \delta = \arcsin[
+    \cos b\, \cos\delta_{\scriptstyle\mathrm{NGP}}\,
+    \sin(\ell - \ell_{\scriptstyle\mathrm{ascend}}) + \sin b\,
+    \sin\delta_{\scriptstyle\mathrm{NGP}} ]
+\end{equation}
+and
+\begin{equation}
+  \alpha = \arctan\left[
+    \frac{ \cos b\, \cos(\ell - \ell_{\scriptstyle\mathrm{ascend}}) }
+         { \sin b\, \cos\delta_{\scriptstyle\mathrm{NGP}} -
+           \cos b\, \sin\delta_{\scriptstyle\mathrm{NGP}}\,
+           \sin(\ell - \ell_{\scriptstyle\mathrm{ascend}}) } \right]
+    + \alpha_{\scriptstyle\mathrm{NGP}}
+\end{equation}
+where
+\begin{center}
+\begin{tabular}{cl}
+  $\alpha_{\scriptstyle\mathrm{NGP}}=192\degdot25$ &
+    is the right ascension (1950) of the North Galactic Pole \\
+  $\delta_{\scriptstyle\mathrm{NGP}}=27\degdot4$ &
+    is the declination (1950) of the North Galactic Pole \\
+  $\ell_{\scriptstyle\mathrm{ascend}}=33^\circ$ &
+    is the ascending node of the Galactic plane on the equator. \\
+\end{tabular}
+\end{center}
+
+\begin{description}
+\item{Author:} Jolien Creighton, jolien@tapir.caltech.edu
+\item{Comments:}  This routine is adapted from the method given in:
+  Peter Duffet-Smith \emph{Practical Astronomy with Your Calculator,}
+   3rd edition,
+  (Cambridge University Press, 1988).  The values used in this routine should
+  be updated to epoch 2000 coordinates.
+\end{description}
+
+
+\clearpage
+\subsection{Example: \texttt{galactic2equatorial} program}
+\label{ss:galactic2equatorial}
+
+This is a simple implementation of the function
+\texttt{galactic\_to\_equatorial()} that converts a specified Galactic
+longitude and latitude to right ascension and declination (epoch 1950).
+The Galactic coordinates are entered in decimal degrees as
+command line arguments.  Some examples:
+\begin{enumerate}
+\item The North Galactic pole is $b=90^\circ$, or
+$\alpha_{1950}=12^{\mathrm{\scriptstyle h}}49^{\mathrm{\scriptstyle m}}$
+and $\delta_{1950}=+27^\circ24'$.  The output of the command
+\verb|galactic2equatorial 0 90| is
+\begin{verbatim}
+l   (deg):   0.00
+b   (deg): +90.00
+RA  (hms):  12 48 59
+Dec (dms): +27 23 59
+\end{verbatim}
+\item The Galactic center is $\ell=b=0$, or
+$\alpha_{1950}=17^{\mathrm{\scriptstyle h}}42^{\mathrm{\scriptstyle m}}
+  24^{\mathrm{\scriptstyle s}}$ and $\delta_{1950}=-28^\circ55'$.  The output
+of the command \verb|galactic2equatorial 0 0| is
+\begin{verbatim}
+l   (deg):   0.00
+b   (deg):  +0.00
+RA  (hms):  17 42 26
+Dec (dms): -28 55 00
+\end{verbatim}
+\item The Large Magellanic Cloud is $\ell=280\degdot5$
+and $b=-32\degdot9$, or
+$\alpha_{2000}=05^{\mathrm{\scriptstyle h}}23^{\mathrm{\scriptstyle m}}
+  34\secdot598$ and
+$\delta_{2000}=-69^\circ45'22\arcsecdot33$.
+The output of the command \verb|galactic2equatorial 280.5 -32.9| is
+\begin{verbatim}
+l   (deg): 280.50
+b   (deg): -32.90
+RA  (hms):  05 23 48
+Dec (dms): -69 49 36
+\end{verbatim}
+\end{enumerate}
+These examples show that the output is correct to the accuracy of the
+input coordinates.
+
+\begin{description}
+\item[author:] Jolien Creighton, jolien@tapir.caltech.edu
+\end{description}
+
+\clearpage
+\lgrindfile{Includes/galactic2equatorial.tex}
+
+\clearpage
+\subsection{Function: \texttt{equatorial\_to\_horizon()}}
+\label{ss:equatorial_to_horizon}
+
+\begin{verbatim}
+void equatorial_to_horizon(float alpha, float delta, float time, float lat,
+			   float *azi, float *alt)
+\end{verbatim}
+
+This routine converts the coordinates of an object from the equatorial
+system---right ascension~$\alpha$ and declination~$\delta$---to the horizon
+system---azimuth~$A$ and altitude~$a$---for a given time and latitude.
+The arguments are:
+\begin{description}
+\item{\texttt{alpha}}: Input.  The right ascension~$\alpha$ (radians).
+\item{\texttt{delta}}: Input.  The declination~$\delta$ (radians).
+\item{\texttt{time}}: Input.  The time of day (sidereal seconds).
+\item{\texttt{lat}}: Input.  The latitude~$\lambda$ North (radians).
+\item{\texttt{azi}}: Output.  The azimuth~$A$ (radians clockwise from North).
+\item{\texttt{alt}}: Output.  The altitude~$a$ (radians up from the horizon).
+\end{description}
+
+The transformation is the following:
+\begin{equation}
+  a = \arcsin[ \sin\delta\, \sin\lambda + \cos\delta\, \cos\lambda\, \cos h ]
+\end{equation}
+and
+\begin{equation}
+  A = \arctan\left[ \frac{-\cos\delta\, \cos\lambda\, \sin h}
+                         {\sin\delta - \sin\lambda\, \sin a} \right]
+\end{equation}
+where $\lambda$ is the latitude and $h=\mbox{(local sidereal time)}-\alpha$ is
+the hour angle.
+
+\begin{description}
+\item{Author:} Jolien Creighton, jolien@tapir.caltech.edu
+\item{Comments:}  This routine is adapted from the method given in:
+  Peter Duffet-Smith \emph{Practical Astronomy with Your Calculator,}
+  3rd edition,
+  (Cambridge University Press, 1988).  I have assumed that the user either
+  (a) has correctly precessed the equatorial coordinates, or (b) doesn't care.
+\end{description}
+
+
+\clearpage
+\subsection{Function: \texttt{beam\_pattern()}}
+\label{ss:beam_pattern}
+
+\begin{verbatim}
+void beam_pattern(float theta, float phi, float psi, float *plus, float *cross)
+\end{verbatim}
+
+This routine computes the beam pattern functions, $F_+$ and $F_\times$,
+for some specified angles $\theta$, $\phi$, and $\psi$.  The arguments are:
+\begin{description}
+\item{\texttt{theta}}: Input.  The polar angle~$\theta$ (radians from zenith).
+\item{\texttt{phi}}: Input.  The azimuthal angle~$\phi$ (radians
+  counter-clockwise from the first arm).
+\item{\texttt{psi}}: Input.  The polarization angle~$\psi$ (radians).
+\item{\texttt{plus}}: Output.  The detector response function~$F_+$.
+\item{\texttt{cross}}: Output.  The detector response function~$F_\times$.
+\end{description}
+
+The beam pattern functions are calculated according to the following formulae:
+\begin{equation}
+  F_+ = {\textstyle\frac{1}{2}}(1+\cos^2\theta)\cos2\phi\, \cos2\psi
+    - \cos\theta\, \sin2\phi\, \sin2\psi
+\end{equation}
+and
+\begin{equation}
+  F_\times = {\textstyle\frac{1}{2}}(1+\cos^2\theta)\cos2\phi\, \sin2\psi
+    + \cos\theta\, \sin2\phi\, \cos2\psi.
+\end{equation}
+
+\begin{description}
+\item{Author:} Jolien Creighton, jolien@tapir.caltech.edu
+\item{Comments:}  The beam pattern formulae, as well as a precise definition
+  of the angles can be found in:
+  Kip Thorne in \emph{300 Years of Gravitation}, S.\@ Hawking and W.\@ Israel
+  editors (Cambridge University Press, 1987).  The formulae are suitable for
+  detectors in which the arms are perpendicular; they are not suitable for the
+  GEO-600 site because the opening angle is approximately $94^\circ$.
+\end{description}
+
+
+\clearpage
+\subsection{Function: \texttt{mc\_chirp()}}
+\label{ss:mc_chirp}
+
+\begin{verbatim}
+void mc_chirp(float time, float latitude, float orientation, long *seed,
+	      float *invMpc, float *c0, float *c1)
+\end{verbatim}
+
+This routine makes a random chirp from a hypothetical distribution of Galactic
+binary neutron stars.  The arguments are:
+\begin{description}
+\item{\texttt{time}}: Input.  The time of arrival of the chirp in sidereal
+  seconds.
+\item{\texttt{latitude}}: Input.  The latitude of the detector in radians
+  North.
+\item{\texttt{orientation}}: Input.  The orientation of the arm of the detector
+  in radians counter clockwise from North.
+\item{\texttt{seed}}: Input/Output.  A random number seed for use in the
+  Numerical Recipes random number generator \texttt{ran1()}.
+\item{\texttt{invMpc}}: Output.  The effective distance of the chirp, i.e.,
+  the distance of the binary system if it were optimally oriented.
+\item{\texttt{c0}}: Output.  The cosine of the random phase of the chirp.
+\item{\texttt{c1}}: Output.  The sine of the random phase of the chirp.
+\end{description}
+The resulting chirp waveform is
+$h(t)=\texttt{invMpc}\times[\texttt{c0}\times h_c(t)+\texttt{c1}\times h_s(t)]$
+where $h_c(t)$ is the cosine-phase chirp waveform and $h_s(t)$ is the
+sine-phase chirp waveform normalized to one megaparsec.
+
+The hypothetical number of Galactic binary neutron star systems between the
+Galactocentric radii $R$ and $R+dR$, and between disk heights $z$ and $z+dz$,
+is taken to be
+\begin{equation}
+  dN \propto R\,dR\,dz\,e^{-R^2/2R_0^2}\,e^{-|z|/h_z}
+\end{equation}
+with $R_0=4.8\:\mbox{kpc}$ and $h_z=1\:\mbox{kpc}$.  Only the disk population
+is considered in this calculation.  The Galactocentric radius of the Sun
+is taken to be $R_\odot=8.5\:\mbox{kpc}$.
+
+\begin{description}
+\item{Author:} Jolien Creighton, jolien@tapir.caltech.edu
+\item{Comments:} The hypothetical distribution was adapted from the
+  distribution used by S.\@ J.\@ Curran and D.\@ R.\@ Lorimer,
+  Mon.\@ Not.\@ R.\@ Astron.\@ Soc.\@ \textbf{276} 347 (1995).  The scale
+  height is a guestimate.  Very little is known about the actual distribution
+  of Galactic neutron star binaries!  The routine assumes that the arms of the
+  detector are perpendicular; it is not suitable for the
+  GEO-600 site because the opening angle is approximately $94^\circ$.
+\end{description}
+\clearpage
+
+
+\subsection{Example: \texttt{inject} program}
+\label{ss:insert}
+This program produces a list of random Galactic neutron star-neutron star
+binary inspiral
+parameters for injection into the interferometer data to test the data
+analysis software.
+
+The inspiral waveforms correspond to two neutron star companions, each with a
+mass distribution that is uniform between two cutoffs given by the parameters
+\texttt{MLO} and \texttt{MHI}
+[for example see L S Finn, Phys Rev Lett \textbf{73} 1878 (1994)].
+
+The amplitude distribution corresponds to the (time dependent) model
+described for the GRASP routine \texttt{mc\_chirp()}.  The initial phase is
+uniformly distributed.  The parameters \texttt{LAT}, \texttt{LON}, and
+\texttt{ARM} correspond to the latitude, longitude, and arm orientation of the
+detector, and are required for the model.
+
+The injection time is either at a fixed intervals given by parameter
+\texttt{INV\_RATE}
+(when parameter \texttt{FIXED}=1), or at random intervals corresponding to a
+Poisson process with inverse rate \texttt{INV\_RATE} (when \texttt{FIXED}=0).
+Injection times are between the start and the end of the data run specified
+by the environment variable \texttt{GRASP\_DATAPATH}.  The start and end times
+of this data run are obtained from code resembling that in program
+\texttt{locklist}.  If two chirps potentially occur within the same data
+segment (with length given by parameter \texttt{NPOINT}), a warning message is
+printed.
+
+The results are output to stdout in a list containing the arrival time
+(double), the two masses (floats), the amplitude---inverse Mpc distance
+(float), and the initial phase (float), separated by spaces.  This is the
+same format as required for the file \texttt{insert.ascii} which is read by
+the \texttt{binary\_get\_data()} routine in the \texttt{binary\_search} code.
+
+\begin{description}
+\item[Author:] Jolien Creighton, jolien@tapir.caltech.edu
+\end{description}
+
+\clearpage
+\lgrindfile{Includes/inject.tex}
+
+

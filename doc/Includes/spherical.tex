@@ -1,0 +1,78 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_ringdown\1spherical.c},{11:59},{Jan 23 1998}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{}}
+\L{\LB{\K{\#define}_\V{TWOPI}_6.28318530718}}
+\L{\LB{\K{\#define}_\V{FOURPI}_12.5663706144}}
+\L{\LB{\K{static}_\K{int}_\V{imaxarg1},\V{imaxarg2};}}
+\L{\LB{\K{\#define}_\V{IMAX}(\V{a},\V{b})_(\V{imaxarg1}=(\V{a}),\V{imaxarg2}=(\V{b}),(\V{imaxarg1})_\>_(\V{imaxarg2})_?\2}}
+\L{\LB{________(\V{imaxarg1})_:_(\V{imaxarg2}))}}
+\L{\LB{\K{static}_\K{int}_\V{iminarg1},\V{iminarg2};}}
+\L{\LB{\K{\#define}_\V{IMIN}(\V{a},\V{b})_(\V{iminarg1}=(\V{a}),\V{iminarg2}=(\V{b}),(\V{iminarg1})_\<_(\V{iminarg2})_?\2}}
+\L{\LB{________(\V{iminarg1})_:_(\V{iminarg2}))}}
+\L{\LB{}}
+\L{\LB{\K{float}_\V{sw\_spherical}(\K{float}_\V{mu},_\K{int}_\V{s},_\K{int}_\V{l},_\K{int}_\V{m})}}
+\L{\LB{\C{}\1\* Computes the spin-weighted spherical harmonic (with phi=0) using}}
+\L{\LB{___equation (3.1) of Goldberg et al (1967). \*\1\CE{}}}
+\L{\LB{\{}}
+\L{\LB{__\K{float}_\V{factrl}(\K{int});}}
+\L{\LB{__\K{float}_\V{bico}(\K{int},_\K{int});}}
+\L{\LB{__\K{float}_\V{sum},\V{coef},\V{x};}}
+\L{\LB{__\K{int}_\V{sign},\V{r},\V{rmin},\V{rmax};}}
+\L{\LB{}}
+\L{\LB{__\K{if}_(\V{mu}==\-1.0)_\{}}
+\L{\LB{____\V{fprintf}(\V{stderr},\S{}\"error_in_sw\_spherical():_division_by_zero\"\SE{});}}
+\L{\LB{____\K{return}_0;}}
+\L{\LB{__\}_\K{else}_\{}}
+\L{\LB{____\V{x}_=_(1_+_\V{mu})\1(1_\-_\V{mu});}}
+\L{\LB{__\}}}
+\L{\LB{__\V{coef}_=_\V{factrl}(\V{l}+\V{m})\*\V{factrl}(\V{l}\-\V{m})\*(2\*\V{l}+1)\1(\V{factrl}(\V{l}\-\V{s})\*\V{factrl}(\V{l}+\V{s})\*\V{FOURPI});}}
+\L{\LB{__\V{rmin}_=_\V{IMAX}(0,\V{m}\-\V{s});}}
+\L{\LB{__\V{rmax}_=_\V{IMIN}(\V{l}\-\V{s},\V{l}+\V{m});}}
+\L{\LB{__\V{sum}_=_0;}}
+\L{\LB{__\K{for}_(\V{r}=\V{rmin};\V{r}\<=\V{rmax};\V{r}++)_\{}}
+\L{\LB{____(((\V{l}\-\V{r}+\V{s})\%2)==0)_?_(\V{sign}_=_1)_:_(\V{sign}_=_\-1);}}
+\L{\LB{____\V{sum}_+=_\V{sign}\*\V{bico}(\V{l}\-\V{s},\V{r})\*\V{bico}(\V{l}+\V{s},\V{r}+\V{s}\-\V{m})\*\V{pow}(\V{x},0.5\*(2\*\V{r}+\V{s}\-\V{m}));}}
+\L{\LB{__\}}}
+\L{\LB{__\V{sum}_\*=_\V{sqrt}(\V{coef})\*\V{pow}(0.5\*(1\-\V{mu}),\V{l});}}
+\L{\LB{}}
+\L{\LB{__\K{return}_\V{sum};}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}(\K{int}_\V{argc},_\K{char}_\*\V{argv}[\,])}}
+\L{\LB{\{}}
+\L{\LB{__\K{float}_\V{Sre},\V{Sim},\V{Y},\V{norm}=1.0\1\V{sqrt}(\V{TWOPI}),\V{mu}=0,\V{dmu}=0.02;}}
+\L{\LB{__\K{float}_\V{eigenvalues}[4];}}
+\L{\LB{__\K{int}_\V{s},\V{l},\V{m};}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* process arguments \*\1\CE{}}}
+\L{\LB{__\K{if}_(\V{argc}==4)_\{_\C{}\1\* correct number of arguments \*\1\CE{}}}
+\L{\LB{____\V{s}_=_\V{atoi}(\V{argv}[1]);}}
+\L{\LB{____\V{l}_=_\V{atoi}(\V{argv}[2]);}}
+\L{\LB{____\V{m}_=_\V{atoi}(\V{argv}[3]);}}
+\L{\LB{__\}_\K{else}_\{_\C{}\1\* incorrect number of arguments \*\1\CE{}}}
+\L{\LB{____\V{fprintf}(\V{stderr},\S{}\"usage:_spherical_s_l_m\2n\"\SE{});}}
+\L{\LB{____\K{return}_1;}}
+\L{\LB{__\}}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* set the eigenvalues to produce spin-weighted spherical harmonics \*\1\CE{}}}
+\L{\LB{__\V{eigenvalues}[0]_=_\V{eigenvalues}[1]_=_\V{eigenvalues}[3]_=_0;}}
+\L{\LB{__\V{eigenvalues}[2]_=_(\V{l}_\-_\V{s})\*(\V{l}_+_\V{s}_+_1);}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* reset the normalization \*\1\CE{}}}
+\L{\LB{__\V{sw\_spheroid}(\&\V{Sre},\&\V{Sim},\V{mu},1,0.0,\V{s},\V{l},\V{m},\V{eigenvalues});}}
+\L{\LB{}}
+\L{\LB{__\K{for}_(\V{mu}=\-1+0.5\*\V{dmu};\V{mu}\<1;\V{mu}+=\V{dmu})_\{}}
+\L{\LB{____\C{}\1\* compute the spin-weighted spheroidal harmonic \*\1\CE{}}}
+\L{\LB{____\V{sw\_spheroid}(\&\V{Sre},\&\V{Sim},\V{mu},0,0.0,\V{s},\V{l},\V{m},\V{eigenvalues});}}
+\L{\LB{____\C{}\1\* compute the spin-weighted spherical harmonic \*\1\CE{}}}
+\L{\LB{____\V{Y}_=_\V{sw\_spherical}(\V{mu},\V{s},\V{l},\V{m});}}
+\L{\LB{____\C{}\1\* print results with correct normalization for the spheroidal harmonic \*\1\CE{}}}
+\L{\LB{____\V{printf}(\S{}\"\%e\2t\%e\2t\%e\2n\"\SE{},\V{mu},\V{norm}\*\V{Sre},\V{Y});}}
+\L{\LB{__\}}}
+\L{\LB{}}
+\L{\LB{__\K{return}_0;}}
+\L{\LB{\}}}

@@ -1,0 +1,244 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_timefreq\1tfmain.c},{16:10},{Nov 23 1999}
+\L{\LB{______\C{}\1\* To investigate the Time Frequency  distribution of chirps \*\1\CE{}}}
+\L{\LB{______\C{}\1\* using MPI and GL calls \*\1\CE{}}}
+\L{\LB{______\C{}\1\* prototype program \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\K{\#include}_\S{}\"mpi.h\"\SE{}}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{\K{\#include}_\S{}\"tfmain.h\"\SE{}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*}}
+\L{\LB{__GLOBAL VARIABLES TO BE USED ACROSS FILES}}
+\L{\LB{__\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\V{struct\_tfparam}_\V{tfparam};_\C{}\1\* the parameters of the timefrequency program defined in file timefreq.h \*\1\CE{}}}
+\L{\LB{\V{dl\_options}_\V{dlopt};_______\C{}\1\* the parameters for the linerecognition algorithms\*\1\CE{}}}
+\L{\LB{\V{struct\_signalparameters}_\V{snpar};_\C{}\1\* the parameters of the signal and noise; defined in tfmain.h \*\1\CE{}}}
+\L{\LB{\V{MPI\_Comm}_\V{comm}_=_91;}}
+\L{\LB{\K{long}_\V{longn}=\V{DATADIM};}}
+\L{\LB{\K{float}_\*\V{htilde},\V{srate}=\V{SRATE};}}
+\L{\LB{\K{int}_\V{reply}=1,\V{count}=0,\V{counter};}}
+\L{\LB{\K{int}_\V{npoint}=\V{DATADIM},\V{numprocs},\V{myid},\V{new\_lock}=0;}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}(\K{int}_\V{argc},\K{char}_\*\*\V{argv})}}
+\L{\LB{\{}}
+\L{\LB{}}
+\L{\LB{____\K{char}_\V{processor\_name}[256],\V{command}[256];}}
+\L{\LB{____\K{int}_\V{namelen},\V{mypid};}}
+\L{\LB{____}}
+\L{\LB{________\C{}\1\* initialize the MPI processes\*\1\CE{}}}
+\L{\LB{____\V{MPI\_Init}_(_\&\V{argc},_\&\V{argv});}}
+\L{\LB{____\V{MPI\_Comm\_size}_(_\V{comm},_\&\V{numprocs}_);}}
+\L{\LB{____\V{MPI\_Comm\_rank}_(_\V{comm},_\&\V{myid}_);}}
+\L{\LB{____\V{MPI\_Get\_processor\_name}(\V{processor\_name},\&\V{namelen});}}
+\L{\LB{}}
+\L{\LB{________\C{}\1\* Renice the processes \*\1\CE{}}}
+\L{\LB{____\V{mypid}_=_\V{getpid}();}}
+\L{\LB{____\V{sprintf}(\V{command},\S{}\"renice_10__\%d_\&\2n\"\SE{},\V{mypid});}}
+\L{\LB{____\V{system}(\V{command});}}
+\L{\LB{_________\C{}\1\* For debugging purposes \*\1\CE{}}}
+\L{\LB{\K{\#if}(\V{DEBUG}==1)}}
+\L{\LB{____\K{if}(\V{myid}==0)\{}}
+\L{\LB{________\V{sprintf}(\V{command},\S{}\"xxgdb_tf_\%d_\&\2n\"\SE{},\V{mypid});}}
+\L{\LB{________\V{system}(\V{command});}}
+\L{\LB{____\}}}
+\L{\LB{____\V{sleep}(20);}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{________\C{}\1\*allocate space various common arrays \*\1\CE{}}}
+\L{\LB{____\V{htilde}_=_(\K{float}_\*)_\V{malloc}(\K{sizeof}(\K{float})\*\V{npoint});}}
+\L{\LB{_______\C{}\1\* get the parameters from the file tfmain.in \*\1\CE{}}}
+\L{\LB{____\V{gettfparameters}();}}
+\L{\LB{________\C{}\1\* branch off to either the master or the slaves \*\1\CE{}}}
+\L{\LB{____\K{if}(\V{myid}==0)}}
+\L{\LB{________\V{master}();}}
+\L{\LB{____\K{else}}}
+\L{\LB{________\V{slave}();}}
+\L{\LB{________\C{}\1\* exit \*\1\CE{}}}
+\L{\LB{____\V{MPI\_Finalize}();}}
+\L{\LB{____\K{return}_0;}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{\K{void}_\V{master}()}}
+\L{\LB{\{}}
+\L{\LB{____\K{int}_\V{slaves},\V{recv}=0,\V{from},\V{mdata}=0,\V{i};}}
+\L{\LB{____\V{MPI\_Status}_\V{status};}}
+\L{\LB{____\K{char}_\V{tmp\_str}[256];}}
+\L{\LB{____\K{float}_\*\V{scale};}}
+\L{\LB{____\V{FILE}_\*\V{fp},\*\V{fp1},\*\V{fp2};}}
+\L{\LB{____}}
+\L{\LB{________\C{}\1\* create the output directory and copy the input file there \*\1\CE{}}}
+\L{\LB{____\V{sprintf}(\V{tmp\_str},\S{}\"mkdir_run\%02d\2n\"\SE{},\V{tfparam}.\V{run\_number});}}
+\L{\LB{____\V{system}(\V{tmp\_str});}}
+\L{\LB{____\V{sprintf}(\V{tmp\_str},\S{}\"cp_tfmain.in_run\%02d\2n\"\SE{},\V{tfparam}.\V{run\_number});}}
+\L{\LB{____\V{system}(\V{tmp\_str});}}
+\L{\LB{____\V{sprintf}(\V{tmp\_str},\S{}\"cp_tfmain.h_run\%02d\2n\"\SE{},\V{tfparam}.\V{run\_number});}}
+\L{\LB{____\V{system}(\V{tmp\_str});____}}
+\L{\LB{____\V{sprintf}(\V{tmp\_str},\S{}\"run\%02d\1timstat\"\SE{},\V{tfparam}.\V{run\_number});}}
+\L{\LB{____\V{fp}_=_\V{fopen}(\V{tmp\_str},\S{}\"w\"\SE{});}}
+\L{\LB{____\V{sprintf}(\V{tmp\_str},\S{}\"run\%02d\1rescale\"\SE{},\V{tfparam}.\V{run\_number});}}
+\L{\LB{____\V{fp1}_=_\V{fopen}(\V{tmp\_str},\S{}\"w\"\SE{});}}
+\L{\LB{____\K{if}(\V{snpar}.\V{signaltype}==\V{INSERT\_COALESCENCE})\{}}
+\L{\LB{________\V{sprintf}(\V{tmp\_str},\S{}\"cp_MergeSig.dat_run\%02d\2n\"\SE{},\V{tfparam}.\V{run\_number});}}
+\L{\LB{________\V{system}(\V{tmp\_str});}}
+\L{\LB{____\}}}
+\L{\LB{____\V{sprintf}(\V{tmp\_str},\S{}\"run\%02d\1segments\"\SE{},\V{tfparam}.\V{run\_number});}}
+\L{\LB{____\V{fp2}_=_\V{fopen}(\V{tmp\_str},\S{}\"w\"\SE{});}}
+\L{\LB{____\V{sprintf}(\V{tmp\_str},\S{}\"printenv_\>_run\%02d\1environment\2n\"\SE{},\V{tfparam}.\V{run\_number});}}
+\L{\LB{____\V{system}(\V{tmp\_str});}}
+\L{\LB{____\V{sprintf}(\V{tmp\_str},\S{}\"echo_number_of_processes_=_\%d_\>\>_run\%02d\1prog\"\SE{},\V{numprocs},\V{tfparam}.\V{run\_number});}}
+\L{\LB{____\V{system}(\V{tmp\_str});}}
+\L{\LB{________\C{}\1\* set the rescale parameter \*\1\CE{}}}
+\L{\LB{____\V{snpar}.\V{addsignal}_=_0;}}
+\L{\LB{____\V{scale}_=_(\K{float}_\*)_\V{malloc}(\K{sizeof}(\K{float})\*\V{numprocs});}}
+\L{\LB{____\K{for}_(\V{slaves}=1;\V{slaves}\<\V{numprocs};\V{slaves}++)\{}}
+\L{\LB{________\V{mdata}_=_\V{get\_time\_series\_data}();}}
+\L{\LB{________\V{MPI\_Send}(\&\V{count},_1,_\V{MPI\_INT},_\V{slaves}_,_1001,_\V{comm});}}
+\L{\LB{________\V{MPI\_Send}(\V{htilde},\V{npoint},\V{MPI\_FLOAT},\V{slaves},1002,\V{comm});}}
+\L{\LB{____\}}}
+\L{\LB{____\K{for}(\V{i}=0;\V{i}\<\V{tfparam}.\V{start\_segment};\V{i}++)\{}}
+\L{\LB{________\V{mdata}_=_\V{get\_time\_series\_data}();}}
+\L{\LB{________\V{printf}(\S{}\"Skipping_segment_\%d,_mdata_=_\%d\2n\"\SE{},\V{i},\V{mdata});}}
+\L{\LB{________\V{fflush}(\V{stdout});_}}
+\L{\LB{____\}}}
+\L{\LB{____\K{for}(\V{slaves}=1;\V{slaves}\<\V{numprocs};\V{slaves}++)\{}}
+\L{\LB{________\V{MPI\_Recv}(\V{scale}+\V{slaves},_1,\V{MPI\_FLOAT},_\V{slaves}_,_1004,_\V{comm},_\&\V{status});}}
+\L{\LB{________\V{fprintf}(\V{fp1},\S{}\"\%d_\%f\2n\"\SE{},\V{slaves},\V{scale}[\V{slaves}]);}}
+\L{\LB{____\}}}
+\L{\LB{____\V{fclose}(\V{fp1});}}
+\L{\LB{________\C{}\1\* Compute average of the rescale values \*\1\CE{}}}
+\L{\LB{____\V{tfparam}.\V{maxpixelval}_=_0.0;}}
+\L{\LB{____\K{for}(\V{slaves}=1;\V{slaves}\<\V{numprocs};\V{slaves}++)_\V{tfparam}.\V{maxpixelval}_+=_\V{scale}[\V{slaves}];}}
+\L{\LB{____\V{tfparam}.\V{maxpixelval}_\1=_(\V{numprocs}\-1);}}
+\L{\LB{____\V{printf}(\S{}\"_The_average_rescale_value_:_\%f\2n\"\SE{},\V{tfparam}.\V{maxpixelval});}}
+\L{\LB{____\V{fflush}(\V{stdout});}}
+\L{\LB{____\V{free}(\V{scale});}}
+\L{\LB{________\C{}\1\* send the rescale value to all the slaves \*\1\CE{}}}
+\L{\LB{____\V{MPI\_Bcast}(\&\V{tfparam}.\V{maxpixelval},_1,_\V{MPI\_FLOAT},_0,_\V{comm});}}
+\L{\LB{____\K{for}(\V{slaves}=1;\V{slaves}\<\V{numprocs};\V{slaves}++)\{}}
+\L{\LB{________\V{MPI\_Recv}(\&\V{reply},_1,\V{MPI\_INT},_\V{slaves}_,_1003,_\V{comm},_\&\V{status});}}
+\L{\LB{________\V{MPI\_Recv}(\&\V{counter}_,_1,\V{MPI\_INT},_\V{slaves}_,_1003,_\V{comm},_\&\V{status});}}
+\L{\LB{____\}}}
+\L{\LB{}}
+\L{\LB{____\V{count}=_\V{tfparam}.\V{start\_segment};}}
+\L{\LB{____\V{recv}_=_\V{tfparam}.\V{start\_segment};}}
+\L{\LB{____\V{snpar}.\V{addsignal}_=_1;}}
+\L{\LB{________\C{}\1\* all set to start the actual simulation loop over}}
+\L{\LB{___________slaves and send the datasegments  to the slaves \*\1\CE{}}}
+\L{\LB{____\V{sprintf}(\V{tmp\_str},\S{}\"date_\>\>_run\%02d\1prog\2n\"\SE{},\V{tfparam}.\V{run\_number});}}
+\L{\LB{____\V{system}(\V{tmp\_str});}}
+\L{\LB{____\K{for}_(\V{slaves}=1;\V{slaves}\<\V{numprocs};\V{slaves}++)\{}}
+\L{\LB{____________\C{}\1\* get the data \*\1\CE{}}}
+\L{\LB{________\V{mdata}_=_\V{get\_time\_series\_data}();}}
+\L{\LB{\K{\#if}(\V{DEBUG1})}}
+\L{\LB{________\V{graph}(\V{htilde},\V{npoint},1);}}
+\L{\LB{________\V{sleep}(5);}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{________\V{timstat}(\V{count},_\V{fp},_\V{htilde});}}
+\L{\LB{________\V{MPI\_Send}(\&\V{count},_1,_\V{MPI\_INT},_\V{slaves}_,_1001,_\V{comm});}}
+\L{\LB{________\V{MPI\_Send}(\V{htilde},\V{npoint},\V{MPI\_FLOAT},\V{slaves},1002,\V{comm});}}
+\L{\LB{________\V{printf}(\S{}\"master___:_sent_segment_\%d_to_slave_\%d_mdata_=_\%d\2n\"\SE{},\V{count},\V{slaves},\V{mdata});}}
+\L{\LB{________\V{fflush}(\V{stdout});}}
+\L{\LB{________\V{count}++;}}
+\L{\LB{____\}}}
+\L{\LB{________\C{}\1\* wait for the slaves to send the done message and send fresh datasegments \*\1\CE{}}}
+\L{\LB{____\K{while}(\V{recv}\<\V{count})\{}}
+\L{\LB{________\V{MPI\_Recv}(\&\V{reply}_,_1,_\V{MPI\_INT},_\V{MPI\_ANY\_SOURCE},_1003,_\V{comm},_\&\V{status});}}
+\L{\LB{________\V{from}_=_\V{status}.\V{MPI\_SOURCE};}}
+\L{\LB{________\V{MPI\_Recv}(\&\V{counter}_,_1,\V{MPI\_INT},_\V{from}_,_1003,_\V{comm},_\&\V{status});}}
+\L{\LB{________\V{printf}(\S{}\"master___:_Received_reply_for_segment_\%d_back_from_slave_\%d\2n\"\SE{},\V{counter},\V{from});}}
+\L{\LB{________\V{fflush}(\V{stdout});}}
+\L{\LB{________\V{recv}++;}}
+\L{\LB{________\K{if}(\V{mdata})_\V{mdata}_=_\V{get\_time\_series\_data}();}}
+\L{\LB{________\V{printf}(\S{}\"master___:count=\%d,recv=\%d,mdata=\%d\2n\"\SE{},\V{count},\V{recv},\V{mdata});}}
+\L{\LB{________\K{if}((\V{count}\<\V{tfparam}.\V{num\_of\_segments})\&\&(\V{mdata}))_\{}}
+\L{\LB{____________\V{fprintf}(\V{fp2},\S{}\"\%d_\%d_\%d_\2n\"\SE{},\V{count},_\V{from},\V{new\_lock});}}
+\L{\LB{____________\V{MPI\_Send}(\&\V{count},_1,_\V{MPI\_INT},_\V{from}_,_1001,_\V{comm});}}
+\L{\LB{____________\V{MPI\_Send}(\V{htilde},_\V{npoint},_\V{MPI\_FLOAT},_\V{from}_,_1002,_\V{comm});}}
+\L{\LB{____________\V{printf}(\S{}\"master___:_sent_segment_\%d_to_slave_\%d\2n\"\SE{},\V{count},\V{from});}}
+\L{\LB{____________\V{fflush}(\V{stdout});}}
+\L{\LB{____________\V{timstat}(\V{count},_\V{fp},\V{htilde});}}
+\L{\LB{____________\V{count}++;}}
+\L{\LB{________\}}}
+\L{\LB{____________\C{}\1\* send slave the termination message \*\1\CE{}}}
+\L{\LB{________\K{else}\{}}
+\L{\LB{____________\V{counter}=\-1;}}
+\L{\LB{____________\V{printf}(\S{}\"master___:Sending_termination_signal_to_slave__\%d_\2n\"\SE{},\V{from});}}
+\L{\LB{____________\V{MPI\_Send}(\&\V{counter},_1,_\V{MPI\_INT},_\V{from}_,_1001,_\V{comm});}}
+\L{\LB{________\}}}
+\L{\LB{____\}}}
+\L{\LB{____\V{fclose}(\V{fp});}}
+\L{\LB{____\V{fclose}(\V{fp2});}}
+\L{\LB{____\V{sprintf}(\V{tmp\_str},\S{}\"date_\>\>_run\%02d\1prog\2n\"\SE{},\V{tfparam}.\V{run\_number});}}
+\L{\LB{____\V{system}(\V{tmp\_str});}}
+\L{\LB{____\K{return};}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{}}
+\L{\LB{\K{void}_\V{slave}()}}
+\L{\LB{\{}}
+\L{\LB{____\V{MPI\_Status}_\V{status};}}
+\L{\LB{____\K{float}_\*\V{tfgeneral}[\V{TDIM}],\*\V{pic}[\V{PDIM}],\*\V{out\_img}[\V{PDIM}],\V{scalefactor}=0.0;}}
+\L{\LB{____\K{int}_\V{i},\V{rows}=\V{PDIM},\V{cols}=\V{PDIM},\V{noofsub},\V{ind};}}
+\L{\LB{____\K{char}_\V{filen}[256];}}
+\L{\LB{____\K{static}_\K{int}_\V{first}_=_1;}}
+\L{\LB{____}}
+\L{\LB{________\C{}\1\* the number of subsegments in each segment of data \*\1\CE{}}}
+\L{\LB{____\V{noofsub}_=_(\V{DATADIM}\-(\V{POSTSAFETY}+\V{PRESAFETY}))\1\V{NDIM};}}
+\L{\LB{________\C{}\1\* allocate memory of the timefrequency block and for the picture matrices\*\1\CE{}}}
+\L{\LB{____\K{for}(\V{i}=0;\V{i}\<\V{TDIM}\1\V{tfparam}.\V{offset\_step\_size};\V{i}++)}}
+\L{\LB{________\V{tfgeneral}[\V{i}]_=_(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{NDIM});}}
+\L{\LB{____\K{for}(\V{i}=0;\V{i}\<\V{PDIM};\V{i}++)\{}}
+\L{\LB{________\V{pic}[\V{i}]_=_(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{PDIM});}}
+\L{\LB{________\V{out\_img}[\V{i}]_=_(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{PDIM});}}
+\L{\LB{____\}}}
+\L{\LB{________\C{}\1\* loop for receiving the data \*\1\CE{}}}
+\L{\LB{____\K{while}(1)\{}}
+\L{\LB{________\V{MPI\_Recv}(\&\V{count},1,\V{MPI\_INT},0,1001,\V{comm},\&\V{status});}}
+\L{\LB{____________\C{}\1\* Terminate if count is less that 0\*\1\CE{}}}
+\L{\LB{________\K{if}(\V{count}\<0)_\K{return};}}
+\L{\LB{____________\C{}\1\* Recv the htilde array from the master\*\1\CE{}}}
+\L{\LB{________\V{MPI\_Recv}(\V{htilde},_\V{npoint},_\V{MPI\_FLOAT},_0,_1002,_\V{comm},_\&\V{status});}}
+\L{\LB{________\V{printf}(\S{}\"slave_\%d:_received_segment_\%d_from_master\2n\"\SE{},\V{myid},\V{count});}}
+\L{\LB{________\V{fflush}(\V{stdout});}}
+\L{\LB{____________\C{}\1\* compute the time-frequency maps for the data segment \*\1\CE{}}}
+\L{\LB{________\K{for}(\V{ind}=0;\V{ind}\<\V{noofsub};\V{ind}++)\{}}
+\L{\LB{____________\C{}\1\* compute the time-frequency maps for each subsegment \*\1\CE{}}}
+\L{\LB{____________\V{time\_freq\_map}(\V{htilde},_\&\V{tfparam},_\V{ind},\V{tfgeneral},\V{pic});____________}}
+\L{\LB{____________\K{if}(\V{first})\{}}
+\L{\LB{________________\V{scalefactor}_+=_\V{compute\_scalefactor}(\V{pic},\V{tfparam}.\V{rescale\_factor},\V{PDIM});}}
+\L{\LB{\K{\#if}(\V{DEBUG1})________________}}
+\L{\LB{________________\V{printf}(\S{}\"slave_\%d:_nofsub_=_\%d__scalefactor_=_\%f\2n\"\SE{},\V{myid},\V{ind},\V{compute\_scalefactor}(\V{pic},\V{tfparam}.\V{rescale\_factor},\V{PDIM}));}}
+\L{\LB{________________\V{fflush}(\V{stdout});}}
+\L{\LB{\K{\#endif}________________}}
+\L{\LB{________________\K{if}(\V{ind}==(\V{noofsub}\-1))\{}}
+\L{\LB{____________________\V{first}_=_0;}}
+\L{\LB{____________________\V{scalefactor}_\1=_\V{noofsub};}}
+\L{\LB{____________________\V{MPI\_Send}(\&\V{scalefactor},1,\V{MPI\_FLOAT},_0,_1004,_\V{comm});}}
+\L{\LB{____________________\V{MPI\_Bcast}(\&\V{tfparam}.\V{maxpixelval},_1,_\V{MPI\_FLOAT},_0,_\V{comm});}}
+\L{\LB{________________\}}}
+\L{\LB{____________\}}}
+\L{\LB{____________\K{else}\{}}
+\L{\LB{________________\V{rescale}(\V{pic},\V{PDIM},\V{tfparam}.\V{maxpixelval});}}
+\L{\LB{________________\V{sprintf}(\V{filen},\S{}\".\1run\%02d\1out\_\%d.\%02d\"\SE{},\V{tfparam}.\V{run\_number},\V{count},\V{ind});}}
+\L{\LB{________________\V{get\_line\_lens}(\V{dlopt}.\V{sigma},\V{dlopt}.\V{high},\V{dlopt}.\V{low},\V{rows},\V{cols},\V{pic},\V{filen});}}
+\L{\LB{\K{\#if}(\V{DEBUG2})}}
+\L{\LB{________________\K{if}((\V{ind}==0)\&\&(\V{count}==0))}}
+\L{\LB{____________________\V{ppmprint}(\V{pic},\S{}\"picture.ppm\"\SE{},\V{PDIM});}}
+\L{\LB{\K{\#ifdef}_\V{HAVE\_GL}}}
+\L{\LB{____________________\C{}\1\* if you want to display the TF map on the screen \*\1\CE{}}}
+\L{\LB{________________\K{if}(\V{myid}==1)}}
+\L{\LB{____________________\V{plottf}(\V{pic},\V{PDIM});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{________________\V{printf}(\S{}\"slave_\%d:_nofsub_=_\%d\2n\"\SE{},\V{myid},\V{ind});}}
+\L{\LB{________________\V{fflush}(\V{stdout});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{____________\}____}}
+\L{\LB{________\}}}
+\L{\LB{____________\C{}\1\* inform master that you have finished the current segment \*\1\CE{}}}
+\L{\LB{________\V{MPI\_Send}(\&\V{reply},_1,_\V{MPI\_INT},_0,_1003,_\V{comm});}}
+\L{\LB{____________\C{}\1\* send the counter back to the master as a check \*\1\CE{}}}
+\L{\LB{________\V{MPI\_Send}(\&\V{count},_1,_\V{MPI\_INT},_0,_1003,_\V{comm});}}
+\L{\LB{____\}}}
+\L{\LB{\}}}

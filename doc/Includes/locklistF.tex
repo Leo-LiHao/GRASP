@@ -1,0 +1,84 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_frame\1locklistF.c},{17:34},{Oct  1 1998}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}()_\{}}
+\L{\LB{___\K{double}_\V{begin},\V{end},\V{saveend}=0.0;}}
+\L{\LB{___\K{struct}_\V{fgetoutput}_\V{fgetoutput};}}
+\L{\LB{___\K{struct}_\V{fgetinput}_\V{fgetinput};}}
+\L{\LB{___\K{int}_\V{firstpass}=1;}}
+\L{\LB{___\V{time\_t}_\V{unixtime};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* this number of samples is about 30 seconds of data \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{npoint}=296000;}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* number of channels needed is one \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{nchan}=1;}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* storage for channel names, data locations, points returned, ratios \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{chnames}=(\K{char}_\*\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{char}_\*));}}
+\L{\LB{___\V{fgetinput}.\V{locations}=(\K{short}_\*\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{short}_\*));}}
+\L{\LB{___\V{fgetoutput}.\V{npoint}=(\K{int}_\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{int}));}}
+\L{\LB{___\V{fgetoutput}.\V{ratios}=(\K{int}_\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{int}));}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* since we operate in SEEK mode, no space needed for data storage \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{locations}[0]=\V{NULL};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* use utility function framefiles() to retrieve file names \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{files}=\V{framefiles};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* get only the locked sections \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{inlock}=1;}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* seek over data (we don\'t care what the values are!) \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{seek}=1;}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* don\'t need calibration information \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{calibrate}=0;}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* set channel name  \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{chnames}[0]=\S{}\"IFO\_DMRO\"\SE{};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* start the main loop \*\1\CE{}}}
+\L{\LB{___\K{while}_(1)_\{}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* find the next locked section of the data \*\1\CE{}}}
+\L{\LB{______\V{fget\_ch}(\&\V{fgetoutput},\&\V{fgetinput});}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* print out absolute start time of run \*\1\CE{}}}
+\L{\LB{______\K{if}_(\V{firstpass})_\{}}
+\L{\LB{_________\V{printf}(\S{}\"Starting_time_of_first_frame:_\%13f_Unix\-C_time\2n\"\SE{},\V{fgetoutput}.\V{tfirst});}}
+\L{\LB{_________\V{printf}(\S{}\"Starting_time_of_first_frame:_\%13f_GPS_time\2n\"\SE{},\V{fgetoutput}.\V{tfirst\_gps});}}
+\L{\LB{_________\V{unixtime}=\V{fgetoutput}.\V{tfirst};}}
+\L{\LB{_________\V{printf}(\S{}\"____\~_UTC_time_\%s\"\SE{},\V{asctime}(\V{utctime}(\&\V{unixtime})));}}
+\L{\LB{_________\V{printf}(\S{}\"_\~_Unix_gmtime_\%s\2n\"\SE{},\V{asctime}(\V{gmtime}(\&\V{unixtime})));}}
+\L{\LB{_________\V{firstpass}=0;}}
+\L{\LB{______\}}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* see if we fell out of lock, and print if we did \*\1\CE{}}}
+\L{\LB{______\K{if}_(\V{fgetoutput}.\V{returnval}==1)_\{}}
+\L{\LB{}}
+\L{\LB{_________\C{}\1\* time at whick lock lost (relative to start of run) \*\1\CE{}}}
+\L{\LB{_________\V{begin}=\V{fgetoutput}.\V{lostlock}\-\V{fgetoutput}.\V{tfirst};}}
+\L{\LB{}}
+\L{\LB{_________\C{}\1\* time at whick lock aquired (relative to start of run) \*\1\CE{}}}
+\L{\LB{_________\V{end}=\V{fgetoutput}.\V{lastlock}\-\V{fgetoutput}.\V{tfirst};}}
+\L{\LB{_________\K{if}_(\V{begin}\>0.0)_\{}}
+\L{\LB{____________\V{printf}(\S{}\"In_lock_from_t_=_\%f_into_run_to_\%f_into_run_for_\%f_sec\2n\"\SE{},}}
+\L{\LB{______________________\V{saveend},\V{begin},\V{begin}\-\V{saveend});}}
+\L{\LB{____________\V{printf}(\S{}\"Out_of_lock_from_t_=_\%f_into_run_to_\%f_into_run_for_\%f_sec\2n\"\SE{},}}
+\L{\LB{______________________\V{begin},\V{end},\V{end}\-\V{begin});}}
+\L{\LB{_________\}}}
+\L{\LB{_________\V{saveend}=\V{end};}}
+\L{\LB{______\}}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* if no data remains, then exit \*\1\CE{}}}
+\L{\LB{______\K{if}_(\V{fgetoutput}.\V{returnval}==0)_\{}}
+\L{\LB{_________\V{printf}(\S{}\"End_of_data_at_time_\%f\2n\"\SE{},\V{fgetoutput}.\V{tstart}\-\V{fgetoutput}.\V{tfirst});}}
+\L{\LB{_________\K{break};}}
+\L{\LB{______\}}}
+\L{\LB{___\}}}
+\L{\LB{___\K{return}_0;}}
+\L{\LB{\}}}

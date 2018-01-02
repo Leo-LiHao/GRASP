@@ -1,0 +1,65 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_stochastic\1snr.c},{11:59},{Jan 23 1998}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\C{}\1\* main program to calculate the theoretical snr \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{}}
+\L{\LB{\K{\#define}_\V{DETECTORS\_FILE}_\S{}\"detectors.dat\"\SE{}_\C{}\1\* file containing detector info \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{SITE1\_CHOICE}_1________\C{}\1\* 1=LIGO-Hanford site \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{SITE2\_CHOICE}_2________\C{}\1\* 2=LIGO-Livingston site \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{OMEGA\_0}_(3.0e\-6)______\C{}\1\* Omega\_0 (for initial detectors) \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{F\_LOW}_0.0_____________\C{}\1\* minimum frequency (in Hz) \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{F\_HIGH}_(1.0e+4)_______\C{}\1\* maximum frequency (in Hz) \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{T}_(1.0e+7)____________\C{}\1\* total observation time (in sec) \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{N}_40000_______________\C{}\1\* number of frequency points \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{DELTA\_F}_0.25__________\C{}\1\* frequency spacing (in Hz) \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}(\K{int}_\V{argc},\K{char}_\*\*\V{argv})}}
+\L{\LB{\{}}
+\L{\LB{__\K{double}_\V{mean},\V{variance},\V{stddev},\V{snr};}}
+\L{\LB{}}
+\L{\LB{__\K{float}__\V{site1\_parameters}[9],\V{site2\_parameters}[9];}}
+\L{\LB{__\K{char}___\V{site1\_name}[100],\V{noise1\_file}[100],\V{whiten1\_file}[100];}}
+\L{\LB{__\K{char}___\V{site2\_name}[100],\V{noise2\_file}[100],\V{whiten2\_file}[100];}}
+\L{\LB{}}
+\L{\LB{__\K{double}_\*\V{power1},\*\V{power2};}}
+\L{\LB{__\K{double}_\*\V{gamma12};}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* ALLOCATE MEMORY \*\1\CE{}}}
+\L{\LB{__\V{power1}=(\K{double}_\*)\V{malloc}(\V{N}\*\K{sizeof}(\K{double}));}}
+\L{\LB{__\V{power2}=(\K{double}_\*)\V{malloc}(\V{N}\*\K{sizeof}(\K{double}));}}
+\L{\LB{__\V{gamma12}=(\K{double}_\*)\V{malloc}(\V{N}\*\K{sizeof}(\K{double}));}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* CALL DETECTOR\_SITE() TO GET SITE PARAMETER INFORMATION \*\1\CE{}}}
+\L{\LB{__\V{detector\_site}(\V{DETECTORS\_FILE},\V{SITE1\_CHOICE},\V{site1\_parameters},\V{site1\_name},}}
+\L{\LB{}\Tab{16}{\V{noise1\_file},\V{whiten1\_file});}}
+\L{\LB{__\V{detector\_site}(\V{DETECTORS\_FILE},\V{SITE2\_CHOICE},\V{site2\_parameters},\V{site2\_name},}}
+\L{\LB{}\Tab{16}{\V{noise2\_file},\V{whiten2\_file});}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* CALL NOISE\_POWER() AND OVERLAP() \*\1\CE{}}}
+\L{\LB{__\V{noise\_power}(\V{noise1\_file},\V{N},\V{DELTA\_F},\V{power1});}}
+\L{\LB{__\V{noise\_power}(\V{noise2\_file},\V{N},\V{DELTA\_F},\V{power2});}}
+\L{\LB{__\V{overlap}(\V{site1\_parameters},\V{site2\_parameters},\V{N},\V{DELTA\_F},\V{gamma12});}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* CALCULATE MEAN, VARIANCE, STDDEV, AND SNR \*\1\CE{}}}
+\L{\LB{__\V{mean}=\V{OMEGA\_0}\*\V{T};}}
+\L{\LB{__\V{variance}=\V{calculate\_var}(\V{N},\V{DELTA\_F},\V{OMEGA\_0},\V{F\_LOW},\V{F\_HIGH},\V{T},\V{gamma12},}}
+\L{\LB{}\Tab{24}{_\V{power1},\V{power2});}}
+\L{\LB{__\V{stddev}=\V{sqrt}(\V{variance});}}
+\L{\LB{__\V{snr}=\V{mean}\1\V{stddev};}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* DISPLAY RESULTS \*\1\CE{}}}
+\L{\LB{__\V{printf}(\S{}\"\2n\"\SE{});}}
+\L{\LB{__\V{printf}(\S{}\"Detector_site_1_=_\%s\2n\"\SE{},\V{site1\_name});}}
+\L{\LB{__\V{printf}(\S{}\"Detector_site_2_=_\%s\2n\"\SE{},\V{site2\_name});}}
+\L{\LB{__\V{printf}(\S{}\"Omega\_0_=_\%e\2n\"\SE{},\V{OMEGA\_0});}}
+\L{\LB{__\V{printf}(\S{}\"f\_low__=_\%e_Hz\2n\"\SE{},\V{F\_LOW});}}
+\L{\LB{__\V{printf}(\S{}\"f\_high_=_\%e_Hz\2n\"\SE{},\V{F\_HIGH});}}
+\L{\LB{__\V{printf}(\S{}\"Observation_time_T_=_\%e_sec\2n\"\SE{},\V{T});}}
+\L{\LB{__\V{printf}(\S{}\"Theoretical_S\1N_=_\%e\2n\"\SE{},\V{snr});}}
+\L{\LB{__\V{printf}(\S{}\"\2n\"\SE{});}}
+\L{\LB{}}
+\L{\LB{__\K{return}_0;}}
+\L{\LB{\}}}

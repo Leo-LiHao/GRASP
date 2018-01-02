@@ -1,0 +1,11 @@
+#############################################################################
+#  THE REGION ABOVE THIS SPACE IS FILLED IN BY InstallGRASP                 #
+#############################################################################
+
+INCLUDES= -I$(GRASP_I) 
+
+all: qn_ringdown.o
+
+qn_ringdown.o: qn_ringdown.c $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) -c qn_ringdown.c
+	ar -vr $(GRASP_HOME)/lib/libgrasp.a qn_ringdown.o

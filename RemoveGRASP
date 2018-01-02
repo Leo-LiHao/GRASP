@@ -1,0 +1,60 @@
+#!/bin/csh -f
+# This is the file RemoveGRASP.  It is a C-shell script.
+# You should not need to make any changes to it!
+# 
+# This script "reverses" the effects of running InstallGRASP:
+# it removes the executables, object files, and library archives
+# built by InstallGRASP.  It may be run at any point, if you wish
+# to re-start or repeat the installation procedure.  It will do
+# no damage, in the sense that you can re-create your GRASP installation
+# by simply running the InstallGRASP script again.
+#
+# Installation instructions may be found in the GRASP USERS MANUAL.  A
+# postscript version of the manual may be found in the doc/
+# subdirectory of this file, in manual.ps
+
+echo " "
+echo "-----------------------------------------------------------"
+echo "Removing object (*.o) files (except glue code in src/optimization/*/*.o)"
+rm -f src/*/*.o
+rm -f src/[0-np-z]*/*/*.o
+rm -f lib/libgrasp.a
+echo "Done removing object files and library archive"
+echo "-----------------------------------------------------------"
+
+# remove all Makefiles
+echo "Removing Makefiles"
+pushd src
+rm -f */Makefile
+rm -f */examples_*/Makefile
+popd
+echo "Done removing Makefiles"
+echo "-----------------------------------------------------------"
+
+# remove links in bin
+echo "Removing executable links from bin directory"
+mv bin/README bin/.README
+rm -f bin/*
+mv bin/.README bin/README
+echo "Done removing links"
+echo "-----------------------------------------------------------"
+
+# remove all executables made from .c files:
+echo "Removing all executables made from .c files"
+foreach i (src/examples/examples_*/*.c)
+		rm -f $i:r
+end
+echo "Done removing all compiled executables"
+echo "-----------------------------------------------------------"
+
+# remove the GRtoolbox stuff
+echo "Removing all Matlab/GRtoolbox compiled files"
+rm -f src/GRtoolbox/*.mex*
+rm -f src/GRtoolbox/*.o
+echo "Done removing Matlab/GRtoolbox compiled files"
+echo "-----------------------------------------------------------"
+
+echo "Done removing GRASP objects, Makefiles, compiled executables, and library archives"
+echo "You may now re-run the InstallGRASP script after"
+echo "making changes to SiteSpecific."
+echo " "

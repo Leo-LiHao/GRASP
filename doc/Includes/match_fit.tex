@@ -1,0 +1,94 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_template\_bank\1match\_fit.c},{11:59},{Jan 23 1998}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{}}
+\L{\LB{\K{\#define}_\V{DETECTOR\_NUM}_15_____\C{}\1\* Smooth fit to Caltech 40m prototype \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{FLO}_120.____________\C{}\1\* Hz - low frequency cut off for filtering \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{FTAU}_140.___________\C{}\1\* Hz - frequency used in definitions of}}
+\L{\LB{}\Tab{24}{____________tau0, tau1. \*\1\CE{}}}
+\L{\LB{\C{}\1\*\#define DETECTOR\_NUM 8       Caltech 40m prototype \*\1\CE{}}}
+\L{\LB{\C{}\1\*\#define DETECTOR\_NUM 1       LIGO initial interferometer \*\1\CE{}}}
+\L{\LB{\C{}\1\*\#define DETECTOR\_NUM 12      LIGO Advanced interferometer \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}(\K{int}_\V{argc},\K{char}_\*\*\V{argv})}}
+\L{\LB{\{}}
+\L{\LB{__\K{float}_\*\V{pfit},\*\V{cfit},\V{semimajor},\V{semiminor},\V{theta};}}
+\L{\LB{__\K{float}_\V{m1},\V{m2},\V{matchcont};}}
+\L{\LB{__\K{float}_\V{srate}=50000;}}
+\L{\LB{__\K{float}_\V{site\_parameters}[9];}}
+\L{\LB{__\K{char}_\V{noise\_file}[128],\V{whiten\_file}[128],\V{site\_name}[128];}}
+\L{\LB{__\K{int}_\V{order},\V{tstp},\V{tstc};}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* Check that the program is called with the correct number of}}
+\L{\LB{_____arguments; print out argument information if it\'s not. \*\1\CE{}}}
+\L{\LB{__\K{if}(\V{argc}_!=_5)_\{}}
+\L{\LB{____\V{fprintf}(\V{stderr},\S{}\"4_Arguments:_1._Mass_of_body_1_(solar_masses)\2n\"\SE{});}}
+\L{\LB{____\V{fprintf}(\V{stderr},\S{}\"_____________2._Mass_of_body_2_(solar_masses)\2n\"\SE{});}}
+\L{\LB{____\V{fprintf}(\V{stderr},\S{}\"_____________3._Match_contour_match_value;\2n\"\SE{});}}
+\L{\LB{____\V{fprintf}(\V{stderr},\S{}\"_____________4._Waveform_order_[power_of_(v\1c)]\2n\"\SE{});}}
+\L{\LB{____\V{fprintf}(\V{stderr},\S{}\"\2nExample:_match\_fit_1.2_1.6_.97_4\2n\"\SE{});}}
+\L{\LB{____\V{exit}(0);}}
+\L{\LB{__\}}}
+\L{\LB{__\C{}\1\* Assign arguments to variables \*\1\CE{}}}
+\L{\LB{__\V{m1}=\V{atof}(\V{argv}[1]);}}
+\L{\LB{__\V{m2}=\V{atof}(\V{argv}[2]);}}
+\L{\LB{__\V{matchcont}=\V{atof}(\V{argv}[3]);}}
+\L{\LB{__\V{order}=\V{atoi}(\V{argv}[4]);}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* Get the file names for the desired noise curve \*\1\CE{}}}
+\L{\LB{__\V{detector\_site}(\S{}\"detectors.dat\"\SE{},\V{DETECTOR\_NUM},\V{site\_parameters},}}
+\L{\LB{}\Tab{16}{\V{site\_name},\V{noise\_file},\V{whiten\_file});}}
+\L{\LB{}}
+\L{\LB{__\V{printf}(\S{}\"\2nEvaluating_templates_for_detector:_\%s_using_data_from_file:_\2\"\%s\2\"\2n\2n\2n\"\SE{},}}
+\L{\LB{________\V{site\_name},\V{noise\_file});}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* Allocate memory for the coefficients used in the parabolic fits \*\1\CE{}}}
+\L{\LB{__\V{pfit}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*3);}}
+\L{\LB{__\V{cfit}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*7);}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* Try to find a parabolic fit \*\1\CE{}}}
+\L{\LB{__\V{tstp}=\V{match\_parab}(\V{m1},\V{m2},\V{matchcont},\V{order},\V{srate},\V{FLO},\V{FTAU},\V{noise\_file},}}
+\L{\LB{}\Tab{16}{___\&\V{semimajor},\&\V{semiminor},\&\V{theta},\V{pfit});}}
+\L{\LB{__\K{if}(\V{tstp})_\{}}
+\L{\LB{____\V{printf}(\S{}\"Found_a_parabolic_fit_to_the_match_around_template_with\2n\"\SE{});}}
+\L{\LB{____\V{printf}(\S{}\"m1=\%f,_m2=\%f.\2n\2n\"\SE{},\V{m1},\V{m2});}}
+\L{\LB{____\V{printf}(\S{}\"Semimajor_axis_of_best_fit_ellipse:____\%e_ms\2n\"\SE{},}}
+\L{\LB{}\Tab{8}{___\V{semimajor}\*1.e3);}}
+\L{\LB{____\V{printf}(\S{}\"Semiminor_axis_of_best_fit_ellipse:____\%e_ms\2n\"\SE{},}}
+\L{\LB{}\Tab{8}{___\V{semiminor}\*1.e3);}}
+\L{\LB{____\V{printf}(\S{}\"Angle_between_semimajor_and_tau0_axis:_\%f_rad\2n\"\SE{},\V{theta});}}
+\L{\LB{____\V{printf}(\S{}\"Fit:_m_=_1_+_\%e_x\^2_+_\%e_xy_+_\%e_y\^2\2n\"\SE{},}}
+\L{\LB{}\Tab{8}{___\V{pfit}[0],\V{pfit}[1],\V{pfit}[2]);}}
+\L{\LB{____\V{printf}(\S{}\"[where_x=dtau0,_y=dtau1]\2n\"\SE{});}}
+\L{\LB{__\}_\K{else}}}
+\L{\LB{____\V{printf}(\S{}\"Unable_to_find_parabolic_fit.__Attempting_cubic_fit.\2n\"\SE{});}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* If the parabola failed, try to find a cubic fit \*\1\CE{}}}
+\L{\LB{__\K{if}(!\V{tstp})_\{}}
+\L{\LB{____\V{tstc}=\V{match\_cubic}(\V{m1},\V{m2},\V{matchcont},\V{order},\V{srate},\V{FLO},\V{FTAU},\V{noise\_file},}}
+\L{\LB{}\Tab{16}{_____\&\V{semimajor},\&\V{semiminor},\&\V{theta},\V{cfit});}}
+\L{\LB{____\K{if}(\V{tstc})_\{}}
+\L{\LB{______\V{printf}(\S{}\"Found_a_cubic_fit_to_the_match_around_template_with\2n\"\SE{});}}
+\L{\LB{______\V{printf}(\S{}\"m1=\%f,_m2=\%f.\2n\2n\"\SE{},\V{m1},\V{m2});}}
+\L{\LB{______\V{printf}(\S{}\"Using_ellipse_constructed_from_parabolic_part_of_cubic.\2n\"\SE{});}}
+\L{\LB{______\V{printf}(\S{}\"Semimajor_axis_of_best_fit_ellipse:____\%e_ms\2n\"\SE{},}}
+\L{\LB{}\Tab{8}{_____\V{semimajor}\*1.e3);}}
+\L{\LB{______\V{printf}(\S{}\"Semiminor_axis_of_best_fit_ellipse:____\%e_ms\2n\"\SE{},}}
+\L{\LB{}\Tab{8}{_____\V{semiminor}\*1.e3);}}
+\L{\LB{______\V{printf}(\S{}\"Angle_between_semimajor_and_tau0_axis:_\%f_rad\2n\"\SE{},\V{theta});}}
+\L{\LB{______\V{printf}(\S{}\"Fit:_m_=_1_+_\%e_x\^2_+_\%e_xy_+_\%e_y\^2\2n\"\SE{},}}
+\L{\LB{}\Tab{8}{_____\V{cfit}[0],\V{cfit}[1],\V{cfit}[2]);}}
+\L{\LB{______\V{printf}(\S{}\"_________+_\%e_x\^3_+_\%e_y\^3_+_\%e_x\^2_y_+_\%e_xy\^2\2n\"\SE{},}}
+\L{\LB{}\Tab{8}{_____\V{cfit}[3],\V{cfit}[4],\V{cfit}[5],\V{cfit}[6]);}}
+\L{\LB{______\V{printf}(\S{}\"[where_x=dtau0,_y=dtau1]\2n\"\SE{});}}
+\L{\LB{____\}_\K{else}_\{}}
+\L{\LB{______\V{printf}(\S{}\"Unable_to_find_a_cubic_fit.__Try_looking_for_a_match\2n\"\SE{});}}
+\L{\LB{______\V{printf}(\S{}\"contour_at_smaller_match_value;_or,_give_up_on_this\2n\"\SE{});}}
+\L{\LB{______\V{printf}(\S{}\"mass_regime.\2n\"\SE{});}}
+\L{\LB{____\}}}
+\L{\LB{__\}}}
+\L{\LB{}}
+\L{\LB{__\K{return}_0;}}
+\L{\LB{\}}}

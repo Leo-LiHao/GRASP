@@ -1,0 +1,43 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_galaxy\1galactic2equatorial.c},{11:59},{Jan 23 1998}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{\K{\#define}_\V{DEG\_TO\_RAD}__((\K{float})(\V{M\_PI}\1180))}}
+\L{\LB{\K{\#define}_\V{RAD\_TO\_DEG}__((\K{float})180\1\V{M\_PI})}}
+\L{\LB{\K{\#define}_\V{RAD\_TO\_HOUR}_((\K{float})12\1\V{M\_PI})}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}(\K{int}_\V{argc},_\K{char}_\*\V{argv}[\,])}}
+\L{\LB{\{}}
+\L{\LB{__\K{float}_\V{l},\V{b},\V{alpha},\V{delta};}}
+\L{\LB{__\K{double}_\V{hra},\V{mra},\V{sra},\V{ddec},\V{mdec},\V{sdec};}}
+\L{\LB{}}
+\L{\LB{__\K{if}_(\V{argc}==3)_\{}}
+\L{\LB{____\V{l}_=_\V{atof}(\V{argv}[1]);}}
+\L{\LB{____\V{b}_=_\V{atof}(\V{argv}[2]);}}
+\L{\LB{__\}_\K{else}_\{}}
+\L{\LB{____\V{fprintf}(\V{stderr},\S{}\"usage:_\%s_l_b\2n\"\SE{},\V{argv}[0]);}}
+\L{\LB{____\V{fprintf}(\V{stderr},\S{}\"__l:__Galactic_longitude_(degrees)\2n\"\SE{});}}
+\L{\LB{____\V{fprintf}(\V{stderr},\S{}\"__b:__Galactic_latitude_(degrees)\2n\"\SE{});}}
+\L{\LB{____\K{return}_1;}}
+\L{\LB{__\}}}
+\L{\LB{}}
+\L{\LB{__\V{printf}(\S{}\"l___(deg):_\%6.2f\2n\"\SE{},\V{l});}}
+\L{\LB{__\V{printf}(\S{}\"b___(deg):_\%+6.2f\2n\"\SE{},\V{b});}}
+\L{\LB{}}
+\L{\LB{__\V{l}_\*=_\V{DEG\_TO\_RAD};}}
+\L{\LB{__\V{b}_\*=_\V{DEG\_TO\_RAD};}}
+\L{\LB{}}
+\L{\LB{__\V{galactic\_to\_equatorial}(\V{l},\V{b},\&\V{alpha},\&\V{delta});}}
+\L{\LB{}}
+\L{\LB{__\V{alpha}_\*=_\V{RAD\_TO\_HOUR};}}
+\L{\LB{__\V{delta}_\*=_\V{RAD\_TO\_DEG};}}
+\L{\LB{}}
+\L{\LB{__\V{sra}_=_60\*\V{modf}(60\*\V{modf}(\V{alpha},\&\V{hra}),\&\V{mra});}}
+\L{\LB{__\V{sdec}_=_60\*\V{modf}(\V{fabs}(60\*\V{modf}(\V{delta},\&\V{ddec})),\&\V{mdec});}}
+\L{\LB{}}
+\L{\LB{__\V{printf}(\S{}\"RA__(hms):__\%02u_\%02u_\%02u\2n\"\SE{},(\K{char})\V{hra},(\K{char})\V{mra},(\K{char})\V{sra});}}
+\L{\LB{__\V{printf}(\S{}\"Dec_(dms):_\%+02d_\%02u_\%02u\2n\"\SE{},(\K{int})\V{ddec},(\K{char})\V{mdec},(\K{char})\V{sdec});}}
+\L{\LB{}}
+\L{\LB{__\K{return}_0;}}
+\L{\LB{\}}}

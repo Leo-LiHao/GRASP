@@ -1,0 +1,206 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_correlation\1corr\_init.c},{17:33},{Jun  4 1999}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}(\K{int}_\V{argc},_\K{char}_\*\V{argv}[\,])_\{___}}
+\L{\LB{___\V{FILE}_\*\V{fp};}}
+\L{\LB{___\K{struct}_\V{fgetinput}_\V{fgetinput};}}
+\L{\LB{___\K{struct}_\V{fgetoutput}_\V{fgetoutput};}}
+\L{\LB{___\K{float}__\*\V{data},\V{delta\_f};}}
+\L{\LB{___\K{int}_\*\V{npoints};}}
+\L{\LB{___\K{int}_\V{i},\V{j},\V{check},\V{min\_points};}}
+\L{\LB{___\K{char}_\V{fname}[256],\V{detector}[256],\V{fft\_dir}[256],\V{cmd}[256];}}
+\L{\LB{_____}}
+\L{\LB{___\K{if}_(_\V{argc}_!=_2)_\{_}}
+\L{\LB{______\V{printf}(\S{}\"Usage:_corr\_init_configuration\-file\2n\"\SE{});}}
+\L{\LB{______\V{exit}(1);}}
+\L{\LB{___\}_}}
+\L{\LB{}}
+\L{\LB{___\V{fp}_=_\V{fopen}(\V{argv}[1],\S{}\"r\"\SE{});_}}
+\L{\LB{___\K{if}_(_\V{fp}_==_\V{NULL}_)_\{}}
+\L{\LB{____\V{fprintf}(\V{stderr},\S{}\"Problems_opening_\%s\2n\"\SE{},\V{argv}[1]);}}
+\L{\LB{____\V{exit}(1);____}}
+\L{\LB{___\}___}}
+\L{\LB{___\V{fprintf}(\V{stderr},\S{}\"Reading_\%s\2n\"\SE{},\V{argv}[1]);_}}
+\L{\LB{}}
+\L{\LB{___\K{while}_(1)_\{}}
+\L{\LB{_____\V{fgets}(\V{detector},\K{sizeof}(\V{detector}),\V{fp});}}
+\L{\LB{_____\K{if}_(\V{detector}[0]_!=_\S{}\'\#\'\SE{})_\K{break};}}
+\L{\LB{___\}}}
+\L{\LB{___\V{detector}[\V{strlen}(\V{detector})\-1]=\S{}\'\20\'\SE{};}}
+\L{\LB{___\V{check}=\V{fscanf}(\V{fp},\S{}\"\%d\"\SE{},\&\V{fgetinput}.\V{nchan});}}
+\L{\LB{____}}
+\L{\LB{___\C{}\1\* storage for channel names, data locations, points returned, ratios \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{chnames}=(\K{char}_\*\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{char}_\*));}}
+\L{\LB{___\K{for}_(\V{i}=0;\V{i}\<\V{fgetinput}.\V{nchan};\V{i}++)___}}
+\L{\LB{_____\V{fgetinput}.\V{chnames}[\V{i}]=(\K{char}_\*)\V{malloc}(256\*\K{sizeof}(\K{char}));}}
+\L{\LB{___\V{fgetinput}.\V{locations}=(\K{short}_\*\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{short}_\*));}}
+\L{\LB{___\V{fgetoutput}.\V{npoint}=(\K{int}_\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{int}));}}
+\L{\LB{___\V{fgetoutput}.\V{ratios}=(\K{int}_\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{int}));}}
+\L{\LB{___\V{fgetinput}.\V{datatype}=(\K{char}_\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{char}));}}
+\L{\LB{___\V{npoints}=(\K{int}_\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{int}));}}
+\L{\LB{_}}
+\L{\LB{___\K{for}_(\V{i}=0;\V{i}\<\V{fgetinput}.\V{nchan};\V{i}++)_\{}}
+\L{\LB{_____\V{check}=\V{fscanf}(\V{fp},\S{}\"\%s_\%c_\%d\"\SE{},\V{fgetinput}.\V{chnames}[\V{i}],\&\V{fgetinput}.\V{datatype}[\V{i}],\&\V{npoints}[\V{i}]);}}
+\L{\LB{_____\C{}\1\* the next fgetinput.nchan lines of the configuration file should contain 3 columns \*\1\CE{}}}
+\L{\LB{_____\C{}\1\*                 - if not print an error message                                   \*\1\CE{}}}
+\L{\LB{_____\K{if}_(\V{check}_!=_3)_\{}}
+\L{\LB{_______\V{fprintf}(\V{stderr},\S{}\"Problems_reading_data_from_\%s\2n\"\SE{},\V{argv}[1]);_}}
+\L{\LB{_______\V{exit}(1);___}}
+\L{\LB{_____\}}}
+\L{\LB{___\}}}
+\L{\LB{}}
+\L{\LB{___\V{fclose}(\V{fp});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* number of points to get \*\1\CE{}}}
+\L{\LB{____\V{fgetinput}.\V{npoint}=\V{npoints}[0];}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* allocate storage space for data \*\1\CE{}}}
+\L{\LB{___\K{for}(\V{i}=0;\V{i}\<\V{fgetinput}.\V{nchan};\V{i}++)_\{}}
+\L{\LB{_____\K{switch}_(\V{fgetinput}.\V{datatype}[\V{i}])_\{}}
+\L{\LB{_____\K{case}_\S{}\'S\'\SE{}:_\C{}\1\* short data \*\1\CE{}}}
+\L{\LB{_____\K{case}_\S{}\'u\'\SE{}:_\C{}\1\* unsigned short data \*\1\CE{}}}
+\L{\LB{_______\V{fgetinput}.\V{locations}[\V{i}]=(\K{short}_\*)\V{malloc}(\V{npoints}[\V{i}]\*\K{sizeof}(\K{short}));_}}
+\L{\LB{_______\K{break};}}
+\L{\LB{_____\K{case}_\S{}\'I\'\SE{}:__\C{}\1\* integer data \*\1\CE{}}}
+\L{\LB{_____\K{case}_\S{}\'i\'\SE{}:__\C{}\1\* unsigned integer data \*\1\CE{}}}
+\L{\LB{_______\V{fgetinput}.\V{locations}[\V{i}]=(\K{short}_\*)\V{malloc}(\V{npoints}[\V{i}]\*\K{sizeof}(\K{int}));}}
+\L{\LB{_______\K{break};}}
+\L{\LB{_____\K{case}_\S{}\'L\'\SE{}:_\C{}\1\* long data \*\1\CE{}}}
+\L{\LB{_____\K{case}_\S{}\'l\'\SE{}:_\C{}\1\* unsigned long data \*\1\CE{}}}
+\L{\LB{_______\V{fgetinput}.\V{locations}[\V{i}]=(\K{short}_\*)\V{malloc}(\V{npoints}[\V{i}]\*\K{sizeof}(\K{long}));}}
+\L{\LB{_______\K{break};}}
+\L{\LB{_____\K{case}_\S{}\'F\'\SE{}:_\C{}\1\* float data \*\1\CE{}}}
+\L{\LB{_______\V{fgetinput}.\V{locations}[\V{i}]=(\K{short}_\*)\V{malloc}(\V{npoints}[\V{i}]\*\K{sizeof}(\K{float}));}}
+\L{\LB{_______\K{break};}}
+\L{\LB{_____\K{case}_\S{}\'D\'\SE{}:_\C{}\1\* double data \*\1\CE{}}}
+\L{\LB{_______\V{fgetinput}.\V{locations}[\V{i}]=(\K{short}_\*)\V{malloc}(\V{npoints}[\V{i}]\*\K{sizeof}(\K{double}));}}
+\L{\LB{_______\K{break};}}
+\L{\LB{_____\K{case}_\S{}\'C\'\SE{}:_\C{}\1\* character data \*\1\CE{}}}
+\L{\LB{_____\K{case}_\S{}\'f\'\SE{}:_\C{}\1\* complex float data \*\1\CE{}_}}
+\L{\LB{_____\K{case}_\S{}\'d\'\SE{}:_\C{}\1\* complex double data \*\1\CE{}}}
+\L{\LB{_____\K{case}_\S{}\'s\'\SE{}:_\C{}\1\* character string data \*\1\CE{}}}
+\L{\LB{_____\K{case}_\S{}\'c\'\SE{}:_\C{}\1\* unsigned character data \*\1\CE{}}}
+\L{\LB{_______\V{fprintf}(\V{stderr},\S{}\"Data_type_\%c_cannot_be_plotted\2n\"\SE{},\V{fgetinput}.\V{datatype}[0]);}}
+\L{\LB{_______\K{break};}}
+\L{\LB{_____\K{default}:}}
+\L{\LB{_______\V{fprintf}(\V{stderr},\S{}\"Unknown_data_type_\%c\2n\"\SE{},\V{fgetinput}.\V{datatype}[0]);}}
+\L{\LB{_______\V{exit}(1);}}
+\L{\LB{_____\}______}}
+\L{\LB{___\}__}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* don\'t have inlock channel if not 40m \*\1\CE{}}}
+\L{\LB{___\K{if}_(\V{detector}_!=_\S{}\"C1\"\SE{})_\{_}}
+\L{\LB{_____\V{fgetinput}.\V{inlock}=0;}}
+\L{\LB{___\}}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* but we don\'t need calibration information \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{calibrate}=0;}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* don\'t seek, we need the sample values! \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{seek}=0;}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* source of files \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{files}=\V{framefiles};}}
+\L{\LB{}}
+\L{\LB{___\V{check}=\V{fget\_ch}(\&\V{fgetoutput},\&\V{fgetinput});_}}
+\L{\LB{___\K{if}_(_\V{check}_==_0)_\{}}
+\L{\LB{_____\V{fprintf}(\V{stderr},\S{}\"not_enough_data!!!!!!!!\"\SE{});}}
+\L{\LB{_____\V{exit}(1);}}
+\L{\LB{___\}}}
+\L{\LB{___\V{fprintf}(\V{stderr},\S{}\"Signal_(\%s)_sample_rate_is_\%f\2n\"\SE{},\V{fgetinput}.\V{chnames}[0],\V{fgetoutput}.\V{srate});}}
+\L{\LB{}}
+\L{\LB{___\V{min\_points}=\V{npoints}[0];}}
+\L{\LB{___\K{for}(\V{i}=1;\V{i}\<\V{fgetinput}.\V{nchan};\V{i}++)_\{}}
+\L{\LB{_____\K{if}_(\V{npoints}[\V{i}]\<\V{min\_points})_\V{min\_points}=\V{npoints}[\V{i}];}}
+\L{\LB{___\}}}
+\L{\LB{}}
+\L{\LB{___\V{delta\_f}=\V{fgetoutput}.\V{srate}\1\V{npoints}[0];}}
+\L{\LB{}}
+\L{\LB{___\K{for}_(\V{i}=0;\V{i}\<256;\V{i}++)_\{}}
+\L{\LB{_____\K{if}_(\V{argv}[1][\V{i}]_==_\S{}\'\20\'\SE{}_\|\,\|_\V{argv}[1][\V{i}]_==_\S{}\'.\'\SE{})_\{}}
+\L{\LB{_______\V{fft\_dir}[\V{i}]_=_\S{}\'\20\'\SE{};}}
+\L{\LB{_______\K{break};}}
+\L{\LB{_____\}}}
+\L{\LB{_____\V{fft\_dir}[\V{i}]=\V{argv}[1][\V{i}];}}
+\L{\LB{___\}}}
+\L{\LB{}}
+\L{\LB{___\V{strcat}(\V{fft\_dir},\S{}\"\_fft\"\SE{});}}
+\L{\LB{___\V{sprintf}(\V{cmd},\S{}\"mkdir_\%s_2\>_\1dev\1null\"\SE{},\V{fft\_dir});}}
+\L{\LB{___\V{system}(\V{cmd});}}
+\L{\LB{}}
+\L{\LB{___\K{for}_(\V{i}=0;\V{i}\<\V{fgetinput}.\V{nchan};\V{i}++)_\{}}
+\L{\LB{_____\C{}\1\* check frames are consistent with configuration file \*\1\CE{}}}
+\L{\LB{_____\K{if}_(\V{npoints}[\V{i}]_!=_\V{fgetoutput}.\V{srate}\1\V{fgetoutput}.\V{ratios}[\V{i}])_\{}}
+\L{\LB{_______\V{fprintf}(\V{stderr},\S{}\"Sample_rates_in_\%s_is_\%f\2n\"\SE{},}}
+\L{\LB{}\Tab{8}{_______\V{fgetinput}.\V{chnames}[\V{i}],\V{fgetoutput}.\V{srate}\1\V{fgetoutput}.\V{ratios}[\V{i}]);}}
+\L{\LB{_____\}}}
+\L{\LB{}}
+\L{\LB{_____\C{}\1\* assign memory for storing data in floats \*\1\CE{}}}
+\L{\LB{_____\V{data}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{npoints}[\V{i}]);}}
+\L{\LB{_}}
+\L{\LB{_____\K{switch}_(\V{fgetinput}.\V{datatype}[\V{i}])_\{}}
+\L{\LB{_____\K{case}_\S{}\'S\'\SE{}:_\C{}\1\* short data \*\1\CE{}}}
+\L{\LB{_____\K{case}_\S{}\'u\'\SE{}:_\C{}\1\* unsigned short data \*\1\CE{}}}
+\L{\LB{______\K{for}(\V{j}=0;\V{j}\<\V{npoints}[\V{i}];\V{j}++)__\V{data}[\V{j}]=\V{fgetinput}.\V{locations}[\V{i}][\V{j}];__}}
+\L{\LB{______\K{break};}}
+\L{\LB{_____\K{case}_\S{}\'I\'\SE{}:__\C{}\1\* integer data \*\1\CE{}}}
+\L{\LB{_____\K{case}_\S{}\'i\'\SE{}:__\C{}\1\* unsigned integer data \*\1\CE{}}}
+\L{\LB{________\K{for}(\V{j}=0;\V{j}\<\V{npoints}[\V{i}];\V{j}++)__\V{data}[\V{j}]=((\K{int}_\*)(\V{fgetinput}.\V{locations}[\V{i}]))[\V{j}];}}
+\L{\LB{_______\K{break};}}
+\L{\LB{_____\K{case}_\S{}\'L\'\SE{}:_\C{}\1\* long data \*\1\CE{}}}
+\L{\LB{_____\K{case}_\S{}\'l\'\SE{}:_\C{}\1\* unsigned long data \*\1\CE{}}}
+\L{\LB{_______\K{for}(\V{j}=0;\V{j}\<\V{npoints}[\V{i}];\V{j}++)__\V{data}[\V{j}]=((\K{long}_\*)(\V{fgetinput}.\V{locations}[\V{i}]))[\V{j}];}}
+\L{\LB{_______\K{break};}}
+\L{\LB{_____\K{case}_\S{}\'F\'\SE{}:_\C{}\1\* float data \*\1\CE{}}}
+\L{\LB{_______\K{for}(\V{j}=0;\V{j}\<\V{npoints}[\V{i}];\V{j}++)__\V{data}[\V{j}]=((\K{float}_\*)(\V{fgetinput}.\V{locations}[\V{i}]))[\V{j}];}}
+\L{\LB{_______\K{break};}}
+\L{\LB{_____\K{case}_\S{}\'D\'\SE{}:_\C{}\1\* double data \*\1\CE{}}}
+\L{\LB{_______\K{for}(\V{j}=0;\V{j}\<\V{npoints}[\V{i}];\V{j}++)__\V{data}[\V{j}]=((\K{double}_\*)(\V{fgetinput}.\V{locations}[\V{i}]))[\V{j}];}}
+\L{\LB{_______\K{break};}}
+\L{\LB{_____\K{case}_\S{}\'C\'\SE{}:_\C{}\1\* character data \*\1\CE{}}}
+\L{\LB{_____\K{case}_\S{}\'f\'\SE{}:_\C{}\1\* complex float data \*\1\CE{}_}}
+\L{\LB{_____\K{case}_\S{}\'d\'\SE{}:_\C{}\1\* complex double data \*\1\CE{}}}
+\L{\LB{_____\K{case}_\S{}\'s\'\SE{}:_\C{}\1\* character string data \*\1\CE{}}}
+\L{\LB{_____\K{case}_\S{}\'c\'\SE{}:_\C{}\1\* unsigned character data \*\1\CE{}}}
+\L{\LB{_______\V{fprintf}(\V{stderr},\S{}\"Data_type_\%c_cannot_be_converted_to_float\2n\"\SE{},\V{fgetinput}.\V{datatype}[0]);}}
+\L{\LB{_______\K{break};}}
+\L{\LB{_____\K{default}:}}
+\L{\LB{_______\V{fprintf}(\V{stderr},\S{}\"Unknown_data_type_\%c\2n\"\SE{},\V{fgetinput}.\V{datatype}[0]);}}
+\L{\LB{_______\V{exit}(1);}}
+\L{\LB{_____\}__________}}
+\L{\LB{_}}
+\L{\LB{_____\C{}\1\* We can now free fgetinput.locations[i] \*\1\CE{}}}
+\L{\LB{_____\V{free}(\V{fgetinput}.\V{locations}[\V{i}]);_}}
+\L{\LB{_____\C{}\1\* Take the Fourier transforms \*\1\CE{}}}
+\L{\LB{_____\V{realft}(\V{data}\-1,\V{npoints}[\V{i}],1);}}
+\L{\LB{_____\V{data}[1]=0;}}
+\L{\LB{_}}
+\L{\LB{_____\C{}\1\* Print the Fourier transform to file \*\1\CE{}}}
+\L{\LB{_____\V{sprintf}(\V{fname},\S{}\"\%s\1\%s\-\%s\_fft.b\"\SE{},\V{fft\_dir},\V{detector},\V{fgetinput}.\V{chnames}[\V{i}]);}}
+\L{\LB{_____\V{fp}_=_\V{fopen}(\V{fname},\S{}\"wb\"\SE{});_}}
+\L{\LB{_____\K{if}_(_\V{fp}_==_\V{NULL})_\{}}
+\L{\LB{_______\V{printf}(\S{}\"Cannot_open_\%s\2n\"\SE{},\V{fname});}}
+\L{\LB{_______\V{exit}(1);}}
+\L{\LB{_____\}_}}
+\L{\LB{_____\V{fprintf}(\V{stderr},\S{}\"writing_\%s\2n\"\SE{},\V{fname});}}
+\L{\LB{_____\V{fwrite}(\&\V{delta\_f},\K{sizeof}(\K{float}),1,\V{fp});}}
+\L{\LB{_____\V{fwrite}(\V{data},\K{sizeof}(\K{float}),\V{min\_points},\V{fp});}\Tab{48}{____}}
+\L{\LB{_____\V{fclose}(\V{fp});}}
+\L{\LB{}}
+\L{\LB{_____}}
+\L{\LB{_____\V{free}(\V{data});}}
+\L{\LB{___\}}}
+\L{\LB{_____}}
+\L{\LB{___\C{}\1\* free memory \*\1\CE{}}}
+\L{\LB{___\V{free}(\V{fgetinput}.\V{locations});}}
+\L{\LB{___\V{free}(\V{fgetinput}.\V{chnames});}}
+\L{\LB{___\V{free}(\V{fgetinput}.\V{locations});}}
+\L{\LB{___\V{free}(\V{fgetoutput}.\V{npoint});}}
+\L{\LB{___\V{free}(\V{fgetoutput}.\V{ratios});}}
+\L{\LB{___\V{free}(\V{npoints});}}
+\L{\LB{}}
+\L{\LB{___\K{return}_0;}}
+\L{\LB{\}}}

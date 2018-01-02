@@ -1,0 +1,39 @@
+#############################################################################
+#  THE REGION ABOVE THIS SPACE IS FILLED IN BY InstallGRASP                 #
+#############################################################################
+
+INCLUDES= -I$(GRASP_I) 
+LIBS= $(OPTIMIZED_OBJECTS) -L$(GRASP_HOME)/lib -lgrasp -L$(RECIPES_LIB) -l$(LRECIPES) $(OPTIMIZED_LIBS) -lm
+
+all: diag calibrate_binned calibrate power_spectrum print_ss animate gwoutput locklist reader transfer
+
+diag: diag.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) diag.c -o diag $(LIBS) 
+
+calibrate_binned: calibrate_binned.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) calibrate_binned.c -o calibrate_binned $(LIBS) 
+
+calibrate: calibrate.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) calibrate.c -o calibrate $(LIBS) 
+
+power_spectrum: power_spectrum.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) power_spectrum.c -o power_spectrum $(LIBS) 
+
+print_ss: print_ss.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) print_ss.c -o print_ss $(LIBS)
+
+animate: animate.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) animate.c -o animate $(LIBS) 
+
+gwoutput: gwoutput.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) gwoutput.c -o gwoutput $(LIBS)
+
+locklist: locklist.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) locklist.c -o locklist $(LIBS) 
+
+reader: reader.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS)  $(INCLUDES) reader.c -o reader $(LIBS)
+
+transfer: transfer.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS)  $(INCLUDES) transfer.c -o transfer $(LIBS)
+

@@ -1,0 +1,109 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_testmass\1tmwave.c},{17:34},{Jun  4 1999}
+\L{\LB{\C{}\1\* tmwave.c}}
+\L{\LB{___This example calculates the two waveforms using the testmass formulas. }}
+\L{\LB{___It saves these in the file waveorm.dat without doing much else. The purpose}}
+\L{\LB{___of this example is to demonstrate how to calculate a waveform using GRASP.}}
+\L{\LB{_____}}
+\L{\LB{___Author: S. Droz (droz at physics.uoguelph.ca)}}
+\L{\LB{\*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{}}
+\L{\LB{\K{\#ifdef}_\V{\_\_MACOS\_\_}}}
+\L{\LB{\C{}\1\* If we run this on a Macintosh compatible machine use}}
+\L{\LB{___the console package SIOUX. This is ignored on any other }}
+\L{\LB{___platform. \*\1\CE{}}}
+\L{\LB{\K{\#include}_\<\V{sioux}.\V{h}\>}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* Prototypes: \*\1\CE{}}}
+\L{\LB{\K{int}_\V{PlayAudio}(\K{float}_\*\V{f},_\K{double}_\V{Rate},_\K{int}_\V{n});}}
+\L{\LB{\K{\#endif}_}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}()}}
+\L{\LB{\{}}
+\L{\LB{___\K{int}_\V{NoPo}_=0;_______________\C{}\1\* Read in as many data points as possible  \*\1\CE{}____}}
+\L{\LB{___\K{float}_\*\V{x}_=_\V{NULL};___________\C{}\1\* We let GRASP take care of all the memory \*\1\CE{}}}
+\L{\LB{___\K{float}_\*\V{Phase}_=_\V{NULL};_______\C{}\1\* allocation.                              \*\1\CE{}}}
+\L{\LB{___\K{float}_\*\V{hplus}_=_\V{NULL};}}
+\L{\LB{___\K{float}_\*\V{hcross}_=_\V{NULL};}}
+\L{\LB{___\K{int}_\V{NoOfWavePoints}_=_10000;____\C{}\1\* Calculate as many points as needed. \*\1\CE{}}}
+\L{\LB{___\K{float}_\*\V{f}_=_\V{NULL};}}
+\L{\LB{___\K{float}_\V{fend},\V{fstart},\V{dt};}}
+\L{\LB{___\K{int}___\V{error},_\V{i};}}
+\L{\LB{___\V{FILE}__\*\V{fp};}}
+\L{\LB{___\K{float}_\V{m1}_=_1.4;______\C{}\1\* Mass of the first body in units of the solar mass \*\1\CE{}_}}
+\L{\LB{___\K{float}_\V{m2}_=_1.4;______\C{}\1\* Mass of the second body in units of the solar mass \*\1\CE{}_}}
+\L{\LB{___\K{float}_\V{theta}_=_1.2;___\C{}\1\* The inclination angle in radians \*\1\CE{}______}}
+\L{\LB{___\K{float}_\V{phi}_=_0.0;_____\C{}\1\* The azimuthal angle in radians \*\1\CE{}}}
+\L{\LB{___}}
+\L{\LB{___\C{}\1\* Which modes should we include? (1 include, 0 omit) \*\1\CE{}_________}}
+\L{\LB{___\C{}\1\*}\Tab{16}{m = -5 -4 -3 -2 -1  1  2  3  4  5}\Tab{56}{   l     \*\1\CE{}}}
+\L{\LB{___\K{int}_\V{modes}[28]_=_\{_________1,_1,_1,_1,____________\C{}\1\* l = 2 \*\1\CE{}}}
+\L{\LB{__________________________1,_1,_1,_1,_1,_1,_________\C{}\1\* l = 3 \*\1\CE{}}}
+\L{\LB{_______________________0,_0,_0,_0,_0,_0,_0,_0,______\C{}\1\* l = 4 \*\1\CE{}}}
+\L{\LB{____________________0,_0,_0,_0,_0,_0,_0,_0,_0,_0_\};_\C{}\1\* l = 5 \*\1\CE{}}}
+\L{\LB{___}}
+\L{\LB{\K{\#ifdef}_\V{\_\_MACOS\_\_}_\C{}\1\* Mac stuff, don\'t worry \*\1\CE{}}}
+\L{\LB{___\V{SIOUXSettings}.\V{asktosaveonclose}_=_0;}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{___}}
+\L{\LB{___\C{}\1\* First we have to read in the data files. This will only work if you\'ve }}
+\L{\LB{______set the environment variable GRASP\_PARAMETERS. We just read in the default}}
+\L{\LB{______files, so we can give NULL as filenames. x[0.\,.NoPo-1] will contain all the}}
+\L{\LB{______v - values.  This routine sets up memory for the A\_\{lm\}(v)\'s and P(v)}}
+\L{\LB{______internally. It will also calculate V(t) and save it.                 \*\1\CE{}___}}
+\L{\LB{___\V{printf}(\S{}\"_Reading_data_.\,.\,.\2n\"\SE{});}}
+\L{\LB{___\V{error}_=_\V{ReadData}(\V{NULL},_\V{NULL},_\&\V{x},_\&\V{NoPo});}}
+\L{\LB{___\K{if}_(_\V{error}_)_\K{return}_\V{error};}}
+\L{\LB{___}}
+\L{\LB{___\C{}\1\* We now have to calculate the phase function }}
+\L{\LB{______Phi(f\_0,v). This function already knows}}
+\L{\LB{______how many points to calculate; the same number }}
+\L{\LB{______as the number of datapoints. Since we want to plot}}
+\L{\LB{______the wave function around \~ 100 Hz we set fo = 400.0 \*\1\CE{}}}
+\L{\LB{___\V{printf}(\S{}\"_Calculating_the_phase_.\,.\,.\2n\"\SE{});}}
+\L{\LB{___\V{error}_=_\V{calculate\_testmass\_phase}(400.0,_(\V{m1}+\V{m2})_,\&\V{Phase});}}
+\L{\LB{___\K{if}_(_\V{error}_)_\V{printf}(\S{}\"Error_calculating_the_phase\2n\"\SE{});}}
+\L{\LB{___}}
+\L{\LB{___}}
+\L{\LB{___\C{}\1\* Uncomment the following code if you want to save Phi(f\_0,v) \*\1\CE{}}}
+\L{\LB{___\C{}\1\*}}
+\L{\LB{___fp = fopen(\"Phase.dat\",\"w\");}}
+\L{\LB{___for (i = 0; i \< NoPo; i++) }}
+\L{\LB{_____fprintf(fp,\"\%f \%f \%20.18f\2n\",x[i], pow(x[i],3.0)\1(2.0\*(m1+m2)\*TSOLAR\*Pi), Phase[i]);}}
+\L{\LB{___fclose(fp);}}
+\L{\LB{___\*\1\CE{}}}
+\L{\LB{___}}
+\L{\LB{___}}
+\L{\LB{___\C{}\1\* We\'re now ready to calculate the chirp itself. \*\1\CE{}}}
+\L{\LB{___\V{printf}(\S{}\"_Calculating_the_chirp_.\,.\,.\2n\"\SE{});}}
+\L{\LB{}}
+\L{\LB{___\V{dt}_=\V{Get\_Duration}(60.0,_785.0,\V{m1},\V{m2})\1(1.0\*\V{NoOfWavePoints}\-1.0);_\C{}\1\* Set the timestep in seconds \*\1\CE{}}}
+\L{\LB{____}}
+\L{\LB{___\V{testmass\_chirp}(\V{m1},_\V{m2},_\V{theta},_\V{phi}_,_\V{Phase},_60.0,_785.0,_\&\V{fstart},_\&\V{fend},_}}
+\L{\LB{_______________\V{dt},__\&\V{hplus},_\&\V{hcross},_\&\V{f},__\&\V{NoOfWavePoints},_3,__\V{modes});}}
+\L{\LB{_______________}}
+\L{\LB{___\V{printf}(\S{}\"_Calculated_\%d__data_points\2nin_the_frequency_intervall_[\%f,_\%f].\2n\"\SE{},}}
+\L{\LB{___________\V{NoOfWavePoints},\V{fstart},_\V{fend});}}
+\L{\LB{___\V{printf}(\S{}\"_The_chirp_lasted_\%f_seconds.\2n\"\SE{},\V{dt}\*\V{NoOfWavePoints});}\Tab{64}{__}}
+\L{\LB{___\V{printf}(\S{}\"_Writing_data_to_disk._This_might_take_a_few_seconds.\2n\"\SE{});____________}}
+\L{\LB{___\V{fp}_=_\V{fopen}(\S{}\"waveform.dat\"\SE{},\S{}\"w\"\SE{});}}
+\L{\LB{___\K{for}_(\V{i}_=_0;_\V{i}_\<_\V{NoOfWavePoints};_\V{i}++)_}}
+\L{\LB{_____\V{fprintf}(\V{fp},\S{}\"\%f_\%f_\%f_\%f_\%f\2n\"\SE{},_\V{i}\*\V{dt},_\V{f}[\V{i}]_,_\V{hplus}[\V{i}],}}
+\L{\LB{_____\V{hcross}[\V{i}],\V{pow}(\V{f}[\V{i}]\*2.0\*(\V{m1}+\V{m2})\*\V{TSOLAR}\*\V{M\_PI},1.0\13.0)__);}}
+\L{\LB{___\V{fclose}(\V{fp});}}
+\L{\LB{}}
+\L{\LB{\K{\#ifdef}_\V{\_\_MACOS\_\_}}}
+\L{\LB{___\V{printf}(\S{}\"Playing_wave_.\,.\,.\,._\2n\"\SE{});__\C{}\1\* Play the wave \*\1\CE{}}}
+\L{\LB{___\V{error}_=_\V{PlayAudio}(\V{hplus},_1.0\1\V{dt},_\V{Noofcp}\-1);}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{___}}
+\L{\LB{___\V{Clean\_Up\_Memory}(\V{Phase});_\C{}\1\* Clean up all the memory which was used internally. \*\1\CE{}}}
+\L{\LB{___\V{free}(\V{hplus});____________\C{}\1\* Get rid of the waveforms \*\1\CE{}}}
+\L{\LB{___\V{free}(\V{hcross});}}
+\L{\LB{___\V{printf}(\S{}\"Goodbye.\,.\,.\2n\"\SE{});_\C{}\1\* That\'s all folks. \*\1\CE{}}}
+\L{\LB{___\K{return}_\V{error};}}
+\L{\LB{\}}}

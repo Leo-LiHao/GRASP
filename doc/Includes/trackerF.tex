@@ -1,0 +1,325 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_utility\1trackerF.c},{14:00},{Jun 26 1998}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* macros to define the standard mathematical forms of mod \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{MOD}(\V{X})_((\V{X})\>=0?((\V{X})\%\V{num\_display}):(\V{num\_display}\-1+((\V{X}+1)\%\V{num\_display})))__}}
+\L{\LB{\K{\#define}_\V{FMOD2PI}(\V{X})_((\V{X})\>=0.0?(\V{fmod}((\V{X}),2.0\*\V{M\_PI})):(2.0\*\V{M\_PI}+\V{fmod}((\V{X}),2.0\*\V{M\_PI})))_}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* numerical recipes routine for robust linear fit \*\1\CE{}}}
+\L{\LB{\K{void}_\V{medfit}(\K{float}_\V{x}[\,],\K{float}_\V{y}[\,],\K{int}_\V{npoints},\K{float}_\*\V{a}_,\K{float}_\*\V{b},\K{float}_\*\V{dev});}}
+\L{\LB{\K{void}_\V{graphout}(\K{float},\K{float},\K{float},\K{float});}}
+\L{\LB{}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}()_\{}}
+\L{\LB{___\K{short}_\*\V{datas};}}
+\L{\LB{___\K{int}_\V{npass}=1,\V{num\_points},\V{num\_win},\V{num\_freq},\V{padded\_length},\V{max\_lines},\V{num\_removed},\V{code};}}
+\L{\LB{___\K{int}_\V{i},\V{top}=0,\V{estimate},\V{nbins},\V{padding\_factor},\V{num\_display},\V{nprint},\V{index},\V{new}=0,\V{maxpass}=1,\V{minbin},\V{maxbin};}}
+\L{\LB{___\K{float}_\V{nwdt},\*\V{data},\*\V{mtap\_spec\_init},\*\V{mtap\_spec\_final},\V{srate},\V{creal},\V{cimag};}}
+\L{\LB{___\K{float}_\*\V{phase},\V{phase1}=0.0,\V{amp1},\V{phase2},\*\V{times},\*\V{linfitx},\*\V{linfity},\V{offset},\V{binpreset};}}
+\L{\LB{___\K{float}_\V{displaytime},\V{t1},\*\V{amp},\V{dbin},\V{ffit},\V{intercept},\V{slope},\V{deviation},\V{maxamp},\V{displayamp}=1.0;}}
+\L{\LB{___\K{double}_\V{time},\V{fpreset};}}
+\L{\LB{___\K{struct}_\V{removed\_lines}_\*\V{line\_list};}}
+\L{\LB{___\K{struct}_\V{fgetinput}_\V{fgetinput};}}
+\L{\LB{___\K{struct}_\V{fgetoutput}_\V{fgetoutput};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* ------------------------ USER DEFINABLE ----------------------------\*\1\CE{}}}
+\L{\LB{___\C{}\1\* data length, padded length (powers of 2!) \*\1\CE{}}}
+\L{\LB{___\V{num\_points}=2048;}}
+\L{\LB{___\V{padding\_factor}=8;}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* your best guess for the line frequency you want to track \*\1\CE{}}}
+\L{\LB{___\V{fpreset}=582.395;}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* set non-zero if you want us to estimate the best-fit frequency \*\1\CE{}}}
+\L{\LB{___\V{estimate}=0;}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* number of (padded) frequency bins (either side) to search near fpreset \*\1\CE{}}}
+\L{\LB{___\V{nbins}=5;}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* the number of phase\1amplitudes to display \*\1\CE{}}}
+\L{\LB{___\V{num\_display}=150;}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* number of taper windows to use, and time-freq bandwidth \*\1\CE{}}}
+\L{\LB{___\V{num\_win}=5;}}
+\L{\LB{___\V{nwdt}=3.0;}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* the number of passes to make within the line removal algorithm \*\1\CE{}}}
+\L{\LB{___\V{maxpass}=1;}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* num\_points=2048; padding\_factor=8;fpreset=582.395; \*\1\CE{}}}
+\L{\LB{___\V{num\_points}=4096;_\V{padding\_factor}=4;\V{fpreset}=582.395;}}
+\L{\LB{___\V{num\_points}=4096;_\V{padding\_factor}=4;\V{fpreset}=180.0;}}
+\L{\LB{___\C{}\1\* --------------------- END OF USER DEFINABLE ----------------------------\*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* number of channels \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{nchan}=1;}}
+\L{\LB{___\V{fgetinput}.\V{inlock}=0;}}
+\L{\LB{___\V{fgetinput}.\V{npoint}=\V{num\_points};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* source of files \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{files}=\V{framefiles};}}
+\L{\LB{}}
+\L{\LB{___\V{fgetinput}.\V{chnames}=(\K{char}_\*\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{char}_\*));}}
+\L{\LB{___\V{fgetinput}.\V{locations}=(\K{short}_\*\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{short}_\*));}}
+\L{\LB{___\V{fgetoutput}.\V{npoint}=(\K{int}_\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{int}));}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* channel name \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{chnames}[0]=\S{}\"IFO\_DMRO\"\SE{};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* number of points to get \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{seek}=0;}}
+\L{\LB{___\V{fgetinput}.\V{calibrate}=0;}}
+\L{\LB{}}
+\L{\LB{___\V{padded\_length}=\V{padding\_factor}\*\V{num\_points};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* num frequencies including DC, Nyquist \*\1\CE{}}}
+\L{\LB{___\V{num\_freq}=1+\V{padded\_length}\12;}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* max number of lines to report on \*\1\CE{}}}
+\L{\LB{___\V{max\_lines}=64;}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* allocate storage \*\1\CE{}}}
+\L{\LB{___\V{datas}=(\K{short}_\*)\V{malloc}(\K{sizeof}(\K{short})\*\V{num\_points});}}
+\L{\LB{___\V{data}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{num\_points});}}
+\L{\LB{___\V{mtap\_spec\_init}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{num\_freq});}}
+\L{\LB{___\V{mtap\_spec\_final}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{num\_freq});}}
+\L{\LB{___\V{line\_list}=(\K{struct}_\V{removed\_lines}_\*)\V{malloc}(\K{sizeof}(\K{struct}_\V{removed\_lines})\*\V{max\_lines});}}
+\L{\LB{___\V{amp}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{num\_display});}}
+\L{\LB{___\V{phase}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{num\_display});}}
+\L{\LB{___\V{times}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{num\_display});}}
+\L{\LB{___\V{linfitx}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{num\_display});}}
+\L{\LB{___\V{linfity}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{num\_display});}}
+\L{\LB{}}
+\L{\LB{___\V{fgetinput}.\V{locations}[0]=\V{datas};}}
+\L{\LB{}}
+\L{\LB{___\K{while}_(\V{npass}\>0)_\{}}
+\L{\LB{______\C{}\1\* get a section of data.\,.\,. \*\1\CE{}}}
+\L{\LB{______\V{code}=\V{fget\_ch}(\&\V{fgetoutput},\&\V{fgetinput});}}
+\L{\LB{______\V{time}=\V{fgetoutput}.\V{dt};}}
+\L{\LB{}}
+\L{\LB{______\K{if}_(\V{code}==0)_\K{return}_0;}}
+\L{\LB{______\V{new}+=\V{code};}}
+\L{\LB{}}
+\L{\LB{______\V{srate}=\V{fgetoutput}.\V{srate};}}
+\L{\LB{______\K{if}_(\V{new}==1)_\{}}
+\L{\LB{_________\V{fprintf}(\V{stderr},\S{}\"\2aTracker:_New_Locked_Segment_at_time_\%f\2n\"\SE{},\V{time});}}
+\L{\LB{_________\V{ffit}=\V{fpreset};}}
+\L{\LB{_________\V{npass}=1;}}
+\L{\LB{_________\V{top}=0;}}
+\L{\LB{_________\V{time}=0.0;}}
+\L{\LB{______\}}}
+\L{\LB{}}
+\L{\LB{______\V{binpreset}=\V{fpreset}\*2.0\*\V{num\_freq}\1\V{srate};}}
+\L{\LB{______\V{minbin}=\V{binpreset}\-\V{nbins};}}
+\L{\LB{______\K{if}_(\V{minbin}\<0)_\V{minbin}=0;}}
+\L{\LB{______\V{maxbin}=\V{binpreset}+\V{nbins};}}
+\L{\LB{______\K{if}_(\V{maxbin}\>\V{num\_freq})_\V{maxbin}=\V{num\_freq};}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* copy short data to float data \*\1\CE{}}}
+\L{\LB{______\K{for}_(\V{i}=0;\V{i}\<\V{num\_points};\V{i}++)_\V{data}[\V{i}]=\V{datas}[\V{i}];}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* remove the spectral lines from the data set \*\1\CE{}}}
+\L{\LB{______\V{remove\_spectral\_lines}(\V{data},\V{num\_points},\V{padded\_length},\V{nwdt},\V{num\_win},\V{max\_lines},}}
+\L{\LB{_________________\V{maxpass},\&\V{num\_removed},\V{line\_list},\V{mtap\_spec\_init},\V{mtap\_spec\_final},0,\V{minbin},\V{maxbin});}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* if we fail to remove a line, amplitude set to zero, phase RETAINS PRIOR VALUE \*\1\CE{}}}
+\L{\LB{______\V{amp1}=0.0;__}}
+\L{\LB{______\C{}\1\* look in the list of removed lines for the right one \*\1\CE{}}}
+\L{\LB{______\K{for}_(\V{i}=0;\V{i}\<\V{num\_removed};\V{i}++)_\{}}
+\L{\LB{_________\C{}\1\* the closest bin to our estimated frequency \*\1\CE{}}}
+\L{\LB{_________\V{dbin}=\V{binpreset}\-\V{line\_list}[\V{i}].\V{index};}}
+\L{\LB{_________\K{if}_(\V{fabs}(\V{dbin})\<=\V{nbins})_\{}}
+\L{\LB{_____________\V{creal}=\V{line\_list}[\V{i}].\V{re}+\V{dbin}\*\V{line\_list}[\V{i}].\V{dcdbr}+}}
+\L{\LB{_______________0.5\*\V{dbin}\*\V{dbin}\*\V{line\_list}[\V{i}].\V{d2cdb2r};}}
+\L{\LB{____________\V{cimag}=\V{line\_list}[\V{i}].\V{im}+\V{dbin}\*\V{line\_list}[\V{i}].\V{dcdbi}+}}
+\L{\LB{_______________0.5\*\V{dbin}\*\V{dbin}\*\V{line\_list}[\V{i}].\V{d2cdb2i};}}
+\L{\LB{____________\V{amp1}=2.0\*\V{sqrt}(\V{creal}\*\V{creal}+\V{cimag}\*\V{cimag});}}
+\L{\LB{____________\V{phase1}=\V{atan2}(\V{cimag},\V{creal})+2.0\*\V{M\_PI}\*\V{fmod}(\V{fpreset}\*\V{time},1.0);}}
+\L{\LB{____________\K{break};}}
+\L{\LB{_________\}}}
+\L{\LB{______\}}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* save data in a circular buffers \*[0.\,.num\_display-1]  \*\1\CE{}}}
+\L{\LB{______\V{amp}[\V{top}]=\V{amp1};}}
+\L{\LB{______\V{phase}[\V{top}]=\V{FMOD2PI}(\V{phase1});}}
+\L{\LB{______\V{times}[\V{top}]=\V{time};}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* how many values are we going to output to the graph? \*\1\CE{}}}
+\L{\LB{______\V{nprint}=(\V{npass}\<\V{num\_display})?\V{npass}:\V{num\_display};}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* cut out a piece for the linear fit \*\1\CE{}}}
+\L{\LB{______\K{if}_(\V{npass}\>=2)_\{}}
+\L{\LB{}}
+\L{\LB{_________\C{}\1\* adjust the phases to avoid boundary jumps \*\1\CE{}}}
+\L{\LB{_________\V{offset}=0.0;}}
+\L{\LB{_________\V{index}=\V{MOD}(\V{top}\-\V{nprint}+1);}}
+\L{\LB{_________\V{linfitx}[0]=\V{times}[\V{index}];}}
+\L{\LB{_________\V{linfity}[0]=\V{phase}[\V{index}];}}
+\L{\LB{_________\K{for}_(\V{i}=1;\V{i}\<\V{nprint};\V{i}++)_\{}}
+\L{\LB{____________\V{index}=\V{MOD}(\V{top}+\V{i}\-\V{nprint}+1);}}
+\L{\LB{____________\V{linfitx}[\V{i}]=\V{times}[\V{index}];___}}
+\L{\LB{____________\K{if}_(\V{phase}[\V{index}]\-\V{phase}[\V{MOD}(\V{index}\-1)]\>\V{M\_PI})}}
+\L{\LB{_______________\V{offset}\-=2.0\*\V{M\_PI};}}
+\L{\LB{____________\K{else}_\K{if}_(\V{phase}[\V{index}]\-\V{phase}[\V{MOD}(\V{index}\-1)]\<\!\-\V{M\_PI})}}
+\L{\LB{_______________\V{offset}+=2.0\*\V{M\_PI};}}
+\L{\LB{____________\V{linfity}[\V{i}]=\V{phase}[\V{index}]+\V{offset};}}
+\L{\LB{_________\}}}
+\L{\LB{}}
+\L{\LB{_________\C{}\1\* do a robust linear fit \*\1\CE{}}}
+\L{\LB{_________\V{medfit}(\V{linfitx}\-1,\V{linfity}\-1,\V{nprint},\&\V{intercept},\&\V{slope},\&\V{deviation});}}
+\L{\LB{}}
+\L{\LB{_________\C{}\1\* now see what frequency the best fit corresponds to \*\1\CE{}}}
+\L{\LB{_________\V{ffit}=\V{fpreset}\-\V{slope}\1(2.0\*\V{M\_PI});}}
+\L{\LB{}}
+\L{\LB{_________\C{}\1\* if we are assuming a fixed frequency (not adapting) \*\1\CE{}}}
+\L{\LB{_________\K{if}_(!\V{estimate})_\{}}
+\L{\LB{____________\V{slope}=\V{intercept}=0.0;}}
+\L{\LB{_________\}}}
+\L{\LB{}}
+\L{\LB{_________\C{}\1\* print out amplitude if non-zero \*\1\CE{}}}
+\L{\LB{_________\V{maxamp}=0.0;}}
+\L{\LB{_________\K{for}_(\V{i}=0;\V{i}\<\V{nprint};\V{i}++)_\{}}
+\L{\LB{______________\V{index}=\V{MOD}(\V{top}+\V{i}\-\V{nprint}+1);}}
+\L{\LB{____________\K{if}_(\V{amp}[\V{index}]\>0.0)}}
+\L{\LB{________________\V{printf}(\S{}\"\%e\2t\%e\2n\"\SE{},\V{linfitx}[\V{i}],\V{amp}[\V{index}]);}}
+\L{\LB{____________\K{else}}}
+\L{\LB{_______________\C{}\1\* won\'t appear on the graph - out of bounds \*\1\CE{}}}
+\L{\LB{________________\V{printf}(\S{}\"\%e\2t\%f\2n\"\SE{},\V{linfitx}[\V{i}],\-1.0);}}
+\L{\LB{}}
+\L{\LB{____________\K{if}_(\V{amp}[\V{index}]\>\V{maxamp})_\V{maxamp}=\V{amp}[\V{index}];}}
+\L{\LB{_________\}}}
+\L{\LB{_________\C{}\1\* separate data sets \*\1\CE{}}}
+\L{\LB{_________\V{printf}(\S{}\"\&\2n\"\SE{});}}
+\L{\LB{_________\C{}\1\* print out phase  if non-zero amplitude \*\1\CE{}}}
+\L{\LB{_________\K{for}_(\V{i}=0;\V{i}\<\V{nprint};\V{i}++)_\{}}
+\L{\LB{____________\V{phase2}=\V{linfity}[\V{i}];}}
+\L{\LB{____________\V{phase2}=\V{FMOD2PI}((\V{phase2}\-\V{slope}\*\V{linfitx}[\V{i}]\-\V{intercept}));}}
+\L{\LB{____________\K{if}_(\V{phase2}\>\V{M\_PI})}}
+\L{\LB{_______________\V{phase2}\-=2.0\*\V{M\_PI};}}
+\L{\LB{____________\V{phase2}=(180.0\1\V{M\_PI})\*\V{phase2};}}
+\L{\LB{____________\V{index}=\V{MOD}(\V{top}+\V{i}\-\V{nprint}+1);}}
+\L{\LB{____________\K{if}_(\V{amp}[\V{index}]\>0.0)}}
+\L{\LB{_______________\V{printf}(\S{}\"\%.8e\2t\%.8f\2n\"\SE{},\V{linfitx}[\V{i}],\V{phase2});}}
+\L{\LB{____________\K{else}}}
+\L{\LB{_______________\C{}\1\* won\'t appear on the graph - out of bounds \*\1\CE{}}}
+\L{\LB{_______________\V{printf}(\S{}\"\%.8e\2t\%f\2n\"\SE{},\V{linfitx}[\V{i}],\-500.0);}}
+\L{\LB{_________\}}}
+\L{\LB{______\C{}\1\* set up scale of the x-axis \*\1\CE{}}}
+\L{\LB{______\V{t1}=\V{linfitx}[0];}}
+\L{\LB{______\V{displaytime}=\V{num\_display}\*(\V{num\_points}\1\V{srate});}}
+\L{\LB{______\C{}\1\* set up scale of the amplitude graph y-axis \*\1\CE{}}}
+\L{\LB{______\K{if}_(\V{maxamp}\>0.9\*\V{displayamp})_\{_}}
+\L{\LB{_________\V{displayamp}=1.3\*\V{maxamp};}}
+\L{\LB{_________\V{fprintf}(\V{stderr},\S{}\"\2aTracker:_Line_at_\%f_Hz,_amplitude_just_increased\2n\"\SE{},\V{fpreset});}}
+\L{\LB{______\}}}
+\L{\LB{______\K{else}_\K{if}_(\V{maxamp}\<0.4\*\V{displayamp}_\&\&_\V{maxamp}\>0.0)}}
+\L{\LB{_________\V{displayamp}=1.3\*\V{maxamp};___________}}
+\L{\LB{}}
+\L{\LB{______\V{graphout}(\V{t1},\V{t1}+\V{displaytime},\V{ffit},\V{displayamp});}}
+\L{\LB{______\V{fflush}(\V{stdout});}}
+\L{\LB{______\}}}
+\L{\LB{___}}
+\L{\LB{______\C{}\1\* now display set, then kill set \*\1\CE{}}}
+\L{\LB{______\V{npass}++;}}
+\L{\LB{______\V{top}=\V{MOD}(\V{top}+1);}}
+\L{\LB{___\}}}
+\L{\LB{}}
+\L{\LB{___\K{return}_0;}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{\K{void}_\V{graphout}(\K{float}_\V{t1},\K{float}_\V{t2},\K{float}_\V{freq},\K{float}_\V{displayamp})_\{}}
+\L{\LB{___\K{static}_\K{int}_\V{count}=0;}}
+\L{\LB{___\K{int}_\V{xmaj},\V{xmin};}}
+\L{\LB{___\K{float}_\V{ymaj}=0.0,\V{ymin}=1.0;}}
+\L{\LB{___\K{int}_\V{amprec};}}
+\L{\LB{}}
+\L{\LB{___\V{xmin}=(\V{t2}\-\V{t1})\110.0;}}
+\L{\LB{___\V{xmaj}=5\*\V{xmin};}}
+\L{\LB{}}
+\L{\LB{___\K{if}_(\V{ymin}\<=\V{displayamp}\110.0)}}
+\L{\LB{______\K{while}_(\V{ymin}\<=\V{displayamp}\110.0)_\{}}
+\L{\LB{_________\V{ymin}\*=2.0;}}
+\L{\LB{_________\V{ymaj}=4.0\*\V{ymin};}}
+\L{\LB{______\}}}
+\L{\LB{___\K{else}}}
+\L{\LB{______\K{while}_(\V{ymin}\>\V{displayamp}\110.0)_\{}}
+\L{\LB{_________\V{ymin}\1=10.0;}}
+\L{\LB{_________\V{ymaj}=5.0\*\V{ymin};}}
+\L{\LB{______\}}}
+\L{\LB{___\V{amprec}=(\K{int})\V{log10}(\V{ymaj});}}
+\L{\LB{___\K{if}_(\V{amprec}\>1)}}
+\L{\LB{______\V{amprec}=0;}}
+\L{\LB{___\K{else}}}
+\L{\LB{______\V{amprec}=1\-\V{amprec};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* end of set marker \*\1\CE{}}}
+\L{\LB{___\V{printf}(\S{}\"\&\2n\"\SE{});}}
+\L{\LB{}}
+\L{\LB{___\K{if}_(\V{count}==0)_\{}}
+\L{\LB{______\C{}\1\* first time we draw the plot \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@doublebuffer_true\2n\"\SE{});}}
+\L{\LB{______\V{printf}(\S{}\"@focus_off\2n\"\SE{});}}
+\L{\LB{___\}}}
+\L{\LB{___\V{printf}(\S{}\"@with_g0\2n\"\SE{});___}}
+\L{\LB{___\V{printf}(\S{}\"@move_g0.s1_to_g1.s0\2n\"\SE{});}}
+\L{\LB{___\V{printf}(\S{}\"@title_\2\"\2\2\-Line_Tracker\2\"\2n\"\SE{});}}
+\L{\LB{___\V{printf}(\S{}\"@subtitle_\2\"best_estimate_f=\%f_Hz\2\"\2n\"\SE{},\V{freq});}}
+\L{\LB{___\V{printf}(\S{}\"@s0_linestyle_0\2n\"\SE{});}}
+\L{\LB{___\V{printf}(\S{}\"@s0_symbol_color_4\2n\"\SE{});}}
+\L{\LB{___\V{printf}(\S{}\"@s0_symbol_2\2n\"\SE{});}}
+\L{\LB{___\V{printf}(\S{}\"@s0_symbol_size_0.28\2n\"\SE{});}}
+\L{\LB{___\V{printf}(\S{}\"@s0_symbol_fill_1\2n\"\SE{});}}
+\L{\LB{___\V{printf}(\S{}\"@view_0.15,_0.53,_0.95,_0.90\2n\"\SE{});}}
+\L{\LB{___\C{}\1\* set up x-axis for amplitude \*\1\CE{}_}}
+\L{\LB{___\V{printf}(\S{}\"@world_xmin_\%e\2n\"\SE{},\V{t1});}}
+\L{\LB{___\V{printf}(\S{}\"@world_xmax_\%e\2n\"\SE{},\V{t2});}}
+\L{\LB{___\V{printf}(\S{}\"@xaxis_tick_major_\%d\2n\"\SE{},\V{xmaj});}}
+\L{\LB{___\V{printf}(\S{}\"@xaxis_tick_minor_\%d\2n\"\SE{},\V{xmin});}}
+\L{\LB{___\V{printf}(\S{}\"@xaxis_ticklabel_prec_1\2n\"\SE{});}}
+\L{\LB{___\V{printf}(\S{}\"@xaxis_ticklabel_off\2n\"\SE{});}}
+\L{\LB{___\V{printf}(\S{}\"@yaxis_label_\2\"\2\2\-amplitude_(ADC_counts)\2\"\2n\"\SE{});}}
+\L{\LB{___\V{printf}(\S{}\"@world_ymin_\%e\2n\"\SE{},0.0);}}
+\L{\LB{___\V{printf}(\S{}\"@world_ymax_\%e\2n\"\SE{},\V{displayamp});}}
+\L{\LB{___\V{printf}(\S{}\"@yaxis_tick_major_\%e\2n\"\SE{},\V{ymaj});}}
+\L{\LB{___\V{printf}(\S{}\"@yaxis_tick_minor_\%e\2n\"\SE{},\V{ymin});}}
+\L{\LB{___\K{if}_(\V{amprec}\<4)}}
+\L{\LB{______\V{printf}(\S{}\"@yaxis_ticklabel_prec_\%d\2n\"\SE{},\V{amprec});}}
+\L{\LB{___\K{else}_\{}}
+\L{\LB{______\V{printf}(\S{}\"@yaxis_ticklabel_format_general\2n\"\SE{});}}
+\L{\LB{______\V{printf}(\S{}\"@yaxis_ticklabel_prec_\%d\2n\"\SE{},1);}}
+\L{\LB{___\}}}
+\L{\LB{___\C{}\1\* now do phase plot \*\1\CE{}}}
+\L{\LB{___\V{printf}(\S{}\"@with_g1\2n\"\SE{});}}
+\L{\LB{___\V{printf}(\S{}\"@s0_linestyle_0\2n\"\SE{});}}
+\L{\LB{___\V{printf}(\S{}\"@s0_linewidth_0\2n\"\SE{});}}
+\L{\LB{___\V{printf}(\S{}\"@s0_symbol_color_2\2n\"\SE{});}}
+\L{\LB{___\V{printf}(\S{}\"@s0_symbol_2\2n\"\SE{});}}
+\L{\LB{___\V{printf}(\S{}\"@s0_symbol_size_0.28\2n\"\SE{});}}
+\L{\LB{___\V{printf}(\S{}\"@s0_symbol_fill_1\2n\"\SE{});}}
+\L{\LB{___\V{printf}(\S{}\"@view_0.15,_0.1,_0.95,_0.47\2n\"\SE{});}}
+\L{\LB{___\C{}\1\* set up x-axis for phase \*\1\CE{}_}}
+\L{\LB{___\V{printf}(\S{}\"@world_xmin_\%e\2n\"\SE{},\V{t1});}}
+\L{\LB{___\V{printf}(\S{}\"@world_xmax_\%e\2n\"\SE{},\V{t2});}}
+\L{\LB{___\V{printf}(\S{}\"@xaxis_tick_major_\%d\2n\"\SE{},\V{xmaj});}}
+\L{\LB{___\V{printf}(\S{}\"@xaxis_tick_minor_\%d\2n\"\SE{},\V{xmin});}}
+\L{\LB{___\V{printf}(\S{}\"@xaxis_ticklabel_prec_1\2n\"\SE{});}}
+\L{\LB{___\V{printf}(\S{}\"@xaxis_label_\2\"\2\2\-time_(sec)\2\"\2n\"\SE{});}}
+\L{\LB{___\C{}\1\* set up y-axis for phase \*\1\CE{}}}
+\L{\LB{___\V{printf}(\S{}\"@world_ymin_\%e\2n\"\SE{},\-180.0);}}
+\L{\LB{___\V{printf}(\S{}\"@world_ymax_\%e\2n\"\SE{},180.0);}}
+\L{\LB{___\V{printf}(\S{}\"@yaxis_tick_major_90\2n\"\SE{});}}
+\L{\LB{___\V{printf}(\S{}\"@yaxis_tick_minor_45\2n\"\SE{});}}
+\L{\LB{___\V{printf}(\S{}\"@yaxis_ticklabel_prec_0\2n\"\SE{});}}
+\L{\LB{___\V{printf}(\S{}\"@yaxis_label_\2\"\2\2\-phase_(degrees)\2\"\2n\"\SE{});}}
+\L{\LB{___\V{printf}(\S{}\"@xaxis_label_\2\"\2\2\-time_(sec)\2\"\2n\"\SE{});}}
+\L{\LB{___\C{}\1\* draw plot \*\1\CE{}}}
+\L{\LB{___\V{printf}(\S{}\"@redraw\2n\"\SE{});}}
+\L{\LB{___\V{printf}(\S{}\"@kill_s0\2n\"\SE{});}}
+\L{\LB{___\V{printf}(\S{}\"@with_g0\2n\"\SE{});}}
+\L{\LB{___\V{printf}(\S{}\"@kill_s0\2n\"\SE{});}}
+\L{\LB{_________\V{count}++;}}
+\L{\LB{___\K{return};}}
+\L{\LB{\}}}

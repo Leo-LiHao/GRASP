@@ -1,0 +1,126 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_stochastic\1monte\_carlo.c},{11:59},{Jan 23 1998}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\C{}\1\* main program to illustrate monte\_carlo() \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{\K{void}_\V{graphout}(\K{float},\K{float},\K{int});}}
+\L{\LB{}}
+\L{\LB{\K{\#define}_\V{DETECTORS\_FILE}_\S{}\"detectors.dat\"\SE{}_\C{}\1\* file containing detector info \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{SITE1\_CHOICE}_1_______\C{}\1\* identification number for site 1 \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{SITE2\_CHOICE}_2_______\C{}\1\* identification number for site 2 \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{FAKE\_SB}_1____________\C{}\1\* 1: simulate stochastic background \*\1\CE{}}}
+\L{\LB{_____________________________\C{}\1\* 0: no stochastic background \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{FAKE\_NOISE1}_0________\C{}\1\* 1: simulate detector noise at site 1 \*\1\CE{}}}
+\L{\LB{_____________________________\C{}\1\* 0: no detector noise at site 1 \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{FAKE\_NOISE2}_0________\C{}\1\* 1: simulate detector noise at site 2 \*\1\CE{}}}
+\L{\LB{_____________________________\C{}\1\* 0: no detector noise at site 2 \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{WHITEN\_OUT1}_1________\C{}\1\* 1: whiten output at site 1 \*\1\CE{}}}
+\L{\LB{_____________________________\C{}\1\* 0: don\'t whiten output at site 1 \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{WHITEN\_OUT2}_1________\C{}\1\* 1: whiten output at site 2 \*\1\CE{}}}
+\L{\LB{_____________________________\C{}\1\* 0: don\'t whiten output at site 2 \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{N}_65536______________\C{}\1\* number of data points \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{DELTA\_T}_(5.0e\-5)_____\C{}\1\* sampling period (in sec) \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{OMEGA\_0}_(1.0e\-3)_____\C{}\1\* omega\_0 \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{F\_LOW}_(5.0)__________\C{}\1\* minimum frequency (in Hz) \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{F\_HIGH}_(5.0e3)_______\C{}\1\* maximum frequency (in Hz) \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{NUM\_RUNS}_5___________\C{}\1\* number of runs \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}(\K{int}_\V{argc},\K{char}_\*\*\V{argv})}}
+\L{\LB{\{}}
+\L{\LB{__\K{int}_\V{i},\V{j},\V{last}=0,\V{seed}=_\-17;}}
+\L{\LB{__\K{float}_\V{delta\_f},\V{tstart}=0.0,\V{time\_now};}}
+\L{\LB{}}
+\L{\LB{__\K{float}_\V{site1\_parameters}[9],\V{site2\_parameters}[9];}}
+\L{\LB{__\K{char}_\V{site1\_name}[100],\V{noise1\_file}[100],\V{whiten1\_file}[100];}}
+\L{\LB{__\K{char}_\V{site2\_name}[100],\V{noise2\_file}[100],\V{whiten2\_file}[100];}}
+\L{\LB{}}
+\L{\LB{__\K{double}_\*\V{power1},\*\V{power2},\*\V{whiten1},\*\V{whiten2},\*\V{gamma12};}}
+\L{\LB{__\K{float}_\*\V{out1},\*\V{out2};}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* ALLOCATE MEMORY \*\1\CE{}_}}
+\L{\LB{__\V{power1}=(\K{double}_\*)\V{malloc}((\V{N}\12)\*\K{sizeof}(\K{double}));}}
+\L{\LB{__\V{power2}=(\K{double}_\*)\V{malloc}((\V{N}\12)\*\K{sizeof}(\K{double}));}}
+\L{\LB{__\V{whiten1}=(\K{double}_\*)\V{malloc}(\V{N}\*\K{sizeof}(\K{double}));}}
+\L{\LB{__\V{whiten2}=(\K{double}_\*)\V{malloc}(\V{N}\*\K{sizeof}(\K{double}));}}
+\L{\LB{__\V{gamma12}=(\K{double}_\*)\V{malloc}((\V{N}\12)\*\K{sizeof}(\K{double}));}}
+\L{\LB{__\V{out1}=(\K{float}_\*)\V{malloc}(\V{N}\*\K{sizeof}(\K{float}));}}
+\L{\LB{__\V{out2}=(\K{float}_\*)\V{malloc}(\V{N}\*\K{sizeof}(\K{float}));}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* IDENTITY WHITENING FILTERS (IF WHITEN\_OUT1=WHITEN\_OUT2=0) \*\1\CE{}}}
+\L{\LB{__\K{for}_(\V{i}=0;\V{i}\<\V{N}\12;\V{i}++)_\{}}
+\L{\LB{____\V{whiten1}[2\*\V{i}]=\V{whiten2}[2\*\V{i}]=1.0;}}
+\L{\LB{____\V{whiten1}[2\*\V{i}+1]=\V{whiten2}[2\*\V{i}+1]=0.0;}}
+\L{\LB{__\}}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* CALL DETECTOR\_SITE() TO GET SITE PARAMETER INFORMATION \*\1\CE{}}}
+\L{\LB{__\V{detector\_site}(\V{DETECTORS\_FILE},\V{SITE1\_CHOICE},\V{site1\_parameters},\V{site1\_name},}}
+\L{\LB{}\Tab{16}{\V{noise1\_file},\V{whiten1\_file});}}
+\L{\LB{__\V{detector\_site}(\V{DETECTORS\_FILE},\V{SITE2\_CHOICE},\V{site2\_parameters},\V{site2\_name},}}
+\L{\LB{}\Tab{16}{\V{noise2\_file},\V{whiten2\_file});}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* CONSTRUCT NOISE POWER SPECTRA, OVERLAP REDUCTION FUNCTION, AND \*\1\CE{}}}
+\L{\LB{__\C{}\1\* (NON-TRIVIAL) WHITENING FILTERS, IF DESIRED \*\1\CE{}}}
+\L{\LB{__\V{delta\_f}=(\K{float})(1.0\1(\V{N}\*\V{DELTA\_T}));}}
+\L{\LB{__\V{noise\_power}(\V{noise1\_file},\V{N}\12,\V{delta\_f},\V{power1});}}
+\L{\LB{__\V{noise\_power}(\V{noise2\_file},\V{N}\12,\V{delta\_f},\V{power2});}}
+\L{\LB{__\V{overlap}(\V{site1\_parameters},\V{site2\_parameters},\V{N}\12,\V{delta\_f},\V{gamma12});}}
+\L{\LB{__\K{if}_(\V{WHITEN\_OUT1}==1)_\V{whiten}(\V{whiten1\_file},\V{N}\12,\V{delta\_f},\V{whiten1});}}
+\L{\LB{__\K{if}_(\V{WHITEN\_OUT2}==1)_\V{whiten}(\V{whiten2\_file},\V{N}\12,\V{delta\_f},\V{whiten2});}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* SIMULATE STOCHASTIC BACKGROUND AND\1OR DETECTOR NOISE \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{__\K{for}_(\V{j}=0;\V{j}\<\V{NUM\_RUNS};\V{j}++)_\{}}
+\L{\LB{____\V{monte\_carlo}(\V{FAKE\_SB},\V{FAKE\_NOISE1},\V{FAKE\_NOISE2},\V{N},\V{DELTA\_T},\V{OMEGA\_0},\V{F\_LOW},\V{F\_HIGH},}}
+\L{\LB{}\Tab{16}{\V{gamma12},\V{power1},\V{power2},\V{whiten1},\V{whiten2},\V{out1},\V{out2},\&\V{seed});}}
+\L{\LB{}}
+\L{\LB{____\C{}\1\* DISPLAY OUTPUT USING XMGR \*\1\CE{}}}
+\L{\LB{____\K{for}_(\V{i}=0;\V{i}\<\V{N};\V{i}++)_\{}}
+\L{\LB{______\V{time\_now}=\V{tstart}+\V{i}\*\V{DELTA\_T};}}
+\L{\LB{______\V{printf}(\S{}\"\%e\2t\%e\2n\"\SE{},\V{time\_now},\V{out1}[\V{i}]);}}
+\L{\LB{____\}}}
+\L{\LB{____\K{if}_(\V{j}==\V{NUM\_RUNS}\-1)_\V{last}=1;}}
+\L{\LB{____\V{graphout}(\V{tstart},\V{tstart}+\V{N}\*\V{DELTA\_T},\V{last});}}
+\L{\LB{}}
+\L{\LB{____\C{}\1\* UPDATE TSTART \*\1\CE{}}}
+\L{\LB{____\V{tstart}+=\V{N}\*\V{DELTA\_T};}}
+\L{\LB{}}
+\L{\LB{__\}_\C{}\1\* end for (j=0;j\<NUM\_RUNS;j++) \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{__\K{return}_0;}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{\K{void}_\V{graphout}(\K{float}_\V{xmin},\K{float}_\V{xmax},\K{int}_\V{last})}}
+\L{\LB{\{}}
+\L{\LB{__\K{static}_\K{int}_\V{first}=1;}}
+\L{\LB{__\V{printf}(\S{}\"\&\2n\"\SE{});}}
+\L{\LB{}}
+\L{\LB{__\K{if}_(\V{first})_\{_}}
+\L{\LB{}}
+\L{\LB{____\C{}\1\* first time we draw plot \*\1\CE{}}}
+\L{\LB{____\V{printf}(\S{}\"@doublebuffer_true\2n\"\SE{});_\C{}\1\* keep display from flashing \*\1\CE{}}}
+\L{\LB{____\V{printf}(\S{}\"@focus_off\2n\"\SE{});__________}}
+\L{\LB{____\V{printf}(\S{}\"@world_xmin_\%e\2n\"\SE{},\V{xmin});_}}
+\L{\LB{____\V{printf}(\S{}\"@world_xmax_\%e\2n\"\SE{},\V{xmax});_}}
+\L{\LB{____\V{printf}(\S{}\"@autoscale_yaxes\2n\"\SE{});____}}
+\L{\LB{____\V{printf}(\S{}\"@xaxis_label_\2\"t_(sec)\2\"\2n\"\SE{});_}}
+\L{\LB{____\V{printf}(\S{}\"@title_\2\"Simulated_Detector_Ouput\2\"\2n\"\SE{});_}}
+\L{\LB{____\V{printf}(\S{}\"@subtitle_\2\"(stochastic_background\-\-whitened)\2\"\2n\"\SE{});}}
+\L{\LB{____\V{printf}(\S{}\"@redraw_\2n\"\SE{});}}
+\L{\LB{____\K{if}_(!\V{last})_\V{printf}(\S{}\"@kill_s0\2n\"\SE{});_\C{}\1\* kill set; ready to read again \*\1\CE{}}}
+\L{\LB{____}}
+\L{\LB{____\V{first}=0;}}
+\L{\LB{__\}}}
+\L{\LB{__\K{else}_\{}}
+\L{\LB{}}
+\L{\LB{____\C{}\1\* other timeOAs we draw plot \*\1\CE{}}}
+\L{\LB{____\V{printf}(\S{}\"@world_xmin_\%e\2n\"\SE{},\V{xmin});_}}
+\L{\LB{____\V{printf}(\S{}\"@world_xmax_\%e\2n\"\SE{},\V{xmax});_}}
+\L{\LB{____\V{printf}(\S{}\"@autoscale_yaxes\2n\"\SE{});____}}
+\L{\LB{____\K{if}_(!\V{last})_\V{printf}(\S{}\"@kill_s0\2n\"\SE{});_\C{}\1\* kill set; ready to read again \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{__\}}}
+\L{\LB{_}}
+\L{\LB{__\K{return};}}
+\L{\LB{\}}}

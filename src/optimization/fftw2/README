@@ -1,0 +1,40 @@
+This contains functions that replace the Numerical Recipes realft()
+function.  These functions use the optimized FFTW version 2 routines
+which may be obtained from the site:
+	http://theory.lcs.mid.edu/~fftw/
+
+To install FFTW 2.1.1:
+
+(1) get the source code from MIT
+(2) unpack the tar file
+(3) from the fftw-2.1.1 directory, do
+           ./configure --enable-float --prefix /path/to/installation/directory
+            make
+            make install
+
+This creates a single-precision version of FFTW.
+
+(4) in the GRASP directory src/optimization/fftw2:
+    edit the appropriate makefile (for example, makefile.solaris or
+    makefile.linux)
+(5) type make -f makefile.system-type
+    This will create realft_fftw2.o
+(6) Test your optimized FFTW routine by doing
+
+    realft_fftw_test1 > ! test1.out
+    realft_fftw_test2 > ! test2.out
+    paste test1.out test2.out | more
+    (the outputs should agree to floating point precision)
+
+The module realft_fftw.c/o contains a replacement for the Numerical
+Recipes realft() routine which takes identical arguments and internally
+makes use of FFTW to do the fft.  On first entry, and anytime that the
+size of the array changes, it prints a notification message to standard
+error.
+
+The executables realft_fftw_test1 and realft_fftw_test2 are identical
+source code, but the first is linked with the Numerical Recipes library
+and the second is linked with the realft_fftw.o routine.  By comparing
+the outputs of these programs (which do one forward and one inverse FFT),
+which are identical except for rounding error, you can verify that the
+replacement for the realft() routine is working correctly.

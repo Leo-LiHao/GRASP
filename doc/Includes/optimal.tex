@@ -1,0 +1,202 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_inspiral\1optimal.c},{13:53},{Jun 30 1999}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{\K{\#define}_\V{NPOINT}_131072______\C{}\1\* The size of our segments of data (13.1 secs)            \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{FLO}_120.0__________\C{}\1\* The low frequency cutoff for filtering                  \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{HSCALE}_1.e21_______\C{}\1\* A convenient scaling factor; results independent of it  \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{MIN\_INTO\_LOCK}_3.0__\C{}\1\* Number of minutes to skip into each locked section      \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{SAFETY}_1000________\C{}\1\* Padding safety factor to avoid wraparound errors        \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{PR2}_8______________\C{}\1\* Value of p for the R\^2 splitup test                     \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}()_\{}}
+\L{\LB{___\K{void}_\V{realft}(\K{float}\*,\K{unsigned}_\K{long},\K{int});}}
+\L{\LB{___\K{int}_\V{i},\V{code}=0,\V{npoint},\V{remain}=0,\V{maxi},\V{chirplen},\V{needed},\V{diff},\V{impulseoff},\V{chirppoints},\V{indices}[\V{PR2}];}}
+\L{\LB{___\K{float}_\V{distance},\V{snr\_max},\V{srate}=9868.4208984375,\V{tstart},\*\V{mean\_pow\_spec},\V{timeoff},\V{timestart};}}
+\L{\LB{___\K{float}_\*\V{data},\*\V{htilde},\*\V{output90},\*\V{output0},\*\V{chirp0},\*\V{chirp90},\*\V{ch0tilde},\*\V{ch90tilde};}}
+\L{\LB{___\K{float}_\V{n0},\V{n90},\V{inverse\_distance\_scale},\V{decaytime},\*\V{twice\_inv\_noise},\V{datastart},\V{tc};}}
+\L{\LB{___\K{float}_\V{lin0},\V{lin90},\V{invMpc\_inject},\V{varsplit},\V{stats}[2\*\V{PR2}],\V{gammq}(\K{float},\K{float}),\V{var},\*\V{response};}}
+\L{\LB{___\K{double}_\V{decay}=0.0,\V{norm},\V{prob};}}
+\L{\LB{___\K{short}_\*\V{datas};}}
+\L{\LB{___\V{FILE}_\*\V{fpifo},\*\V{fpss},\*\V{fplock};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* open the IFO output file, lock file, and swept-sine file \*\1\CE{}}}
+\L{\LB{___\V{fpifo}=\V{grasp\_open}(\S{}\"GRASP\_DATAPATH\"\SE{},\S{}\"channel.0\"\SE{},\S{}\"r\"\SE{});}}
+\L{\LB{___\V{fplock}=\V{grasp\_open}(\S{}\"GRASP\_DATAPATH\"\SE{},\S{}\"channel.10\"\SE{},\S{}\"r\"\SE{});}}
+\L{\LB{___\V{fpss}=\V{grasp\_open}(\S{}\"GRASP\_DATAPATH\"\SE{},\S{}\"swept\-sine.ascii\"\SE{},\S{}\"r\"\SE{});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* number of points to sample and fft (power of 2) \*\1\CE{}}}
+\L{\LB{___\V{needed}=\V{npoint}=\V{NPOINT};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* stores ADC data as short integers \*\1\CE{}}}
+\L{\LB{___\V{datas}=(\K{short}\*)\V{malloc}(\K{sizeof}(\K{short})\*\V{npoint});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* stores ADC data in time \& freq domain, as floats \*\1\CE{}}}
+\L{\LB{___\V{data}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{npoint});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* The phase 0 and phase pi\12 chirps, in time domain \*\1\CE{}}}
+\L{\LB{___\V{chirp0}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{npoint});}}
+\L{\LB{___\V{chirp90}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{npoint});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* Orthogonalized phase 0 and phase pi\12 chirps, in frequency domain \*\1\CE{}}}
+\L{\LB{___\V{ch0tilde}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{npoint});}}
+\L{\LB{___\V{ch90tilde}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{npoint});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* The response function (transfer function) of the interferometer \*\1\CE{}}}
+\L{\LB{___\V{response}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*(\V{npoint}+2));}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* The gravity wave signal, in the frequency domain \*\1\CE{}}}
+\L{\LB{___\V{htilde}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{npoint});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* The autoregressive-mean averaged noise power spectrum \*\1\CE{}}}
+\L{\LB{___\V{mean\_pow\_spec}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*(\V{npoint}\12+1));}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* Twice the inverse of the mean noise power spectrum \*\1\CE{}}}
+\L{\LB{___\V{twice\_inv\_noise}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*(\V{npoint}\12+1));}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* Ouput of matched filters for phase0 and phase pi\12, in time domain, and temp storage \*\1\CE{}}}
+\L{\LB{___\C{}\1\* factor of 2 in size of output0 because it is used in splitup\_freq4 for temp storage \*\1\CE{}}}
+\L{\LB{___\V{output0}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*2\*\V{npoint});}}
+\L{\LB{___\V{output90}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{npoint});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* get the response function, and put in scaling factor \*\1\CE{}}}
+\L{\LB{___\V{normalize\_gw}(\V{fpss},\V{npoint},\V{srate},\V{response});}}
+\L{\LB{___\K{for}_(\V{i}=0;\V{i}\<\V{npoint}+2;\V{i}++)}}
+\L{\LB{______\V{response}[\V{i}]\*=\V{HSCALE}\1\V{ARMLENGTH\_1994};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* manufacture two chirps (dimensionless strain at 1 Mpc distance) \*\1\CE{}}}
+\L{\LB{___\V{make\_filters}(1.4,1.4,\V{chirp0},\V{chirp90},\V{FLO},\V{npoint},\V{srate},\&\V{chirppoints},\&\V{tc},0,4);}}
+\L{\LB{___\C{}\1\* normalization of next line comes from GRASP (5.6.3) and (5.6.4) \*\1\CE{}}}
+\L{\LB{___\V{inverse\_distance\_scale}=2.0\*\V{HSCALE}\*(\V{TSOLAR}\*\V{C\_LIGHT}\1\V{MPC});}}
+\L{\LB{___\K{for}_(\V{i}=0;\V{i}\<\V{chirppoints};\V{i}++)\{}}
+\L{\LB{______\V{ch0tilde}[\V{i}]=\V{chirp0}[\V{i}]\*=\V{inverse\_distance\_scale};}}
+\L{\LB{______\V{ch90tilde}[\V{i}]=\V{chirp90}[\V{i}]\*=\V{inverse\_distance\_scale};}}
+\L{\LB{___\}}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* zero out the unused elements of the tilde arrays \*\1\CE{}}}
+\L{\LB{___\K{for}_(\V{i}=\V{chirppoints};\V{i}\<\V{npoint};\V{i}++)}}
+\L{\LB{______\V{ch0tilde}[\V{i}]=\V{ch90tilde}[\V{i}]=0.0;}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* and FFT the chirps \*\1\CE{}}}
+\L{\LB{___\V{realft}(\V{ch0tilde}\-1,\V{npoint},1);}}
+\L{\LB{___\V{realft}(\V{ch90tilde}\-1,\V{npoint},1);}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* set length of template including a safety margin \*\1\CE{}}}
+\L{\LB{___\V{chirplen}=\V{chirppoints}+\V{SAFETY};}}
+\L{\LB{___\K{if}_(\V{chirplen}\>\V{npoint})_\V{abort}();}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* This is the main program loop, which aquires data, then filters it \*\1\CE{}}}
+\L{\LB{___\K{while}_(1)_\{}}
+\L{\LB{}\Tab{8}{}}
+\L{\LB{______\C{}\1\* Seek MIN\_INTO\_LOCK minutes into a locked stretch of data \*\1\CE{}}}
+\L{\LB{______\K{while}_(\V{remain}\<\V{needed})_\{}}
+\L{\LB{_________\V{code}=\V{get\_data}(\V{fpifo},\V{fplock},\&\V{tstart},\V{MIN\_INTO\_LOCK}\*60\*\V{srate},}}
+\L{\LB{_______________________\V{datas},\&\V{remain},\&\V{srate},1);___}}
+\L{\LB{_________\K{if}_(\V{code}==0)_\K{return}_0;}}
+\L{\LB{______\}}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* if just entering a new locked stretch, reset averaging over power spectrum \*\1\CE{}}}
+\L{\LB{______\K{if}_(\V{code}==1)_\{}}
+\L{\LB{_________\V{norm}=0.0;}}
+\L{\LB{_________\V{clear}(\V{mean\_pow\_spec},\V{npoint}\12+1,1);}}
+\L{\LB{}}
+\L{\LB{_________\C{}\1\* decay time for spectrum, in sec.  Set to 15x length of npoint sample \*\1\CE{}}}
+\L{\LB{_________\V{decaytime}=15.0\*\V{npoint}\1\V{srate};}}
+\L{\LB{_________\V{decay}=\V{exp}(\-1.0\*\V{npoint}\1(\V{srate}\*\V{decaytime}));}}
+\L{\LB{______\}}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* Get the next needed samples of data \*\1\CE{}}}
+\L{\LB{______\V{diff}=\V{npoint}\-\V{needed};}}
+\L{\LB{______\V{code}=\V{get\_data}(\V{fpifo},\V{fplock},\&\V{tstart},\V{needed},\V{datas}+\V{diff},\&\V{remain},\&\V{srate},0);}}
+\L{\LB{______\V{datastart}=\V{tstart}\-\V{diff}\1\V{srate};}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* copy integer data into floats \*\1\CE{}}}
+\L{\LB{______\K{for}_(\V{i}=0;\V{i}\<\V{npoint};\V{i}++)_\V{data}[\V{i}]=\V{datas}[\V{i}];}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* inject signal in time domain (note output0[\,] used as temp storage only) \*\1\CE{}}}
+\L{\LB{______\V{invMpc\_inject}=0.0;___\C{}\1\* To inject a signal at 10 kpc, set this to 100.0 \*\1\CE{}}}
+\L{\LB{______\V{time\_inject\_chirp}(1.0,0.0,12345,\V{invMpc\_inject},\V{chirp0},\V{chirp90},\V{data},}}
+\L{\LB{________________________\V{response},\V{output0},\V{npoint});}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* find the FFT of data\*\1\CE{}}}
+\L{\LB{______\V{realft}(\V{data}\-1,\V{npoint},1);}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* normalized delta-L\1L tilde \*\1\CE{}}}
+\L{\LB{______\V{product}(\V{htilde},\V{data},\V{response},\V{npoint}\12);}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* update the inverse of the auto-regressive-mean power-spectrum \*\1\CE{}}}
+\L{\LB{______\V{avg\_inv\_spec}(\V{FLO},\V{srate},\V{npoint},\V{decay},\&\V{norm},\V{htilde},\V{mean\_pow\_spec},\V{twice\_inv\_noise});}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* inject a signal in frequency domain, if desired \*\1\CE{}}}
+\L{\LB{______\V{invMpc\_inject}=0.0;___\C{}\1\* For a signal at 10 kpc, set this to 100.0, else 0.0 \*\1\CE{}}}
+\L{\LB{______\V{freq\_inject\_chirp}(\-0.406,0.9135,23456,\V{invMpc\_inject},\V{ch0tilde},\V{ch90tilde},\V{htilde},}}
+\L{\LB{________________________\V{npoint});}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* orthogonalize the chirps: we never modify ch0tilde, only ch90tilde \*\1\CE{}}}
+\L{\LB{______\V{orthonormalize}(\V{ch0tilde},\V{ch90tilde},\V{twice\_inv\_noise},\V{npoint},\&\V{n0},\&\V{n90});}}
+\L{\LB{__}}
+\L{\LB{______\C{}\1\* distance scale Mpc for SNR=1 \*\1\CE{}}}
+\L{\LB{______\V{distance}=\V{sqrt}(1.0\1(\V{n0}\*\V{n0})+1.0\1(\V{n90}\*\V{n90}));}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* find the moment at which SNR is a maximum \*\1\CE{}}}
+\L{\LB{______\V{find\_chirp}(\V{htilde},\V{ch0tilde},\V{ch90tilde},\V{twice\_inv\_noise},\V{n0},\V{n90},\V{output0},\V{output90},}}
+\L{\LB{_________________\V{npoint},\V{chirplen},\&\V{maxi},\&\V{snr\_max},\&\V{lin0},\&\V{lin90},\&\V{var});}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* identify when an impulse would have caused observed filter output \*\1\CE{}}}
+\L{\LB{______\V{impulseoff}=(\V{maxi}+\V{chirppoints})\%\V{npoint};}}
+\L{\LB{______\V{timeoff}=\V{datastart}+\V{impulseoff}\1\V{srate};}}
+\L{\LB{______\V{timestart}=\V{datastart}+\V{maxi}\1\V{srate};}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* if SNR greater than 5, then print details, else just short message \*\1\CE{}}}
+\L{\LB{______\K{if}_(\V{snr\_max}\<5.0)}}
+\L{\LB{_________\V{printf}(\S{}\"max_snr:_\%.2f_offset:_\%d_data_start:_\%.2f_sec._variance:_\%.5f\2n\"\SE{},}}
+\L{\LB{}\Tab{16}{\V{snr\_max},\V{maxi},\V{datastart},\V{var});}}
+\L{\LB{______\K{else}_\{}}
+\L{\LB{_________\C{}\1\* See if the nominal chirp can pass a frequency-space single-phase veto test \*\1\CE{}}}
+\L{\LB{_________\V{varsplit}=\V{splitup\_freq2}(\V{lin0}\*\V{n0}\1\V{sqrt}(2.0),\V{lin90}\*\V{n90}\1\V{sqrt}(2.0),\V{ch0tilde},}}
+\L{\LB{_______________________\V{ch90tilde},2.0\1(\V{n0}\*\V{n0}),\V{twice\_inv\_noise},\V{npoint},\V{maxi},\V{PR2},}}
+\L{\LB{_______________________\V{indices},\V{stats},\V{output0},\V{htilde});}}
+\L{\LB{_________\V{prob}=\V{gammq}(0.5\*(\V{PR2}\-1),0.5\*\V{PR2}\*\V{varsplit});}}
+\L{\LB{_________\C{}\1\* See if the nominal chirp can pass a frequency-space two-phase veto test \*\1\CE{}}}
+\L{\LB{_________\V{varsplit}=\V{splitup\_freq3}(\V{lin0}\*\V{n0}\1\V{sqrt}(2.0),\V{lin90}\*\V{n90}\1\V{sqrt}(2.0),\V{ch0tilde},}}
+\L{\LB{_______________________\V{ch90tilde},2.0\1(\V{n0}\*\V{n0}),\V{twice\_inv\_noise},\V{npoint},\V{maxi},\V{PR2},}}
+\L{\LB{_______________________\V{indices},\V{stats},\V{output0},\V{htilde});}}
+\L{\LB{_________\V{prob}=\V{gammq}(\V{PR2}\-1,0.5\*\V{PR2}\*\V{varsplit});}}
+\L{\LB{\C{}\1\*}\Tab{8}{ printf(\"Splitup 3 returns variance: \%f\2n\",varsplit); \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{_________\V{varsplit}=\V{splitup\_freq5}(\V{lin0}\*\V{n0}\1\V{sqrt}(2.0),\V{lin90}\*\V{n90}\1\V{sqrt}(2.0),\V{ch0tilde},}}
+\L{\LB{_______________________\V{ch90tilde},2.0\1(\V{n0}\*\V{n0}),\V{twice\_inv\_noise},\V{npoint},\V{maxi},\V{PR2},}}
+\L{\LB{_______________________\V{indices},\V{stats},\V{output0},\V{htilde});}}
+\L{\LB{_________\V{prob}=\V{gammq}(\V{PR2}\-1,0.5\*\V{PR2}\*\V{varsplit});}}
+\L{\LB{\C{}\1\*}\Tab{8}{ printf(\"Splitup 5 returns variance: \%f\2n\",varsplit); \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{_________\V{printf}(\S{}\"\2nMax_SNR:_\%.2f_(offset_\%d)_variance_\%f\2n\"\SE{},\V{snr\_max},\V{maxi},\V{var});}}
+\L{\LB{_________\V{printf}(\S{}\"___If_impulsive_event,_offset_\%d_or_time_\%.2f\2n\"\SE{},\V{impulseoff},\V{timeoff});}}
+\L{\LB{_________\V{printf}(\S{}\"___If_inspiral,_template_start_offset_\%d_(time_\%.2f)_\"\SE{},\V{maxi},\V{timestart});}}
+\L{\LB{_________\V{printf}(\S{}\"coalescence_time_\%.2f\2n\"\SE{},\V{timestart}+\V{tc});}}
+\L{\LB{_________\V{printf}(\S{}\"___Normalization:_S\1N=1_at_\%.2f_kpc\2n\"\SE{},1000.0\*\V{distance});}}
+\L{\LB{_________\V{printf}(\S{}\"___Lin_combination_of_max_SNR:_\%.4f_x_phase\_0_+_\%.4f_x_phase\_pi\12\2n\"\SE{},}}
+\L{\LB{}\Tab{16}{\V{lin0},\V{lin90});}}
+\L{\LB{_________\K{if}_(\V{prob}\<0.01)}}
+\L{\LB{____________\V{printf}(\S{}\"___Less_than_1\%\%_probability_that_this_is_a_chirp_(p=\%f).\2n\"\SE{},\V{prob});}}
+\L{\LB{_________\K{else}}}
+\L{\LB{____________\V{printf}(\S{}\"___POSSIBLE_CHIRP!__with_\>_1\%\%_probability_(p=\%f).\2n\"\SE{},\V{prob});}}
+\L{\LB{}}
+\L{\LB{_________\C{}\1\* See if the time-domain statistics are unusual or appears Gaussian \*\1\CE{}}}
+\L{\LB{_________\K{if}_(\V{is\_gaussian}(\V{datas},\V{npoint},\-2048,2047,1))}}
+\L{\LB{____________\V{printf}(\S{}\"___Distribution_does_not_appear_to_have_outliers.\,.\,.\2n\2n\"\SE{});}}
+\L{\LB{_________\K{else}}}
+\L{\LB{____________\V{printf}(\S{}\"___Distribution_has_outliers!_Reject\2n\2n\"\SE{});}}
+\L{\LB{______\}}}
+\L{\LB{___}}
+\L{\LB{______\C{}\1\* shift ends of buffer to the start \*\1\CE{}}}
+\L{\LB{______\V{needed}=\V{npoint}\-\V{chirplen}+1;}}
+\L{\LB{______\K{for}_(\V{i}=0;\V{i}\<\V{chirplen}\-1;\V{i}++)}}
+\L{\LB{_________\V{datas}[\V{i}]=\V{datas}[\V{i}+\V{needed}];}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* reset if not enough points remain to fill the buffer \*\1\CE{}}}
+\L{\LB{______\K{if}_(\V{remain}\<\V{needed})}}
+\L{\LB{_________\V{needed}=\V{npoint};}}
+\L{\LB{___\}}}
+\L{\LB{\}}}

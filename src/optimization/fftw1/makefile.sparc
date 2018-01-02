@@ -1,0 +1,27 @@
+# The first three lines (commented out) are the "generic" locations.
+FFTW_INCLUDE = -I/usr/local/include
+FFTW_LIB = -L/usr/local/lib -lfftw
+NR_LIB = -L/usr/local/recipes/lib -lrecipes_c
+
+CC = cc
+CFLAGS = -fast -xO5
+
+all: realft realft_fftw_test1 realft_fftw_test2
+
+realft: realft.c printvec.o
+	$(CC) $(CFLAGS) $(FFTW_INCLUDE) -o realft realft.c printvec.o \
+              $(FFTW_LIB) $(NR_LIB) -lm
+
+realft_fftw_test1: realft_fftw_test.c printvec.o
+	$(CC) $(CFLAGS) -o realft_fftw_test1 realft_fftw_test.c printvec.o \
+              $(NR_LIB) -lm
+
+realft_fftw_test2: realft_fftw_test.c realft_fftw.o printvec.o
+	$(CC) $(CFLAGS) -o realft_fftw_test2 realft_fftw_test.c printvec.o \
+              realft_fftw.o $(FFTW_LIB) $(NR_LIB) -lm
+
+realft_fftw.o: realft_fftw.c
+	$(CC) $(CFLAGS) $(FFTW_INCLUDE) -c realft_fftw.c
+
+printvec.o: printvec.c
+	$(CC) $(CFLAGS) -c printvec.c

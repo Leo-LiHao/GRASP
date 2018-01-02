@@ -1,0 +1,32 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_40meter\1print\_ss.c},{13:52},{Jun 30 1999}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{\K{\#define}_\V{NPOINT}_4096}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}()_\{}}
+\L{\LB{}\Tab{8}{\K{float}_\V{cplx}[\V{NPOINT}+2],\V{srate},\V{freq};}}
+\L{\LB{}\Tab{8}{\K{int}_\V{npoint},\V{i};}}
+\L{\LB{}\Tab{8}{\V{FILE}_\*\V{fp};}}
+\L{\LB{}}
+\L{\LB{}\Tab{8}{\C{}\1\* open the swept-sine calibration file \*\1\CE{}}}
+\L{\LB{________\V{fp}=\V{grasp\_open}(\S{}\"GRASP\_DATAPATH\"\SE{},\S{}\"swept\-sine.ascii\"\SE{},\S{}\"r\"\SE{});}}
+\L{\LB{}}
+\L{\LB{}\Tab{8}{\C{}\1\* number of points of (imagined) FFT \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{npoint}=\V{NPOINT};}}
+\L{\LB{}}
+\L{\LB{}\Tab{8}{\C{}\1\* a sample rate often used for fast channels \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{srate}=9868.4208984375;}}
+\L{\LB{}}
+\L{\LB{}\Tab{8}{\C{}\1\* swept sine calibration filename is first argument \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{calibrate}(\V{fp},\V{npoint},\V{cplx},\V{srate},2,0);}}
+\L{\LB{}}
+\L{\LB{}\Tab{8}{\C{}\1\* print out frequency, real, imaginary interpolated values \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{printf}(\S{}\"\#_Freq_(Hz)\2tReal\2t\2tImag\2n\"\SE{});}}
+\L{\LB{}\Tab{8}{\K{for}_(\V{i}=0;\V{i}\<=\V{NPOINT}\12;\V{i}++)_\{}}
+\L{\LB{}\Tab{16}{\V{freq}=\V{i}\*\V{srate}\1\V{NPOINT};}}
+\L{\LB{}\Tab{16}{\V{printf}(\S{}\"\%e\2t\%e\2t\%e\2n\"\SE{},\V{freq},\V{cplx}[2\*\V{i}],\V{cplx}[2\*\V{i}+1]);}}
+\L{\LB{}\Tab{8}{\}}}
+\L{\LB{}\Tab{8}{\K{return}_0;}}
+\L{\LB{\}}}

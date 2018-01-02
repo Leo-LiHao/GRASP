@@ -1,0 +1,177 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_frame\1calibrate\_binnedF.c},{14:00},{Jun 26 1998}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{\K{\#define}_\V{NPOINT}_8192}}
+\L{\LB{\K{\#define}_\V{NBIN}_500}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}()_\{}}
+\L{\LB{}\Tab{8}{\K{void}_\V{graphout}(\K{int},\K{float},\K{float});}}
+\L{\LB{}\Tab{8}{\K{float}_\V{data}[\V{NPOINT}],\V{average}[\V{NPOINT}\12],\V{response}[\V{NPOINT}+4];}}
+\L{\LB{}\Tab{8}{\K{float}_\V{spec},\V{decaytime};}}
+\L{\LB{}\Tab{8}{\K{float}_\V{srate},\V{tstart}=0,\V{freq},\V{tlock}=0.0;}}
+\L{\LB{}\Tab{8}{\K{int}_\V{i},\V{j},\V{code},\V{npoint},\V{ir},\V{ii},\V{reset}=0;}}
+\L{\LB{}\Tab{8}{\K{short}_\V{datas}[\V{NPOINT}];}}
+\L{\LB{}\Tab{8}{\K{double}_\V{mod},\V{logfbot},\V{logftop},\V{dlogf},\V{logf},\V{f0},\V{f1},\V{binspec},\V{binf};}}
+\L{\LB{}\Tab{8}{\K{int}_\V{nbin},\V{pass}=0;}}
+\L{\LB{}\Tab{8}{\K{struct}_\V{fgetinput}_\V{fgetinput};}}
+\L{\LB{}\Tab{8}{\K{struct}_\V{fgetoutput}_\V{fgetoutput};}}
+\L{\LB{}}
+\L{\LB{}}
+\L{\LB{}\Tab{8}{\C{}\1\* number of points to sample and fft (power of 2) \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{npoint}=\V{NPOINT};}}
+\L{\LB{}}
+\L{\LB{}\Tab{8}{\C{}\1\* set up fgetinput for getting data \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{fgetinput}.\V{nchan}=1;}}
+\L{\LB{}\Tab{8}{\V{fgetinput}.\V{files}=\V{framefiles};}}
+\L{\LB{}\Tab{8}{\V{fgetinput}.\V{chnames}=(\K{char}_\*\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{char}_\*));}}
+\L{\LB{}\Tab{8}{\V{fgetinput}.\V{locations}=(\K{short}_\*\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{short}_\*));}}
+\L{\LB{}\Tab{8}{\V{fgetoutput}.\V{npoint}=(\K{int}_\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{int}));}}
+\L{\LB{}\Tab{8}{\V{fgetoutput}.\V{ratios}=(\K{int}_\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{int}));}}
+\L{\LB{}}
+\L{\LB{}\Tab{8}{\C{}\1\* channel names \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{fgetinput}.\V{chnames}[0]=\S{}\"IFO\_DMRO\"\SE{};}}
+\L{\LB{}}
+\L{\LB{}\Tab{8}{\C{}\1\* set up different cases \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\K{if}_(\V{NULL}!=\V{getenv}(\S{}\"GRASP\_REALTIME\"\SE{}))_\{}}
+\L{\LB{}\Tab{16}{\C{}\1\* don\'t care if locked \*\1\CE{}}}
+\L{\LB{}\Tab{16}{\V{fgetinput}.\V{inlock}=0;}}
+\L{\LB{}\Tab{8}{\}}}
+\L{\LB{}\Tab{8}{\K{else}_\{}}
+\L{\LB{}\Tab{16}{\C{}\1\* only locked  \*\1\CE{}}}
+\L{\LB{}\Tab{16}{\V{fgetinput}.\V{inlock}=1;}}
+\L{\LB{}\Tab{8}{\}}}
+\L{\LB{}\Tab{8}{\C{}\1\* number of points to get \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{fgetinput}.\V{npoint}=\V{NPOINT};}}
+\L{\LB{}\Tab{8}{\V{fgetinput}.\V{seek}=0;}}
+\L{\LB{}\Tab{8}{\V{fgetinput}.\V{calibrate}=1;}}
+\L{\LB{}}
+\L{\LB{}\Tab{8}{\V{fgetinput}.\V{locations}[0]=\V{datas};}}
+\L{\LB{}}
+\L{\LB{}\Tab{8}{\C{}\1\* set the decay time (sec) \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{decaytime}=30.0;}}
+\L{\LB{}}
+\L{\LB{}\Tab{8}{\C{}\1\* get data \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\K{while}_((\V{code}=\V{fget\_ch}(\&\V{fgetoutput},\&\V{fgetinput})))_\{}}
+\L{\LB{}\Tab{16}{\V{tstart}=\V{fgetoutput}.\V{dt};}}
+\L{\LB{}\Tab{16}{\V{srate}=\V{fgetoutput}.\V{srate};}}
+\L{\LB{}}
+\L{\LB{_}\Tab{16}{\C{}\1\* put data into floats \*\1\CE{}}}
+\L{\LB{}\Tab{16}{\K{for}_(\V{i}=0;\V{i}\<\V{npoint};\V{i}++)_\V{data}[\V{i}]=\V{datas}[\V{i}];}}
+\L{\LB{}}
+\L{\LB{}\Tab{16}{\C{}\1\* get the normalization \*\1\CE{}}}
+\L{\LB{}\Tab{16}{\K{if}_(!\V{pass}++)}}
+\L{\LB{}\Tab{24}{\V{GRnormalize}(\V{fgetoutput}.\V{fri},\V{fgetoutput}.\V{frinum},\V{npoint},\V{srate},\V{response});}}
+\L{\LB{}}
+\L{\LB{____}\Tab{16}{\C{}\1\* Reset if just locked \*\1\CE{}}}
+\L{\LB{______}\Tab{16}{\K{if}_(\V{code}==1)_\{}}
+\L{\LB{}\Tab{24}{\V{reset}=0;}}
+\L{\LB{}\Tab{24}{\V{tlock}=\V{tstart};}}
+\L{\LB{}\Tab{24}{\V{avg\_spec}(\V{data},\V{average},\V{npoint},\&\V{reset},\V{srate},\V{decaytime},2,1);}}
+\L{\LB{}\Tab{16}{\}_\K{else}_\{}}
+\L{\LB{}}
+\L{\LB{}\Tab{24}{\C{}\1\* track average power spectrum, with Welch windowing \*\1\CE{}}}
+\L{\LB{}\Tab{24}{\V{avg\_spec}(\V{data},\V{average},\V{npoint},\&\V{reset},\V{srate},\V{decaytime},2,1);}}
+\L{\LB{}}
+\L{\LB{}\Tab{24}{\C{}\1\* set number of bins between 10 Hz and Nyquist \*\1\CE{}}}
+\L{\LB{}\Tab{24}{\V{f1}=0.5\*\V{srate};}}
+\L{\LB{}\Tab{24}{\V{f0}=10.0;}}
+\L{\LB{}\Tab{24}{\V{dlogf}=(\V{log}(\V{f1})\-\V{log}(\V{f0}))\1\V{NBIN};}}
+\L{\LB{}}
+\L{\LB{}\Tab{24}{\C{}\1\* set top and bottom log frequencies, initial binned quantities \*\1\CE{}}}
+\L{\LB{}\Tab{24}{\V{logfbot}=\V{log}(\V{f0});}}
+\L{\LB{}\Tab{24}{\V{logftop}=\V{logfbot}+\V{dlogf};}}
+\L{\LB{}\Tab{24}{\V{nbin}=0;}}
+\L{\LB{}\Tab{24}{\V{binspec}=\V{binf}=0;}}
+\L{\LB{}}
+\L{\LB{}\Tab{24}{\C{}\1\* loop over all frequencies except DC (j=0) \& Nyquist (j=npoint\12) \*\1\CE{}}}
+\L{\LB{}\Tab{24}{\K{for}_(\V{j}=1;\V{j}\<\V{npoint}\12;\V{j}++)_\{}}
+\L{\LB{}\Tab{32}{\C{}\1\* subscripts of real, imaginary parts \*\1\CE{}}}
+\L{\LB{}\Tab{32}{\V{ii}=(\V{ir}=\V{j}+\V{j})+1;}}
+\L{\LB{}}
+\L{\LB{}\Tab{32}{\C{}\1\* frequency of the point \*\1\CE{}}}
+\L{\LB{}\Tab{32}{\V{freq}=\V{srate}\*\V{j}\1\V{npoint};}}
+\L{\LB{}}
+\L{\LB{}\Tab{32}{\C{}\1\* determine power spectrum in (meters\1rHz) \*\1\CE{}}}
+\L{\LB{}\Tab{32}{\V{mod}=\V{response}[\V{ir}]\*\V{response}[\V{ir}]+\V{response}[\V{ii}]\*\V{response}[\V{ii}];}}
+\L{\LB{}\Tab{32}{\V{spec}=\V{sqrt}(\V{average}[\V{j}]\*\V{mod});}}
+\L{\LB{}}
+\L{\LB{}\Tab{32}{\C{}\1\* are we within desired log freq interval? \*\1\CE{}}}
+\L{\LB{}\Tab{32}{\V{logf}=\V{log}(\V{freq});}}
+\L{\LB{}\Tab{32}{\K{if}_(\V{logf}\<=\V{logfbot})_\{}}
+\L{\LB{}\Tab{40}{\C{}\1\* not in the range that we plan to plot \*\1\CE{}}}
+\L{\LB{}\Tab{40}{\K{continue};}}
+\L{\LB{}\Tab{32}{\}}}
+\L{\LB{}\Tab{32}{\K{else}_\K{if}_(\V{logf}\>\V{logftop})_\{}}
+\L{\LB{}\Tab{40}{\K{if}_(\V{nbin})}}
+\L{\LB{}\Tab{48}{\C{}\1\* one or more bins are filled \*\1\CE{}}}
+\L{\LB{}\Tab{48}{\V{printf}(\S{}\"\%e\2t\%e\2n\"\SE{},\V{binf}\1\V{nbin},\V{binspec}\1\V{nbin});}}
+\L{\LB{}\Tab{40}{\K{else}}}
+\L{\LB{}\Tab{48}{\C{}\1\* nothing in the bin, just output the one point \*\1\CE{}}}
+\L{\LB{}\Tab{48}{\V{printf}(\S{}\"\%e\2t\%e\2n\"\SE{},\V{freq},\V{spec});}}
+\L{\LB{}}
+\L{\LB{}\Tab{40}{\C{}\1\* initialize binned quantities \*\1\CE{}}}
+\L{\LB{}\Tab{40}{\V{nbin}=0;}}
+\L{\LB{}\Tab{40}{\V{binspec}=\V{binf}=0;}}
+\L{\LB{}\Tab{40}{\V{logfbot}=\V{logf};}}
+\L{\LB{}\Tab{40}{\V{logftop}=\V{logf}+\V{dlogf};}}
+\L{\LB{}\Tab{32}{\}}}
+\L{\LB{}\Tab{32}{\C{}\1\* bin the different quantities \*\1\CE{}}}
+\L{\LB{}\Tab{32}{\V{binspec}+=\V{spec};}}
+\L{\LB{}\Tab{32}{\V{binf}+=\V{freq};}}
+\L{\LB{}\Tab{32}{\V{nbin}+=1;}}
+\L{\LB{}\Tab{24}{\}}}
+\L{\LB{}\Tab{24}{\C{}\1\* print out useful things for xmgr program .\,.\,. \*\1\CE{}}}
+\L{\LB{}\Tab{24}{\V{graphout}(0,\V{tstart},\V{tlock});}}
+\L{\LB{}\Tab{16}{\}}}
+\L{\LB{}\Tab{8}{\}}}
+\L{\LB{}\Tab{8}{\K{return}_0;}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{}}
+\L{\LB{\K{void}_\V{graphout}(\K{int}_\V{last},\K{float}_\V{time},\K{float}_\V{tlock})_\{}}
+\L{\LB{___\K{static}_\K{int}_\V{count}=0;}}
+\L{\LB{___\V{printf}(\S{}\"\&\2n\"\SE{});____________________________\C{}\1\* end of set marker             \*\1\CE{}}}
+\L{\LB{___\C{}\1\* first time we draw the plot \*\1\CE{}}}
+\L{\LB{___\K{if}_(\V{count}++==0)_\{}}
+\L{\LB{______\V{printf}(\S{}\"@doublebuffer_true\2n\"\SE{});_______\C{}\1\* keeps display from flashing    \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@focus_off\2n\"\SE{});_______________\C{}\1\* turn off the focus markers     \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@s0_color_2\2n\"\SE{});______________\C{}\1\* FFT is red                     \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@g0_type_logxy\2n\"\SE{});___________\C{}\1\* set graph type to log-log      \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@autoscale_\2n\"\SE{});______________\C{}\1\* autoscale FFT                  \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@world_xmin_\%e\2n\"\SE{},10.0);______\C{}\1\* set min x                      \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@world_xmax_\%e\2n\"\SE{},5000.0);____\C{}\1\* set max x                      \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@world_ymin_\%e\2n\"\SE{},1.e\-19);____\C{}\1\* set min y                      \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@world_ymax_\%e\2n\"\SE{},1.e\-9);_____\C{}\1\* set max y                      \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@yaxis_tick_minor_on\2n\"\SE{});_____\C{}\1\* turn on tick marks             \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@yaxis_tick_major_on\2n\"\SE{});_____\C{}\1\* turn on tick marks             \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@yaxis_tick_minor_2\2n\"\SE{});______\C{}\1\* turn on tick marks             \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@yaxis_tick_major_1\2n\"\SE{});______\C{}\1\* turn on tick marks             \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@redraw_\2n\"\SE{});_________________\C{}\1\* redraw graph                   \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@xaxis_label_\2\"f_(Hz)\2\"\2n\"\SE{});__\C{}\1\* FFT horizontal axis label      \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@yaxis_label_\2\"meters\1rHz\2\"\2n\"\SE{});__\C{}\1\* FFT vertical axis label    \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@title_\2\"Calibrated_IFO_Spectrum\2\"\2n\"\SE{});\C{}\1\* set title             \*\1\CE{}}}
+\L{\LB{______\C{}\1\* set subtitle     \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@subtitle_\2\"\%.2f_sec_since_last_lock._t_=_\%.2f_sec.\2\"\2n\"\SE{},\V{time}\-\V{tlock},\V{time});}}
+\L{\LB{______\K{if}_(!\V{last})_\V{printf}(\S{}\"@kill_s0\2n\"\SE{});______\C{}\1\* kill graph; ready to read agai \*\1\CE{}}}
+\L{\LB{___\}}}
+\L{\LB{___\K{else}_\{}}
+\L{\LB{______\C{}\1\* other times we redraw the plot \*\1\CE{}}}
+\L{\LB{______\C{}\1\* set subtitle     \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@subtitle_\2\"\%.2f_sec_since_last_lock._t_=_\%.2f_sec.\2\"\2n\"\SE{},\V{time}\-\V{tlock},\V{time});}}
+\L{\LB{______\V{printf}(\S{}\"@s0_color_2\2n\"\SE{});______________\C{}\1\* FFT is red                      \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@g0_type_logxy\2n\"\SE{});___________\C{}\1\* set graph type to log-log       \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@world_xmin_\%e\2n\"\SE{},10.0);______\C{}\1\* set min x                       \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@world_xmax_\%e\2n\"\SE{},5000.0);____\C{}\1\* set max x                       \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@world_ymin_\%e\2n\"\SE{},1.e\-19);____\C{}\1\* set min y                       \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@world_ymax_\%e\2n\"\SE{},1.e\-9);_____\C{}\1\* set max y                       \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@yaxis_tick_minor_on\2n\"\SE{});_____\C{}\1\* turn on tick marks              \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@yaxis_tick_major_on\2n\"\SE{});_____\C{}\1\* turn on tick marks              \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@yaxis_tick_minor_2\2n\"\SE{});______\C{}\1\* turn on tick marks              \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@yaxis_tick_major_1\2n\"\SE{});______\C{}\1\* turn on tick marks              \*\1\CE{}}}
+\L{\LB{______\V{printf}(\S{}\"@redraw\2n\"\SE{});__________________\C{}\1\* redraw the graph                \*\1\CE{}}}
+\L{\LB{______\K{if}_(!\V{last})_\V{printf}(\S{}\"@kill_s0\2n\"\SE{});______\C{}\1\* kill graph, ready to read again \*\1\CE{}}}
+\L{\LB{___\}}}
+\L{\LB{___\K{return};}}
+\L{\LB{\}}}

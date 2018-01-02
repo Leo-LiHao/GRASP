@@ -1,0 +1,814 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_binary\-search\1binary\_search.c},{13:04},{Jul  7 1999}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\C{}\1\* binary\_search.c}}
+\L{\LB{_\* (based on multifilter.c)}}
+\L{\LB{_\* JC: 25 July 1997, PRB: 19 August 1997, JC: 27 October 1997, 29 November 1997}}
+\L{\LB{_\* BA: 11-13 April 1998}}
+\L{\LB{_\*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\K{\#include}_\<\V{stdlib}.\V{h}\>}}
+\L{\LB{\K{\#include}_\S{}\"binary\_params.h\"\SE{}}}
+\L{\LB{\K{\#include}_\S{}\"binary\_string.h\"\SE{}}}
+\L{\LB{\K{\#include}_\S{}\"mpi.h\"\SE{}}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{\K{\#include}_\S{}\"assert.h\"\SE{}}}
+\L{\LB{\K{\#include}_\<\V{unistd}.\V{h}\>}}
+\L{\LB{\K{\#if}(\V{ISMPE})}}
+\L{\LB{\K{\#include}_\S{}\"mpe.h\"\SE{}}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{\K{static}_\K{char}_\*\V{rcsid}=\S{}\"\$Id:_binary\_search.c,v_1.23_1999\107\107_18:04:43_ballen_Exp_\$\2n\$Name:_RELEASE\_1\_9\_8_\$\"\SE{};}}
+\L{\LB{}}
+\L{\LB{\K{\#ifndef}_\V{M\_LN2}}}
+\L{\LB{\K{\#define}_\V{M\_LN2}_______0.69314718055994530942______\C{}\1\* log e2 \*\1\CE{}}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* global variables for passing data from get\_calibrated\_data() \*\1\CE{}}}
+\L{\LB{\K{double}_\V{datastart};}}
+\L{\LB{\K{float}_\*\V{n\_inv\_noise},\*\V{htilde},\*\V{pow\_renorm},\V{srate}=9868.4208984375;}}
+\L{\LB{\K{int}_\V{num\_templates},\V{npoint}=\V{NPOINT},\V{new\_lock},\V{gauss\_test},\V{insert\_chirp}=\V{INSERT\_CHIRP};}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* global variables for passing between master and slave in non mpi mode \*\1\CE{}}}
+\L{\LB{\K{float}_\*\V{template\_list},\*\V{sig\_buffer};}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* MPI global variables \*\1\CE{}}}
+\L{\LB{\K{int}_\V{numprocs},\V{myid},\V{namelen};}}
+\L{\LB{\K{char}_\V{processor\_name}[\V{MPI\_MAX\_PROCESSOR\_NAME}],\V{logfile\_name}[256],\*\V{cmd\_name};}}
+\L{\LB{\K{void}_\V{export\_environment}(\K{int},\V{const}_\K{char}\*);}}
+\L{\LB{\V{pid\_t}_\V{process\_id};}}
+\L{\LB{\K{\#if}_(\V{RENICE})}}
+\L{\LB{\K{char}_\V{commandstring}[256];}}
+\L{\LB{\K{int}_\V{nicevalue};}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* define prototypes \*\1\CE{}}}
+\L{\LB{\K{void}_\V{realft}(\K{float}_\*,\K{unsigned}_\K{long}_,\K{int});}}
+\L{\LB{\K{void}_\V{corr\_coef}(\K{float}_\*,_\K{float}_\*,_\K{float}_\*,_\K{int},_\K{float}_\*,_\K{float}_\*,_\K{float}_\*);}}
+\L{\LB{\C{}\1\* the following routine is the Numerical Recipes routine select().}}
+\L{\LB{___However its name has been changed to NRselect.  See section 2.5.2 of the GRASP}}
+\L{\LB{___manual for details!}}
+\L{\LB{___\*\1\CE{}}}
+\L{\LB{\K{float}_\V{NRselect}(\K{unsigned}_\K{long},_\K{unsigned}_\K{long},_\K{float}_[\,]);}}
+\L{\LB{\K{int}_\V{get\_calibrated\_data}();}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* time-reversed filters \*\1\CE{}}}
+\L{\LB{\K{void}_\V{make\_retlifs}(\K{float}_\V{m1},_\K{float}_\V{m2},_\K{float}_\*\V{ch1},_\K{float}_\*\V{ch2},_\K{float}_\V{fstart},}}
+\L{\LB{__________________\K{int}_\V{n},_\K{float}_\V{srate},_\K{int}_\*\V{filled},_\K{float}_\*\V{t\_coal},}}
+\L{\LB{__________________\K{int}_\V{err\_cd\_sprs},_\K{int}_\V{order});}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* information to save about segments of data \*\1\CE{}}}
+\L{\LB{\K{struct}_\V{Saved}_\{}}
+\L{\LB{__\K{double}_\V{tstart};}}
+\L{\LB{__\K{int}_\V{gauss};}}
+\L{\LB{__\K{int}_\V{segmentno};}}
+\L{\LB{\};}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}(\K{int}_\V{argc},\K{char}_\*\V{argv}[\,])_\{}}
+\L{\LB{__\C{}\1\* prototypes \*\1\CE{}}}
+\L{\LB{__\K{void}_\V{master}();}}
+\L{\LB{__\K{void}_\V{slave}();}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* Get the name of this program \*\1\CE{}}}
+\L{\LB{__\V{cmd\_name}_=_\V{argv}[0];}}
+\L{\LB{__\C{}\1\* start MPI, find number of processes, find process number \*\1\CE{}}}
+\L{\LB{__\V{MPI\_Init}(\&\V{argc},\&\V{argv});}}
+\L{\LB{__\V{MPI\_Comm\_size}(\V{MPI\_COMM\_WORLD},\&\V{numprocs});}}
+\L{\LB{__\V{MPI\_Comm\_rank}(\V{MPI\_COMM\_WORLD},\&\V{myid});}}
+\L{\LB{__\V{MPI\_Get\_processor\_name}(\V{processor\_name},\&\V{namelen});}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* export any environment variables from master to slaves (repeat as many times as needed) \*\1\CE{}}}
+\L{\LB{__\V{export\_environment}(\V{myid},\S{}\"GRASP\_MFPATH\"\SE{});}}
+\L{\LB{__\V{export\_environment}(\V{myid},\S{}\"GRASP\_TEMPLATE\"\SE{});}}
+\L{\LB{__\V{export\_environment}(\V{myid},\S{}\"GRASP\_KILLSCRIPT\"\SE{});}}
+\L{\LB{\K{\#if}_(\V{DBX})}}
+\L{\LB{__\V{export\_environment}(\V{myid},\S{}\"DISPLAY\"\SE{});}}
+\L{\LB{\K{\#endif}_\C{}\1\* DBX \*\1\CE{}}}
+\L{\LB{__\V{process\_id}=\V{getpid}();}}
+\L{\LB{\K{\#if}_(\V{RENICE})}}
+\L{\LB{__\C{}\1\* set priority to 19 for slaves, 17 for master \*\1\CE{}}}
+\L{\LB{__\K{if}_(\V{myid})}}
+\L{\LB{____\V{nicevalue}=19;}}
+\L{\LB{__\K{else}}}
+\L{\LB{____\V{nicevalue}=17;}}
+\L{\LB{\K{\#if}_(!\V{DBX})}}
+\L{\LB{__\V{sprintf}(\V{commandstring},\S{}\"renice_\%d_\-p_\%d\"\SE{},\V{nicevalue},\V{process\_id});}}
+\L{\LB{__\V{system}(\V{commandstring});}}
+\L{\LB{__\V{printf}(\S{}\"Processor_\%s_(number_\%d)_process_number_\%d_set_NICE_to_\%d\2n\"\SE{},}}
+\L{\LB{}\Tab{8}{_\V{processor\_name},\V{myid},\V{process\_id},\V{nicevalue});}}
+\L{\LB{__\V{fflush}(\V{stdout});}}
+\L{\LB{\K{\#endif}_\C{}\1\* !DBX \*\1\CE{}}}
+\L{\LB{\K{\#endif}_\C{}\1\* (RENICE) \*\1\CE{}}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* create a file containing a kill script for this job \*\1\CE{}}}
+\L{\LB{__\{}}
+\L{\LB{____\K{int}_\V{i};}}
+\L{\LB{____\V{FILE}_\*\V{fpkill};}}
+\L{\LB{____\K{char}_\V{filemode}[2];}}
+\L{\LB{____\V{filemode}[1]=\S{}\'\20\'\SE{};}}
+\L{\LB{____\K{for}_(\V{i}=0;\V{i}\<\V{numprocs};\V{i}++)_\{}}
+\L{\LB{______\V{MPI\_Barrier}(\V{MPI\_COMM\_WORLD});}}
+\L{\LB{______\K{if}_(\V{i}==\V{myid})_\{}}
+\L{\LB{}\Tab{8}{\V{filemode}[0]=(\V{myid}==0)?\S{}\'w\'\SE{}:\S{}\'a\'\SE{};}}
+\L{\LB{}\Tab{8}{\V{fpkill}=\V{grasp\_open}(\S{}\"GRASP\_KILLSCRIPT\"\SE{},\S{}\"killscript\"\SE{},\V{filemode});}}
+\L{\LB{}\Tab{8}{\K{if}_(\V{myid}==0)_\V{fprintf}(\V{fpkill},\S{}\"\#\2n\"\SE{});}}
+\L{\LB{}\Tab{8}{\V{fprintf}(\V{fpkill},\S{}\"rsh_\%s_kill_\-9_\%d\2n\"\SE{},\V{processor\_name},\V{process\_id});}}
+\L{\LB{____\V{fflush}(\V{fpkill});}}
+\L{\LB{}\Tab{8}{\V{fclose}(\V{fpkill});}}
+\L{\LB{______\}}}
+\L{\LB{____\}}}
+\L{\LB{__\}}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* if desired, pause to attach debugger  \*\1\CE{}}}
+\L{\LB{__\C{}\1\* if (myid==0) sleep(30); \*\1\CE{}}}
+\L{\LB{__}}
+\L{\LB{\K{\#if}_(\V{DBX})}}
+\L{\LB{__\V{sprintf}(\V{commandstring},\S{}\"xterm_\-sb_\-e_gdb_\%s_\%d_\&\"\SE{},\V{cmd\_name},\V{process\_id});}}
+\L{\LB{__\K{if}_(\V{myid}==0)_\V{system}(\V{commandstring});}}
+\L{\LB{__\V{sleep}(15);}}
+\L{\LB{__\V{MPI\_Barrier}(\V{MPI\_COMM\_WORLD});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{__}}
+\L{\LB{\K{\#if}(\V{ISMPE})}}
+\L{\LB{__\V{MPE\_Init\_log}();}}
+\L{\LB{\K{\#endif}_\C{}\1\* (ISMPE) \*\1\CE{}}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* Gravity wave signal (frequency domain),}}
+\L{\LB{_____twice inverse noise power,}}
+\L{\LB{_____and power renormalization factor \*\1\CE{}}}
+\L{\LB{__\{}}
+\L{\LB{_____\K{int}_\V{factor}=1;}}
+\L{\LB{_____\V{factor}=(\V{myid}==0)?1:\V{NPERSLAVE};}}
+\L{\LB{_____\V{htilde}_=_(\K{float}_\*)\V{malloc}(\V{factor}\*(\K{sizeof}(\K{float})\*\V{npoint}}}
+\L{\LB{______________+\K{sizeof}(\K{float})\*(\V{npoint}\12+1)+\K{sizeof}(\K{float})));}}
+\L{\LB{__\}}}
+\L{\LB{__\V{n\_inv\_noise}_=_\V{htilde}_+_\V{npoint};}}
+\L{\LB{__\V{pow\_renorm}_=_\V{n\_inv\_noise}_+_\V{npoint}\12_+_1;}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* In the MPI version of the code, call the master or slave \*\1\CE{}}}
+\L{\LB{__\K{if}_(\V{myid}==0)}}
+\L{\LB{_____\V{master}();}}
+\L{\LB{__\K{else}}}
+\L{\LB{_____\V{slave}();}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* shutdown process \*\1\CE{}}}
+\L{\LB{__\V{printf}(\S{}\"\%s_preparing_to_shut_down_(process_\%d)\2n\"\SE{},\V{processor\_name},\V{myid});}}
+\L{\LB{__\V{fflush}(\V{stdout});}}
+\L{\LB{\K{\#if}(\V{ISMPE})}}
+\L{\LB{__\V{sprintf}(\V{logfile\_name},\S{}\"\%s.\%d.\%d.log\"\SE{},\V{cmd\_name},\V{numprocs},\V{DATA\_SEGMENTS});}}
+\L{\LB{__\V{MPE\_Finish\_log}(\V{logfile\_name});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{__\V{printf}(\S{}\"\%s_waiting_at_MPI\_Barrier.\,.\,._(process_\%d)\2n\"\SE{},\V{processor\_name},\V{myid});}}
+\L{\LB{__\V{MPI\_Barrier}(\V{MPI\_COMM\_WORLD});}}
+\L{\LB{__\V{MPI\_Finalize}();}}
+\L{\LB{__\V{printf}(\S{}\"\%s_shutting_down_(process_\%d)\2n\"\SE{},\V{processor\_name},\V{myid});}}
+\L{\LB{__\V{fflush}(\V{stdout});}}
+\L{\LB{__\K{return}_0;}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* Function executed by the master node \*\1\CE{}}}
+\L{\LB{\K{void}_\V{master}()}}
+\L{\LB{\{}}
+\L{\LB{__\V{MPI\_Status}_\V{status};}}
+\L{\LB{__\K{struct}_\V{Saved}_\*\V{saveme};}}
+\L{\LB{__\K{int}_\V{i},\V{islave},\V{num\_sent}=0,\V{num\_recv}=0,\*\V{tot\_per\_slave},\V{nperslave},\*\V{slave\_shutdown};}}
+\L{\LB{__\K{int}_\V{startsegment}=0;}}
+\L{\LB{__\K{char}_\*\V{startsegenv};}}
+\L{\LB{__}}
+\L{\LB{__\V{startsegenv}=\V{getenv}(\S{}\"GRASP\_STARTSEGMENT\"\SE{});}}
+\L{\LB{__\K{if}_(\V{startsegenv}==\V{NULL})}}
+\L{\LB{____\V{startsegment}=0;}}
+\L{\LB{__\K{else}_\{}}
+\L{\LB{____\V{printf}(\S{}\"Environment_variable_GRASP\_STARTSEGMENT_set_to_\%s\2n\"\SE{},\V{startsegenv});}}
+\L{\LB{____\V{startsegment}=\V{atoi}(\V{startsegenv});}}
+\L{\LB{____\K{if}_(\V{startsegment}\<0_\|\,\|_\V{startsegment}_\>_2048)_\V{startsegment}=0;}}
+\L{\LB{____\V{printf}(\S{}\"Master_starting_with_segment_\#_\%d\2n\"\SE{},\V{startsegment});}}
+\L{\LB{__\}}}
+\L{\LB{__}}
+\L{\LB{\K{\#if}(\V{ISMPE})}}
+\L{\LB{__\V{MPE\_Describe\_state}(1,2,\S{}\"Templates\-\!\>Slaves\"\SE{},\S{}\"red:vlines3\"\SE{});}}
+\L{\LB{__\V{MPE\_Describe\_state}(3,4,\S{}\"Data\-\!\>Slaves\"\SE{},\S{}\"blue:gray3\"\SE{});}}
+\L{\LB{__\V{MPE\_Describe\_state}(5,6,\S{}\"Master_Receive\"\SE{},\S{}\"brown:light\_gray\"\SE{});}}
+\L{\LB{__\V{MPE\_Describe\_state}(7,8,\S{}\"Data\-\!\>Master\"\SE{},\S{}\"yellow:dark\_gray\"\SE{});}}
+\L{\LB{__\V{MPE\_Describe\_state}(9,10,\S{}\"Slave_Receive\"\SE{},\S{}\"orange:white\"\SE{});}}
+\L{\LB{__\V{MPE\_Describe\_state}(13,14,\S{}\"Slaves\<\!\-templates\"\SE{},\S{}\"gray:black\"\SE{});}}
+\L{\LB{__\V{MPE\_Describe\_state}(15,16,\S{}\"compute_template\"\SE{},\S{}\"lavender:black\"\SE{});}}
+\L{\LB{__\V{MPE\_Describe\_state}(17,18,\S{}\"real_fft\"\SE{},\S{}\"lawn_green:black\"\SE{});}}
+\L{\LB{__\V{MPE\_Describe\_state}(19,20,\S{}\"correlate\"\SE{},\S{}\"purple:black\"\SE{});}}
+\L{\LB{__\V{MPE\_Describe\_state}(21,22,\S{}\"correlation_coefficients\"\SE{},\S{}\"wheat:black\"\SE{});}}
+\L{\LB{__\V{MPE\_Describe\_state}(23,24,\S{}\"likelihood_test\"\SE{},\S{}\"light_sky_blue:black\"\SE{});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{__}}
+\L{\LB{__\{__\C{}\1\* read in template list \*\1\CE{}}}
+\L{\LB{____}}
+\L{\LB{____\K{float}_\V{m1},\V{m2};}}
+\L{\LB{____\V{FILE}_\*\V{fptemplates};}}
+\L{\LB{____}}
+\L{\LB{____\V{num\_templates}_=_\V{NUM\_TEMPLATES};}}
+\L{\LB{____\V{template\_list}_=_(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*2\*\V{num\_templates});}}
+\L{\LB{____\V{fptemplates}=\V{grasp\_open}(\S{}\"GRASP\_TEMPLATE\"\SE{},\S{}\"templates.ascii\"\SE{},\S{}\"r\"\SE{});}}
+\L{\LB{____}}
+\L{\LB{____\K{for}_(\V{i}=0;\V{i}\<\V{num\_templates};\V{i}++)_\{}}
+\L{\LB{______\K{if}_(\V{EOF}==\V{fscanf}(\V{fptemplates},\S{}\"\%f_\%f\2n\"\SE{},\&\V{m1},\&\V{m2}))_\{}}
+\L{\LB{________\V{fprintf}(\V{stderr},\S{}\"Warning:_template_file_ended_at_template_number_\%d\2n\%s\2n\"\SE{},\V{i},\V{rcsid});}}
+\L{\LB{________\V{fflush}(\V{stderr});}}
+\L{\LB{________\V{num\_templates}_=_\V{i};}}
+\L{\LB{________\K{break};}}
+\L{\LB{______\}}}
+\L{\LB{______\V{template\_list}[2\*\V{i}]_=_\V{m1};}}
+\L{\LB{______\V{template\_list}[2\*\V{i}+1]_=_\V{m2};}}
+\L{\LB{____\}}}
+\L{\LB{____\V{fclose}(\V{fptemplates});}}
+\L{\LB{__\}}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* print out the header \*\1\CE{}}}
+\L{\LB{__\{}}
+\L{\LB{____\V{time\_t}_\V{translate\_time};}}
+\L{\LB{____\K{float}_\V{flo}=\V{FLO};}}
+\L{\LB{____\K{int}_\V{bytes}=0,\V{one}=1;}}
+\L{\LB{____\V{FILE}_\*\V{fpheader};}}
+\L{\LB{____}}
+\L{\LB{____\V{fpheader}_=_\V{grasp\_open}(\S{}\"GRASP\_MFPATH\"\SE{},\S{}\"signal.header\"\SE{},\S{}\"w\"\SE{});}}
+\L{\LB{____\V{bytes}_+=_\V{fprintf}(\V{fpheader},}}
+\L{\LB{}\Tab{16}{_____\S{}\"\%d\2n\"\SE{},\V{HEADER\_COMMENT\_SIZE});}}
+\L{\LB{____\V{bytes}_+=_\V{fprintf}(\V{fpheader},}}
+\L{\LB{}\Tab{16}{_____\S{}\"This_is_output_from_a_first_pass_filtering_of_the_Nov_1994_data_set.\2n\"\SE{});}}
+\L{\LB{____\V{time}(\&\V{translate\_time});}}
+\L{\LB{____\V{bytes}_+=_\V{fprintf}(\V{fpheader},\S{}\"\%s\2n\"\SE{},\V{ctime}(\&\V{translate\_time}));}}
+\L{\LB{____\V{bytes}_+=_\V{fprintf}(\V{fpheader},\S{}\"\%s\"\SE{},\V{comment});}}
+\L{\LB{____\V{bytes}_+=_\V{fprintf}(\V{fpheader},\S{}\"\%s\"\SE{},\V{description});}}
+\L{\LB{____\K{if}_(\V{bytes}\>\V{HEADER\_COMMENT\_SIZE})_\{}}
+\L{\LB{______\V{fprintf}(\V{stderr},\S{}\"HEADER\_COMMENT\_SIZE_=_\%d_must_be_increased_to_\>=_\%d\2n\"\SE{},\V{HEADER\_COMMENT\_SIZE},\V{bytes});}}
+\L{\LB{______\V{fflush}(\V{stderr});}}
+\L{\LB{______\V{MPI\_Abort}(\V{MPI\_COMM\_WORLD},1);}}
+\L{\LB{____\}_}}
+\L{\LB{____\K{while}_(\V{bytes}\<\V{HEADER\_COMMENT\_SIZE})_\V{bytes}_+=_\V{fprintf}(\V{fpheader},\S{}\"\2n\"\SE{});}}
+\L{\LB{____\V{fwrite}(\&\V{one},4,1,\V{fpheader});}}
+\L{\LB{____\V{fwrite}(\&\V{num\_templates},4,1,\V{fpheader});}}
+\L{\LB{____\V{fwrite}(\&\V{flo},4,1,\V{fpheader});}}
+\L{\LB{____\V{fwrite}(\&\V{srate},4,1,\V{fpheader});}}
+\L{\LB{____\K{for}_(\V{i}=0;\V{i}\<2\*\V{num\_templates};\V{i}++)_\V{fwrite}(\V{template\_list}+\V{i},4,1,\V{fpheader});}}
+\L{\LB{____\V{fclose}(\V{fpheader});}}
+\L{\LB{__\}}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* storage for returned signals (NSIGNALS per template) \*\1\CE{}}}
+\L{\LB{__\V{sig\_buffer}_=_(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{num\_templates}\*\V{NSIGNALS}\*\V{NPERSLAVE});}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* Structure for saving information about data sent to slaves \*\1\CE{}}}
+\L{\LB{__\V{saveme}_=_(\K{struct}_\V{Saved}_\*)\V{malloc}(\K{sizeof}(\K{struct}_\V{Saved})\*\V{numprocs}\*\V{NPERSLAVE});}}
+\L{\LB{__\V{tot\_per\_slave}=(\K{int}_\*)\V{malloc}(\K{sizeof}(\K{int})\*\V{numprocs});}}
+\L{\LB{__\V{slave\_shutdown}=(\K{int}_\*)\V{malloc}(\K{sizeof}(\K{int})\*\V{numprocs});}}
+\L{\LB{__\{_}}
+\L{\LB{____\K{int}_\V{k};}}
+\L{\LB{____\K{for}_(\V{k}=0;\V{k}\<\V{numprocs};\V{k}++)_\V{tot\_per\_slave}[\V{k}]=\V{slave\_shutdown}[\V{k}]=0;}}
+\L{\LB{__\}}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* broadcast templates \*\1\CE{}}}
+\L{\LB{\K{\#if}(\V{ISMPE})}}
+\L{\LB{__\V{MPE\_Log\_event}(1,\V{myid},\S{}\"send\"\SE{});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{__\V{MPI\_Bcast}(\&\V{num\_templates},1,\V{MPI\_INT},0,\V{MPI\_COMM\_WORLD});}}
+\L{\LB{__\V{MPI\_Bcast}(\V{template\_list},2\*\V{num\_templates},\V{MPI\_FLOAT},0,\V{MPI\_COMM\_WORLD});}}
+\L{\LB{\K{\#if}(\V{ISMPE})}}
+\L{\LB{__\V{MPE\_Log\_event}(2,\V{myid},\S{}\"sent\"\SE{});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* Skip segments 0 to startsegment-1 \*\1\CE{}}}
+\L{\LB{__\{}}
+\L{\LB{____\K{int}_\V{i};}}
+\L{\LB{____\V{i}=\V{startsegment};}}
+\L{\LB{____\K{while}(\-\-\V{i}\>=0)_\V{get\_calibrated\_data}();}}
+\L{\LB{____\V{num\_sent}=\V{num\_recv}=\V{startsegment};}}
+\L{\LB{__\}}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* while not finished, loop over slaves \*\1\CE{}}}
+\L{\LB{__\K{for}_(\V{islave}=1;\V{islave}\<\V{numprocs};\V{islave}++)}}
+\L{\LB{____\K{for}_(\V{nperslave}=0;(\V{nperslave}\<\V{NPERSLAVE})_\&\&_(!\V{slave\_shutdown}[\V{islave}]);\V{nperslave}++)}}
+\L{\LB{______\K{if}_(\V{get\_calibrated\_data}())_\{_\C{}\1\* if new data exists, then send it (nonblocking?) \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{num\_sent}++;}}
+\L{\LB{}\Tab{8}{\V{printf}(\S{}\"Master_broadcasting_data_segment_\%d_to_slave_\%d\2n\"\SE{},\V{num\_sent},\V{islave});}}
+\L{\LB{}\Tab{8}{\V{fflush}(\V{stdout});}}
+\L{\LB{\K{\#if}(\V{ISMPE})}}
+\L{\LB{}\Tab{8}{\V{MPE\_Log\_event}(3,\V{myid},\S{}\"send\"\SE{});}}
+\L{\LB{\K{\#endif}_\C{}\1\* ISMPE \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{MPI\_Send}(\V{htilde},\V{NPOINT}+\V{NPOINT}\12+1+1,\V{MPI\_FLOAT},\V{islave},\V{num\_sent},\V{MPI\_COMM\_WORLD});}}
+\L{\LB{\K{\#if}(\V{ISMPE})}}
+\L{\LB{}\Tab{8}{\V{MPE\_Log\_event}(4,\V{myid},\S{}\"sent\"\SE{});}}
+\L{\LB{\K{\#endif}_\C{}\1\* ISMPE \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{saveme}[\V{NPERSLAVE}\*(\V{islave}\-1)+\V{nperslave}].\V{gauss}_=_\V{gauss\_test};}}
+\L{\LB{}\Tab{8}{\V{saveme}[\V{NPERSLAVE}\*(\V{islave}\-1)+\V{nperslave}].\V{tstart}_=_\V{datastart};}}
+\L{\LB{}\Tab{8}{\V{saveme}[\V{NPERSLAVE}\*(\V{islave}\-1)+\V{nperslave}].\V{segmentno}_=_\V{num\_sent};}}
+\L{\LB{}\Tab{8}{\V{tot\_per\_slave}[\V{islave}]++;}}
+\L{\LB{______\}_\K{else}_\{_\C{}\1\* tell remaining processes to exit \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{printf}(\S{}\"Failed_to_get_data_segment_\%d\2n\"\SE{},\V{num\_sent}+1);}}
+\L{\LB{}\Tab{8}{\V{fflush}(\V{stdout});}}
+\L{\LB{\K{\#if}(\V{ISMPE})}}
+\L{\LB{}\Tab{8}{\V{MPE\_Log\_event}(3,\V{myid},\S{}\"send\"\SE{});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}\Tab{8}{\V{printf}(\S{}\"Master_\-_sent_shutdown_message_to_process_\%d\2n\"\SE{},\V{islave});}}
+\L{\LB{}\Tab{8}{\V{fflush}(\V{stdout});}}
+\L{\LB{}\Tab{8}{\V{MPI\_Send}(\V{htilde},\V{NPOINT}+\V{NPOINT}\12+1+1,\V{MPI\_FLOAT},\V{islave},0,\V{MPI\_COMM\_WORLD});}}
+\L{\LB{}\Tab{8}{\V{saveme}[\V{NPERSLAVE}\*(\V{islave}\-1)+\V{nperslave}].\V{segmentno}=0;}}
+\L{\LB{}\Tab{8}{\V{slave\_shutdown}[\V{islave}]=1;}}
+\L{\LB{\K{\#if}(\V{ISMPE})}}
+\L{\LB{}\Tab{8}{\V{MPE\_Log\_event}(4,\V{myid},\S{}\"sent\"\SE{});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{______\}}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* now loop, gathering answers, sending out more data \*\1\CE{}}}
+\L{\LB{__\V{printf}(\S{}\"Entering_loop_to_gather_answers\2n\"\SE{});}}
+\L{\LB{__\V{fflush}(\V{stdout});}}
+\L{\LB{__\K{while}_(\V{num\_sent}!=\V{num\_recv})_\{}}
+\L{\LB{____}}
+\L{\LB{____\V{FILE}_\*\V{fpout};}}
+\L{\LB{____\K{char}_\V{fname}[256];}}
+\L{\LB{____\K{int}_\V{more\_data};}}
+\L{\LB{____}}
+\L{\LB{____\C{}\1\*  listen for answer \*\1\CE{}}}
+\L{\LB{\K{\#if}(\V{ISMPE})}}
+\L{\LB{____\V{MPE\_Log\_event}(5,\V{myid},\S{}\"receiving.\,.\,.\"\SE{});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{____}}
+\L{\LB{____\C{}\1\* This next block retrieves signals from the slaves \*\1\CE{}}}
+\L{\LB{____\{}}
+\L{\LB{______\K{int}_\V{flag}=0;}}
+\L{\LB{______\K{while}_(\V{flag}==0)_\{}}
+\L{\LB{}\Tab{8}{\C{}\1\* check to see if a signal is waiting for pickup \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{MPI\_Iprobe}(\V{MPI\_ANY\_SOURCE},\V{MPI\_ANY\_TAG},\V{MPI\_COMM\_WORLD},\&\V{flag},\&\V{status});}}
+\L{\LB{}\Tab{8}{\K{if}_(\V{flag})_\{}}
+\L{\LB{}\Tab{8}{__\C{}\1\* if it is, then get it and exit \*\1\CE{}}}
+\L{\LB{}\Tab{8}{__\V{MPI\_Recv}(\V{sig\_buffer},\V{NSIGNALS}\*\V{num\_templates}\*\V{NPERSLAVE},\V{MPI\_FLOAT},}}
+\L{\LB{}\Tab{16}{___\V{MPI\_ANY\_SOURCE},\V{MPI\_ANY\_TAG},\V{MPI\_COMM\_WORLD},\&\V{status});}}
+\L{\LB{}\Tab{8}{\}}}
+\L{\LB{}\Tab{8}{\K{else}}}
+\L{\LB{}\Tab{8}{__\V{sleep}(1);}}
+\L{\LB{______\}}}
+\L{\LB{\K{\#if}_(\V{DEBUG\_COMM})}}
+\L{\LB{______\V{printf}(\S{}\"Master_just_got_a_response_from_slave_\%d_(should_be_\%d_segments)\2n\"\SE{},}}
+\L{\LB{}\Tab{8}{_____\V{status}.\V{MPI\_SOURCE},\V{tot\_per\_slave}[\V{status}.\V{MPI\_SOURCE}]);}}
+\L{\LB{______\V{fflush}(\V{stdout});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{______\K{if}_(\V{status}.\V{MPI\_TAG}_!=_\V{tot\_per\_slave}[\V{status}.\V{MPI\_SOURCE}])_\{}}
+\L{\LB{}\Tab{8}{\V{fprintf}(\V{stderr},\S{}\"SERIOUS_PROBLEM:_slave_node_\%d_returned_data_for:_\%d_data_segments\2n\"\SE{},}}
+\L{\LB{}\Tab{16}{\V{status}.\V{MPI\_SOURCE},\V{status}.\V{MPI\_TAG});}}
+\L{\LB{}\Tab{8}{\V{fprintf}(\V{stderr},\S{}\"BUT_the_master_recorded_that_it_was_only_sent:____\%d_data_segments\2n\"\SE{},}}
+\L{\LB{}\Tab{16}{\V{tot\_per\_slave}[\V{status}.\V{MPI\_SOURCE}]);}}
+\L{\LB{}\Tab{8}{\V{fflush}(\V{stderr});}}
+\L{\LB{______\}}}
+\L{\LB{____\}}}
+\L{\LB{\K{\#if}(\V{ISMPE})}}
+\L{\LB{____\V{MPE\_Log\_event}(6,\V{myid},\S{}\"received\"\SE{});}}
+\L{\LB{\K{\#endif}_\C{}\1\* ISMPE \*\1\CE{}}}
+\L{\LB{____\V{num\_recv}+=\V{tot\_per\_slave}[\V{status}.\V{MPI\_SOURCE}];}}
+\L{\LB{____}}
+\L{\LB{____\C{}\1\* Determine the correct file name \*\1\CE{}}}
+\L{\LB{____\K{for}_(\V{nperslave}=0;\V{nperslave}\<\V{tot\_per\_slave}[\V{status}.\V{MPI\_SOURCE}];\V{nperslave}++)_\{}}
+\L{\LB{______}}
+\L{\LB{______\V{sprintf}(\V{fname},\S{}\"signal.\%05d\"\SE{},}}
+\L{\LB{}\Tab{8}{______(\V{saveme}[\V{NPERSLAVE}\*(\V{status}.\V{MPI\_SOURCE}\-1)+\V{nperslave}].\V{segmentno})\-1);}}
+\L{\LB{______}}
+\L{\LB{______\C{}\1\* open signal file for output \*\1\CE{}}}
+\L{\LB{______\V{fpout}=\V{grasp\_open}(\S{}\"GRASP\_MFPATH\"\SE{},\V{fname},\S{}\"w\"\SE{});}}
+\L{\LB{______}}
+\L{\LB{______\C{}\1\* Print the output data to a file \*\1\CE{}}}
+\L{\LB{______\V{fwrite}(\&(\V{saveme}[\V{NPERSLAVE}\*(\V{status}.\V{MPI\_SOURCE}\-1)+\V{nperslave}].\V{tstart}),8,1,\V{fpout});}}
+\L{\LB{______\V{fwrite}(\&(\V{saveme}[\V{NPERSLAVE}\*(\V{status}.\V{MPI\_SOURCE}\-1)+\V{nperslave}].\V{gauss}),_4,1,\V{fpout});}}
+\L{\LB{______\V{fwrite}(\V{sig\_buffer}+\V{nperslave}\*\V{NSIGNALS}\*\V{num\_templates},\V{NSIGNALS}\*4,\V{num\_templates},\V{fpout});}}
+\L{\LB{______\V{fclose}(\V{fpout});}}
+\L{\LB{____\}_\C{}\1\* end of loop over nperslave \*\1\CE{}}}
+\L{\LB{____\V{tot\_per\_slave}[\V{status}.\V{MPI\_SOURCE}]=0;}}
+\L{\LB{}}
+\L{\LB{____\K{for}_(\V{nperslave}=0;\V{nperslave}\<\V{NPERSLAVE};\V{nperslave}++)_\{}}
+\L{\LB{______\V{more\_data}_=_\V{get\_calibrated\_data}();}}
+\L{\LB{\K{\#if}_(\V{DEBUG\_COMM})}}
+\L{\LB{______\V{printf}(\S{}\"\2t\2t\2t\2t\2t\2t\2tMORE_DATA_RETURNED_\%d\2n\"\SE{},\V{more\_data});}}
+\L{\LB{______\V{fflush}(\V{stdout});}}
+\L{\LB{\K{\#endif}_\C{}\1\* DEBUG COMM \*\1\CE{}}}
+\L{\LB{______\K{if}_(\V{more\_data})_\{_\C{}\1\* if there is more data, send it off \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{num\_sent}++;}}
+\L{\LB{}\Tab{8}{\V{printf}(\S{}\"Master_broadcasting_data_segment_\%d_to_slave_\%d\2n\"\SE{},\V{num\_sent},\V{status}.\V{MPI\_SOURCE});}}
+\L{\LB{}\Tab{8}{\V{fflush}(\V{stdout});}}
+\L{\LB{\K{\#if}(\V{ISMPE})}}
+\L{\LB{}\Tab{8}{\V{MPE\_Log\_event}(3,\V{myid},\S{}\"send\"\SE{});}}
+\L{\LB{\K{\#endif}_\C{}\1\* ISMPE \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{MPI\_Send}(\V{htilde},\V{NPOINT}+\V{NPOINT}\12+1+1,\V{MPI\_FLOAT},\V{status}.\V{MPI\_SOURCE},\V{num\_sent},\V{MPI\_COMM\_WORLD});}}
+\L{\LB{\K{\#if}(\V{ISMPE})}}
+\L{\LB{}\Tab{8}{\V{MPE\_Log\_event}(4,\V{myid},\S{}\"sent\"\SE{});}}
+\L{\LB{\K{\#endif}_\C{}\1\* ISMPE \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{tot\_per\_slave}[\V{status}.\V{MPI\_SOURCE}]++;}}
+\L{\LB{}\Tab{8}{\V{saveme}[\V{NPERSLAVE}\*(\V{status}.\V{MPI\_SOURCE}\-1)+\V{nperslave}].\V{gauss}_=_\V{gauss\_test};}}
+\L{\LB{}\Tab{8}{\V{saveme}[\V{NPERSLAVE}\*(\V{status}.\V{MPI\_SOURCE}\-1)+\V{nperslave}].\V{tstart}_=_\V{datastart};}}
+\L{\LB{}\Tab{8}{\V{saveme}[\V{NPERSLAVE}\*(\V{status}.\V{MPI\_SOURCE}\-1)+\V{nperslave}].\V{segmentno}_=_\V{num\_sent};}}
+\L{\LB{______\}_\K{else}_\K{if}_(!\V{slave\_shutdown}[\V{status}.\V{MPI\_SOURCE}])_\{}}
+\L{\LB{\K{\#if}(\V{ISMPE})}}
+\L{\LB{}\Tab{8}{\V{MPE\_Log\_event}(3,\V{myid},\S{}\"send\"\SE{});}}
+\L{\LB{\K{\#endif}_\C{}\1\* ISMPE \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{MPI\_Send}(\V{htilde},\V{NPOINT}+\V{NPOINT}\12+1+1,\V{MPI\_FLOAT},\V{status}.\V{MPI\_SOURCE},0,\V{MPI\_COMM\_WORLD});}}
+\L{\LB{}\Tab{8}{\V{saveme}[\V{NPERSLAVE}\*(\V{status}.\V{MPI\_SOURCE}\-1)+\V{nperslave}].\V{segmentno}=0;}}
+\L{\LB{}\Tab{8}{\V{slave\_shutdown}[\V{status}.\V{MPI\_SOURCE}]=1;}}
+\L{\LB{}\Tab{8}{\V{printf}(\S{}\"Master_\-_sent_shutdown_message_to_process_\%d\2n\"\SE{},\V{status}.\V{MPI\_SOURCE});}}
+\L{\LB{}\Tab{8}{\V{fflush}(\V{stdout});}}
+\L{\LB{\K{\#if}(\V{ISMPE})}}
+\L{\LB{}\Tab{8}{\V{MPE\_Log\_event}(4,\V{myid},\S{}\"sent\"\SE{});}}
+\L{\LB{\K{\#endif}_\C{}\1\* ISMPE \*\1\CE{}}}
+\L{\LB{______\}}}
+\L{\LB{____\}}}
+\L{\LB{____}}
+\L{\LB{__\}__\C{}\1\* end of while (num\_sent!=num\_recv) loop \*\1\CE{}}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* when all the answers are in, print results \*\1\CE{}}}
+\L{\LB{__\V{printf}(\S{}\"This_is_the_master_\-_all_answers_are_in!\2n\"\SE{});}}
+\L{\LB{__\V{fflush}(\V{stdout});}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* shut down any remaining slaves \*\1\CE{}}}
+\L{\LB{__\K{for}_(\V{islave}=1;\V{islave}\<\V{numprocs};\V{islave}++)}}
+\L{\LB{____\K{if}_(\V{slave\_shutdown}[\V{islave}]==0)_\{}}
+\L{\LB{______\V{MPI\_Send}(\V{htilde},\V{NPOINT}+\V{NPOINT}\12+1+1,\V{MPI\_FLOAT},\V{islave},0,\V{MPI\_COMM\_WORLD});}}
+\L{\LB{______\V{printf}(\S{}\"Master_\-_sent_shutdown_message_to_process_\%d_(don\'t_know_why_still_running!)\2n\"\SE{},}}
+\L{\LB{}\Tab{8}{_____\V{islave});}}
+\L{\LB{______\V{fflush}(\V{stdout});}}
+\L{\LB{____\}}}
+\L{\LB{__\V{free}(\V{saveme});}}
+\L{\LB{__\K{return};}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{\K{void}_\V{slave}()}}
+\L{\LB{\{}}
+\L{\LB{__\K{void}_\V{realft}(\K{float}_\*,_\K{unsigned}_\K{long},_\K{int});}}
+\L{\LB{__\K{static}_\K{float}_\*\V{output0}=\V{NULL},\*\V{output90}=\V{NULL},\*\V{snrdata}=\V{NULL};}}
+\L{\LB{__\K{static}_\K{float}_\*\V{ltc}=\V{NULL},\*\V{lch0tilde}=\V{NULL},\*\V{lch90tilde}=\V{NULL};}}
+\L{\LB{__\K{static}_\K{int}_\*\V{lchirppoints},\V{completed}=0;}}
+\L{\LB{__\K{int}_\V{i},\V{num\_stored},\V{temp\_no},\V{nskip}=4,\V{validdata}=0,\V{nperslave},\V{location};}}
+\L{\LB{__\K{float}_\*\V{htildel},\*\V{n\_inv\_noisel},\*\V{pow\_renorml};}}
+\L{\LB{__\V{MPI\_Status}_\V{status};}}
+\L{\LB{__\K{int}_\V{segno}[\V{NPERSLAVE}];}}
+\L{\LB{__}}
+\L{\LB{\K{\#if}(\V{PART\_TEMPLATE}\>\-1)}}
+\L{\LB{__\K{char}_\V{templatefile}[256];}}
+\L{\LB{__\V{FILE}_\*\V{fp\_pt}[\V{NPERSLAVE}];}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{__}}
+\L{\LB{__\V{printf}(\S{}\"Slave_\%d_(\%s)_just_got_started.\,.\,.\2n\"\SE{},\V{myid},\V{processor\_name});}}
+\L{\LB{__\V{fflush}(\V{stdout});}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* allocate storage space \*\1\CE{}}}
+\L{\LB{__\C{}\1\* Ouput of matched filters for phase0 and phase pi\12, in time domain, and temp storage \*\1\CE{}}}
+\L{\LB{__\V{snrdata}_=_(\K{float}_\*)\V{realloc}(\V{snrdata},\K{sizeof}(\K{float})\*\V{npoint}\1\V{nskip});}}
+\L{\LB{__\V{output0}_=_(\K{float}_\*)\V{realloc}(\V{output0},\K{sizeof}(\K{float})\*\V{npoint});}}
+\L{\LB{__\V{output90}_=_(\K{float}_\*)\V{realloc}(\V{output90},\K{sizeof}(\K{float})\*\V{npoint});}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* get the list of templates to use \*\1\CE{}}}
+\L{\LB{\K{\#if}(\V{ISMPE})}}
+\L{\LB{__\V{MPE\_Log\_event}(13,\V{myid},\S{}\"receiving.\,.\,.\"\SE{});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{__\V{MPI\_Bcast}(\&\V{num\_templates},1,\V{MPI\_INT},0,\V{MPI\_COMM\_WORLD});}}
+\L{\LB{__\V{sig\_buffer}_=_(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{num\_templates}\*\V{NSIGNALS}\*\V{NPERSLAVE});}}
+\L{\LB{__\V{template\_list}_=_(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*2\*\V{num\_templates});}}
+\L{\LB{__\V{MPI\_Bcast}(\V{template\_list},2\*\V{num\_templates},\V{MPI\_FLOAT},0,\V{MPI\_COMM\_WORLD});}}
+\L{\LB{\K{\#if}(\V{ISMPE})}}
+\L{\LB{__\V{MPE\_Log\_event}(14,\V{myid},\S{}\"received\"\SE{});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{__\V{printf}(\S{}\"Slave_\%d_(\%s)_just_got_template_list.\,.\,.\2n\"\SE{},\V{myid},\V{processor\_name});}}
+\L{\LB{__\V{fflush}(\V{stdout});}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* Phase 0 and phase pi\12 chirps, in frequency domain \*\1\CE{}}}
+\L{\LB{__\V{num\_stored}_=_\V{STORE\_TEMPLATES}\*(\V{num\_templates}_\-_1)_+_1;}}
+\L{\LB{__\V{lch0tilde}_=_(\K{float}_\*)\V{realloc}(\V{lch0tilde},\K{sizeof}(\K{float})\*\V{npoint}\*\V{num\_stored});}}
+\L{\LB{__\V{lch90tilde}_=_(\K{float}_\*)\V{realloc}(\V{lch90tilde},\K{sizeof}(\K{float})\*\V{npoint}\*\V{num\_stored});}}
+\L{\LB{__\V{lchirppoints}_=_(\K{int}_\*)\V{realloc}(\V{lchirppoints},\K{sizeof}(\K{float})\*\V{num\_stored});}}
+\L{\LB{__\V{ltc}_=_(\K{float}_\*)\V{realloc}(\V{ltc},\K{sizeof}(\K{float})\*\V{num\_stored});}}
+\L{\LB{__}}
+\L{\LB{__\K{if}_(\V{lch0tilde}==\V{NULL}_\|\,\|_\V{lch90tilde}==\V{NULL}_\|\,\|_\V{lchirppoints}==\V{NULL}_\|\,\|_\V{ltc}==\V{NULL})_\{}}
+\L{\LB{____\V{fprintf}(\V{stderr},\S{}\"Node_\%d_on_machine_\%s:_could_not_malloc()_memory!\2n\%s\2n\"\SE{},}}
+\L{\LB{}\Tab{8}{____\V{myid},\V{processor\_name},\V{rcsid});}}
+\L{\LB{____\V{fflush}(\V{stderr});}}
+\L{\LB{____\V{MPI\_Abort}(\V{MPI\_COMM\_WORLD},5);}}
+\L{\LB{__\}}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* now enter an infinite loop, waiting for new inputs \*\1\CE{}}}
+\L{\LB{__\K{while}_(1)_\{}}
+\L{\LB{____\C{}\1\* listen for data, parameters from master \*\1\CE{}}}
+\L{\LB{\K{\#if}(\V{ISMPE})}}
+\L{\LB{____\V{MPE\_Log\_event}(9,\V{myid},\S{}\"receiving.\,.\,.\"\SE{});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{____\V{validdata}=0;}}
+\L{\LB{____\K{for}_(\V{nperslave}=0;\V{nperslave}\<\V{NPERSLAVE};\V{nperslave}++)_\{}}
+\L{\LB{______\V{MPI\_Recv}(\V{htilde}+\V{nperslave}\*(\V{NPOINT}+\V{NPOINT}\12+1+1),\V{NPOINT}+\V{NPOINT}\12+1+1,\V{MPI\_FLOAT},0,\V{MPI\_ANY\_TAG},}}
+\L{\LB{}\Tab{8}{_______\V{MPI\_COMM\_WORLD},\&\V{status});}}
+\L{\LB{______\V{segno}[\V{nperslave}]=\V{status}.\V{MPI\_TAG};}}
+\L{\LB{\K{\#if}_(\V{DEBUG\_COMM})}}
+\L{\LB{______\V{printf}(\S{}\"Slave_\%s_node_\%d_loop:_message_tag_is_\%d\2n\"\SE{},\V{processor\_name},\V{myid},\V{status}.\V{MPI\_TAG});}}
+\L{\LB{______\V{fflush}(\V{stdout});}}
+\L{\LB{\K{\#endif}_\C{}\1\* DEBUG COMM \*\1\CE{}}}
+\L{\LB{______\K{if}_(\V{segno}[\V{nperslave}]!=0)}}
+\L{\LB{}\Tab{8}{\V{validdata}++;}}
+\L{\LB{______\K{else}}}
+\L{\LB{}\Tab{8}{\K{break};}}
+\L{\LB{____\}}}
+\L{\LB{\K{\#if}(\V{ISMPE})}}
+\L{\LB{____\V{MPE\_Log\_event}(10,\V{myid},\S{}\"received\"\SE{});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{____\C{}\1\* if this is a termination message, we are done! \*\1\CE{}}}
+\L{\LB{____\K{if}_(\V{validdata}==0)}}
+\L{\LB{______\K{break};}}
+\L{\LB{____}}
+\L{\LB{____\V{printf}(\S{}\"Slave_\%d_(\%s)_got_htilde_(and_noise_spectrum)_for_\%d_segments:_\%d_to_\%d\2n\"\SE{},}}
+\L{\LB{}\Tab{8}{___\V{myid},\V{processor\_name},\V{validdata},\V{segno}[0],\V{segno}[\V{validdata}\-1]);}}
+\L{\LB{____\V{fflush}(\V{stdout});}}
+\L{\LB{____}}
+\L{\LB{____\C{}\1\* compute signals \*\1\CE{}}}
+\L{\LB{____\K{for}_(\V{temp\_no}=0;\V{temp\_no}\<\V{num\_templates};\V{temp\_no}++)_\{}}
+\L{\LB{______}}
+\L{\LB{______\K{float}_\*\V{ch0tilde},\*\V{ch90tilde},\*\V{tc},\V{r00},\V{r11},\V{r01},\V{sigma2},\V{distance};}}
+\L{\LB{______\K{float}_\V{snr\_max},\V{c0},\V{c90},\V{varsplit},\V{stats}[2\*\V{PBINS}],\V{med\_renorm};}}
+\L{\LB{______\K{int}_\*\V{chirppoints},\V{num\_crossing},\V{maxi},\V{impulseoff},\V{indices}[\V{PBINS}];}}
+\L{\LB{______}}
+\L{\LB{______\C{}\1\* To skip all templates except a particular one \*\1\CE{}}}
+\L{\LB{\K{\#if}(\V{PART\_TEMPLATE}\>\-1)}}
+\L{\LB{______\K{for}_(\V{nperslave}=0;\V{nperslave}\<\V{validdata};\V{nperslave}++)_\{}}
+\L{\LB{}\Tab{8}{\V{snr\_max}=0.0;}}
+\L{\LB{}\Tab{8}{\V{varsplit}=0.0;}}
+\L{\LB{}\Tab{8}{\V{num\_crossing}=0;}}
+\L{\LB{}\Tab{8}{}}
+\L{\LB{}\Tab{8}{\K{if}((\V{temp\_no})!=\V{PART\_TEMPLATE})_\{}}
+\L{\LB{__________\V{sig\_buffer}[\V{nperslave}\*\V{num\_templates}\*\V{NSIGNALS}+\V{temp\_no}\*\V{NSIGNALS}]_=_0.0;}}
+\L{\LB{__________\V{sig\_buffer}[\V{nperslave}\*\V{num\_templates}\*\V{NSIGNALS}+\V{temp\_no}\*\V{NSIGNALS}+1]_=_0.0;}}
+\L{\LB{__________\V{sig\_buffer}[\V{nperslave}\*\V{num\_templates}\*\V{NSIGNALS}+\V{temp\_no}\*\V{NSIGNALS}+2]_=_0.0;}}
+\L{\LB{__________\V{sig\_buffer}[\V{nperslave}\*\V{num\_templates}\*\V{NSIGNALS}+\V{temp\_no}\*\V{NSIGNALS}+3]_=_0.0;}}
+\L{\LB{__________((\K{int}_\*)\V{sig\_buffer})[\V{nperslave}\*\V{num\_templates}\*\V{NSIGNALS}+\V{temp\_no}\*\V{NSIGNALS}+4]_=_0.0;}}
+\L{\LB{__________\V{sig\_buffer}[\V{nperslave}\*\V{num\_templates}\*\V{NSIGNALS}+\V{temp\_no}\*\V{NSIGNALS}+5]_=_0.0;__________}}
+\L{\LB{__________\K{continue};__\C{}\1\* THIS IS NO LONGER RIGHT?? \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\}}}
+\L{\LB{}\Tab{8}{\K{else}\{}}
+\L{\LB{__________\V{sprintf}(\V{templatefile},\S{}\"template\_\%d.\%d\"\SE{},\V{PART\_TEMPLATE},\V{segno}[\V{nperslave}]);}}
+\L{\LB{__________\V{fp\_pt}[\V{nperslave}]_=_\V{grasp\_open}(\S{}\"GRASP\_MFPATH\"\SE{},\V{templatefile},\S{}\"w\"\SE{});}}
+\L{\LB{}\Tab{8}{\}}}
+\L{\LB{______\}}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{______}}
+\L{\LB{______\V{ch0tilde}_=_\V{lch0tilde}_+_\V{npoint}\*\V{temp\_no}\*\V{STORE\_TEMPLATES};}}
+\L{\LB{______\V{ch90tilde}_=_\V{lch90tilde}_+_\V{npoint}\*\V{temp\_no}\*\V{STORE\_TEMPLATES};}}
+\L{\LB{______\V{chirppoints}_=_\V{lchirppoints}_+_\V{temp\_no}\*\V{STORE\_TEMPLATES};}}
+\L{\LB{______\V{tc}_=_\V{ltc}_+_\V{temp\_no}\*\V{STORE\_TEMPLATES};}}
+\L{\LB{______}}
+\L{\LB{______\C{}\1\* Compute the template, and store it internally, if desired \*\1\CE{}}}
+\L{\LB{______\K{if}_(\V{completed}!=\V{num\_templates})_\{}}
+\L{\LB{________\K{float}_\V{m1},\V{m2};}}
+\L{\LB{________\K{int}_\V{longest\_template}=0;}}
+\L{\LB{}\Tab{8}{}}
+\L{\LB{}\Tab{8}{\C{}\1\* manufacture two chirps (dimensionless strain at 1 Mpc distance) \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{m1}_=_\V{template\_list}[2\*\V{temp\_no}];}}
+\L{\LB{}\Tab{8}{\V{m2}_=_\V{template\_list}[2\*\V{temp\_no}+1];}}
+\L{\LB{}\Tab{8}{}}
+\L{\LB{\K{\#if}(\V{ISMPE})}}
+\L{\LB{}\Tab{8}{\K{if}_(!\V{SMALL\_MPELOG})_\V{MPE\_Log\_event}(15,\V{myid},\S{}\"computing\"\SE{});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{\K{\#if}_(\V{REVERSE\_FILTERS})}}
+\L{\LB{}\Tab{8}{\V{make\_retlifs}(\V{m1},\V{m2},\V{ch0tilde},\V{ch90tilde},\V{FLO},\V{npoint},\V{srate},\V{chirppoints},\V{tc},4000,4);}}
+\L{\LB{\K{\#else}}}
+\L{\LB{}\Tab{8}{\V{make\_filters}(\V{m1},\V{m2},\V{ch0tilde},\V{ch90tilde},\V{FLO},\V{npoint},\V{srate},\V{chirppoints},\V{tc},4000,4);}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}\Tab{8}{}}
+\L{\LB{\K{\#if}(\V{ISMPE})}}
+\L{\LB{}\Tab{8}{\K{if}_(!\V{SMALL\_MPELOG})_\V{MPE\_Log\_event}(16,\V{myid},\S{}\"computed\"\SE{});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}\Tab{8}{\K{if}_(\*\V{chirppoints}\>\V{longest\_template})_\V{longest\_template}_=_\*\V{chirppoints};}}
+\L{\LB{}\Tab{8}{}}
+\L{\LB{}\Tab{8}{\K{if}_(\*\V{chirppoints}\>\V{CHIRPLEN})_\{}}
+\L{\LB{}\Tab{8}{__\V{fprintf}(\V{stderr},\S{}\"Chirp_m1=\%f_m2=\%f_length_\%d_too_long!\2n\"\SE{},\V{m1},\V{m2},}}
+\L{\LB{__________________\*\V{chirppoints});}}
+\L{\LB{}\Tab{8}{__\V{fprintf}(\V{stderr},\S{}\"Maximum_allowed_length_is_\%d\2n\"\SE{},\V{CHIRPLEN});}}
+\L{\LB{}\Tab{8}{__\V{fprintf}(\V{stderr},\S{}\"Please_recompile_with_larger_CHIRPLEN_value\2n\"\SE{});}}
+\L{\LB{__________\V{fprintf}(\V{stderr},\S{}\"\%s\2n\"\SE{},\V{rcsid});}}
+\L{\LB{}\Tab{8}{__\V{fflush}(\V{stderr});}}
+\L{\LB{__________\V{MPI\_Abort}(\V{MPI\_COMM\_WORLD},6);______}}
+\L{\LB{}\Tab{8}{\}}}
+\L{\LB{}\Tab{8}{}}
+\L{\LB{}\Tab{8}{\C{}\1\* normalize the chirp template \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\C{}\1\* normalization of next line comes from GRASP (5.6.3) and (5.6.4) \*\1\CE{}}}
+\L{\LB{________\{}}
+\L{\LB{}\Tab{8}{__\K{float}_\V{inverse\_distance\_scale}=2.0\*\V{HSCALE}\*(\V{TSOLAR}\*\V{C\_LIGHT}\1\V{MPC});}}
+\L{\LB{}\Tab{8}{__\K{for}_(\V{i}=0;\V{i}\<\*\V{chirppoints};\V{i}++)\{}}
+\L{\LB{}\Tab{8}{____\V{ch0tilde}[\V{i}]_\*=_\V{inverse\_distance\_scale};}}
+\L{\LB{}\Tab{8}{____\V{ch90tilde}[\V{i}]_\*=_\V{inverse\_distance\_scale};}}
+\L{\LB{}\Tab{8}{__\}}}
+\L{\LB{}\Tab{8}{\}}}
+\L{\LB{}\Tab{8}{}}
+\L{\LB{}\Tab{8}{\C{}\1\* zero out the unused elements of the tilde arrays \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\K{for}_(\V{i}=(\*\V{chirppoints});\V{i}\<\V{npoint};\V{i}++)}}
+\L{\LB{}\Tab{8}{__\V{ch0tilde}[\V{i}]=\V{ch90tilde}[\V{i}]=0.0;}}
+\L{\LB{}\Tab{8}{}}
+\L{\LB{}\Tab{8}{\C{}\1\* and FFT the chirps \*\1\CE{}}}
+\L{\LB{\K{\#if}(\V{ISMPE})}}
+\L{\LB{}\Tab{8}{\K{if}_(!\V{SMALL\_MPELOG})_\V{MPE\_Log\_event}(17,\V{myid},\S{}\"starting_fft\"\SE{});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}\Tab{8}{\V{realft}(\V{ch0tilde}\-1,\V{npoint},1);}}
+\L{\LB{\K{\#if}(\V{ISMPE})}}
+\L{\LB{}\Tab{8}{\K{if}_(!\V{SMALL\_MPELOG})_\V{MPE\_Log\_event}(18,\V{myid},\S{}\"ending_fft\"\SE{});}}
+\L{\LB{}\Tab{8}{\K{if}_(!\V{SMALL\_MPELOG})_\V{MPE\_Log\_event}(17,\V{myid},\S{}\"starting_fft\"\SE{});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}\Tab{8}{\V{realft}(\V{ch90tilde}\-1,\V{npoint},1);}}
+\L{\LB{\K{\#if}(\V{ISMPE})}}
+\L{\LB{}\Tab{8}{\K{if}_(!\V{SMALL\_MPELOG})_\V{MPE\_Log\_event}(18,\V{myid},\S{}\"ending_fft\"\SE{});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}\Tab{8}{\K{if}_(\V{STORE\_TEMPLATES})_\V{completed}++;}}
+\L{\LB{}}
+\L{\LB{}\Tab{8}{\C{}\1\* print out the length of the longest template \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\K{if}_(\V{completed}==\V{num\_templates})}}
+\L{\LB{}\Tab{8}{__\V{fprintf}(\V{stderr},\S{}\"Slave_\%d:_templates_completed.__Longest_is_\%d_points\2n\"\SE{},}}
+\L{\LB{}\Tab{16}{__\V{myid},\V{longest\_template});}}
+\L{\LB{}\Tab{8}{\V{fflush}(\V{stdout});}}
+\L{\LB{______\}__\C{}\1\* done computing the template \*\1\CE{}}}
+\L{\LB{______}}
+\L{\LB{______\C{}\1\* correlation coefficients \*\1\CE{}}}
+\L{\LB{______\K{for}_(\V{nperslave}=0;\V{nperslave}\<\V{validdata};\V{nperslave}++)_\{}}
+\L{\LB{}\Tab{8}{\V{n\_inv\_noisel}=\V{n\_inv\_noise}+\V{nperslave}\*(\V{NPOINT}+\V{NPOINT}\12+1+1);}}
+\L{\LB{}\Tab{8}{\V{htildel}=\V{htilde}+\V{nperslave}\*(\V{NPOINT}+\V{NPOINT}\12+1+1);}}
+\L{\LB{}\Tab{8}{\V{pow\_renorml}=\V{pow\_renorm}+\V{nperslave}\*(\V{NPOINT}+\V{NPOINT}\12+1+1);}}
+\L{\LB{\K{\#if}(\V{ISMPE})}}
+\L{\LB{}\Tab{8}{\K{if}_(!\V{SMALL\_MPELOG})_\V{MPE\_Log\_event}(21,\V{myid},\S{}\"starting\"\SE{});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}\Tab{8}{\V{corr\_coef}(\V{ch0tilde},\V{ch90tilde},\V{n\_inv\_noisel},\V{npoint},\&\V{r00},\&\V{r11},\&\V{r01});}}
+\L{\LB{\K{\#if}(\V{ISMPE})}}
+\L{\LB{}\Tab{8}{\K{if}_(!\V{SMALL\_MPELOG})_\V{MPE\_Log\_event}(22,\V{myid},\S{}\"done\"\SE{});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}\Tab{8}{\C{}\1\* sigma squared and optimal distance scale Mpc for SNR=1            \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{sigma2}_=_0.5\*(\V{r00}_+_\V{r11});}}
+\L{\LB{}\Tab{8}{\V{distance}_=_\V{sqrt}(\V{sigma2});}}
+\L{\LB{}\Tab{8}{}}
+\L{\LB{}\Tab{8}{\C{}\1\* find the moment at which SNR is a maximum \*\1\CE{}}}
+\L{\LB{\K{\#if}(\V{ISMPE})}}
+\L{\LB{}\Tab{8}{\K{if}_(!\V{SMALL\_MPELOG})_\V{MPE\_Log\_event}(19,\V{myid},\S{}\"searching\"\SE{});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}\Tab{8}{\{}}
+\L{\LB{}\Tab{8}{__\K{int}_\V{count}=0;}}
+\L{\LB{}\Tab{8}{__\K{float}_\V{x},\V{y},\V{amp},\V{medsnr},\V{expect}=\V{sqrt}(\V{M\_LN2});}}
+\L{\LB{}\Tab{8}{__\K{float}_\V{x2py2},\V{x2py2max},\V{x2py2\_thresh};}}
+\L{\LB{}\Tab{8}{__}}
+\L{\LB{}\Tab{8}{__\V{correlate}(\V{output0},\V{htildel},\V{ch0tilde},\V{n\_inv\_noisel},\V{npoint});}}
+\L{\LB{}\Tab{8}{__\V{correlate}(\V{output90},\V{htildel},\V{ch90tilde},\V{n\_inv\_noisel},\V{npoint});}}
+\L{\LB{}\Tab{8}{__}}
+\L{\LB{}\Tab{8}{__\V{x2py2max}=0.0;}}
+\L{\LB{}\Tab{8}{__\V{num\_crossing}=0;}}
+\L{\LB{}\Tab{8}{__\V{x2py2\_thresh}=\V{THRESHOLD}\*\V{THRESHOLD}\*\V{sigma2};}}
+\L{\LB{}\Tab{8}{__\V{maxi}=\-1;}}
+\L{\LB{}\Tab{8}{__\K{for}_(\V{i}=\V{PRESAFETY};\V{i}\<\V{NPOINT}\-\V{POSTSAFETY};\V{i}++)_\{}}
+\L{\LB{}\Tab{8}{____\V{x}_=_\V{output0}[\V{i}];}}
+\L{\LB{}\Tab{8}{____\V{y}_=_\V{output90}[\V{i}];}}
+\L{\LB{____________\V{x2py2}_=_\V{x}\*\V{x}_+_\V{y}\*\V{y};}}
+\L{\LB{\K{\#if}(\V{PART\_TEMPLATE}\>\-1)}}
+\L{\LB{}\Tab{8}{____\V{fprintf}(\V{fp\_pt}[\V{nperslave}],\S{}\"\%d_\%f\2n\"\SE{},\V{i},\V{sqrt}(\V{x2py2}\1\V{sigma2}));____}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}\Tab{8}{____\K{if}_(\V{x2py2}\>\V{x2py2max})_\{}}
+\L{\LB{}\Tab{8}{______\V{x2py2max}_=_\V{x2py2};}}
+\L{\LB{}\Tab{8}{______\V{maxi}_=_\V{i};}}
+\L{\LB{}\Tab{8}{____\}}}
+\L{\LB{}\Tab{8}{____\K{if}_(\V{x2py2}\>\V{x2py2\_thresh})_\V{num\_crossing}++;}}
+\L{\LB{}\Tab{8}{____\K{if}_(!(\V{i}\%\V{nskip}))_\V{snrdata}[\V{count}++]_=_\V{x2py2};}}
+\L{\LB{}\Tab{8}{__\}}}
+\L{\LB{}\Tab{8}{__\V{snr\_max}=\V{sqrt}(\V{x2py2max}\1\V{sigma2});}}
+\L{\LB{}\Tab{8}{__}}
+\L{\LB{\K{\#if}(\V{PART\_TEMPLATE}\>\-1)}}
+\L{\LB{}\Tab{8}{__\V{fclose}(\V{fp\_pt}[\V{nperslave}]);}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}\Tab{8}{__}}
+\L{\LB{}\Tab{8}{__\C{}\1\* check that we did correctly find a maximum offset \*\1\CE{}}}
+\L{\LB{}\Tab{8}{__\V{assert}(\V{PRESAFETY}_\<=_\V{maxi}_\&\&_\V{maxi}_\<=_\V{NPOINT}\-\V{POSTSAFETY});}}
+\L{\LB{}\Tab{8}{__}}
+\L{\LB{}\Tab{8}{__\V{c0}_=_(\V{r11}\*\V{output0}[\V{maxi}]_\-_\V{r01}\*\V{output90}[\V{maxi}]);}}
+\L{\LB{}\Tab{8}{__\V{c90}_=_(\V{r00}\*\V{output90}[\V{maxi}]_\-_\V{r01}\*\V{output0}[\V{maxi}]);}}
+\L{\LB{}\Tab{8}{__\V{amp}_=_\V{sqrt}(\V{c0}\*\V{c0}_+_\V{c90}\*\V{c90});}}
+\L{\LB{}\Tab{8}{__}}
+\L{\LB{}\Tab{8}{__\V{c0}_\1=_\V{amp};}}
+\L{\LB{}\Tab{8}{__\V{c90}_\1=_\V{amp};}}
+\L{\LB{}\Tab{8}{__\C{}\1\* the following routine is the Numerical Recipes routine select().}}
+\L{\LB{}\Tab{8}{_____However its name has been changed to NRselect.  See section 2.5.2 of the GRASP}}
+\L{\LB{}\Tab{8}{_____manual for details!}}
+\L{\LB{}\Tab{8}{_____\*\1\CE{}}}
+\L{\LB{}\Tab{8}{__\V{medsnr}_=_\V{NRselect}(\V{count}\12,\V{count},\V{snrdata}\-1);}}
+\L{\LB{}\Tab{8}{__\V{med\_renorm}_=_\V{expect}\1\V{sqrt}(\V{medsnr}\1\V{sigma2});}}
+\L{\LB{}\Tab{8}{\}}}
+\L{\LB{}\Tab{8}{}}
+\L{\LB{\K{\#if}(\V{ISMPE})}}
+\L{\LB{}\Tab{8}{\K{if}_(!\V{SMALL\_MPELOG})_\V{MPE\_Log\_event}(20,\V{myid},\S{}\"done\"\SE{});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}\Tab{8}{\C{}\1\* identify when an impulse would have caused observed filter output \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{impulseoff}_=_(\V{maxi}_+_\*\V{chirppoints})\%\V{npoint};}}
+\L{\LB{}\Tab{8}{}}
+\L{\LB{}\Tab{8}{\C{}\1\* collect interesting signals to return \*\1\CE{}}}
+\L{\LB{}\Tab{8}{\V{location}=\V{NSIGNALS}\*\V{num\_templates}\*\V{nperslave}+\V{temp\_no}\*\V{NSIGNALS};}}
+\L{\LB{}\Tab{8}{\V{sig\_buffer}[\V{location}]_=_\V{distance};}}
+\L{\LB{}\Tab{8}{\V{sig\_buffer}[\V{location}+1]_=_\V{snr\_max};}}
+\L{\LB{}\Tab{8}{\V{sig\_buffer}[\V{location}+2]_=_\V{snr\_max}\*(\*\V{pow\_renorml});}}
+\L{\LB{}\Tab{8}{\V{sig\_buffer}[\V{location}+3]_=_\V{snr\_max}\*\V{med\_renorm};}}
+\L{\LB{\K{\#if}(\V{COMPARE})}}
+\L{\LB{}\Tab{8}{((\K{int}_\*)\V{sig\_buffer})[\V{location}+4]_=_\-\V{maxi};}}
+\L{\LB{\K{\#else}}}
+\L{\LB{}\Tab{8}{((\K{int}_\*)\V{sig\_buffer})[\V{location}+4]_=_\V{impulseoff};_____}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}\Tab{8}{\V{sig\_buffer}[\V{location}+5]_=_\V{atan2}(\V{c90},\V{c0});}}
+\L{\LB{}\Tab{8}{}}
+\L{\LB{}\Tab{8}{\V{varsplit}=0.0;}}
+\L{\LB{}\Tab{8}{\K{if}_(\V{snr\_max}\>\V{THRESHOLD})_\{}}
+\L{\LB{\K{\#if}(\V{ISMPE})}}
+\L{\LB{}\Tab{8}{__\K{if}_(!\V{SMALL\_MPELOG})_\V{MPE\_Log\_event}(23,\V{myid},\S{}\"testing\"\SE{});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{\K{\#if}_(\V{TWO\_PHASE\_R2})}}
+\L{\LB{__________\C{}\1\* two-phase r\^2 test \*\1\CE{}}}
+\L{\LB{}\Tab{8}{__\V{varsplit}_=_\V{splitup\_freq5}(\V{sqrt}(0.5),\V{sqrt}(0.5),\V{ch0tilde},\V{ch90tilde},\V{r00},}}
+\L{\LB{}\Tab{32}{___\V{n\_inv\_noisel},\V{npoint},}}
+\L{\LB{}\Tab{32}{___\V{maxi},\V{PBINS},\V{indices},\V{stats},\V{output0},\V{htildel});}}
+\L{\LB{\K{\#else}}}
+\L{\LB{__________\C{}\1\* Single phase r\^2 test: \*\1\CE{}}}
+\L{\LB{}\Tab{8}{__\V{varsplit}_=_\V{splitup\_freq2}(\V{c0},\V{c90},\V{ch0tilde},\V{ch90tilde},\V{r00},}}
+\L{\LB{}\Tab{32}{___\V{n\_inv\_noisel},\V{npoint},}}
+\L{\LB{}\Tab{32}{___\V{maxi},\V{PBINS},\V{indices},\V{stats},\V{output0},\V{htildel});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}\Tab{8}{__\V{varsplit}_\1=_\V{sigma2};}}
+\L{\LB{\K{\#if}(\V{ISMPE})}}
+\L{\LB{}\Tab{8}{__\K{if}_(!\V{SMALL\_MPELOG})_\V{MPE\_Log\_event}(24,\V{myid},\S{}\"done\"\SE{});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{}\Tab{8}{\}}}
+\L{\LB{}\Tab{8}{\V{sig\_buffer}[\V{location}+6]_=_\V{varsplit};}}
+\L{\LB{}\Tab{8}{((\K{int}_\*)\V{sig\_buffer})[\V{location}+7]_=_\V{num\_crossing};}}
+\L{\LB{}\Tab{8}{}}
+\L{\LB{______\}__\C{}\1\* end of loop over the templates \*\1\CE{}}}
+\L{\LB{____\}_\C{}\1\* end of loop over nperslave \*\1\CE{}}}
+\L{\LB{____}}
+\L{\LB{____\C{}\1\* return signals to master \*\1\CE{}}}
+\L{\LB{\K{\#if}(\V{ISMPE})}}
+\L{\LB{____\V{MPE\_Log\_event}(7,\V{myid},\S{}\"send\"\SE{});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{\K{\#if}_(\V{DEBUG\_COMM})}}
+\L{\LB{____\V{printf}(\S{}\"Slave_\%s_node_\%d_sending_message_to_master:_tag_is_\%d\2n\"\SE{},\V{processor\_name},\V{myid},}}
+\L{\LB{}\Tab{8}{___\V{validdata});}}
+\L{\LB{____\V{fflush}(\V{stdout});}}
+\L{\LB{\K{\#endif}_\C{}\1\* DEBUG\_COMM \*\1\CE{}}}
+\L{\LB{____\V{MPI\_Send}(\V{sig\_buffer},\V{NSIGNALS}\*\V{num\_templates}\*\V{NPERSLAVE},\V{MPI\_FLOAT},0,\V{validdata},\V{MPI\_COMM\_WORLD});}}
+\L{\LB{\K{\#if}(\V{ISMPE})}}
+\L{\LB{____\V{MPE\_Log\_event}(8,\V{myid},\S{}\"sent\"\SE{});}}
+\L{\LB{\K{\#endif}}}
+\L{\LB{____\K{if}_(\V{validdata}\<\V{NPERSLAVE})_\K{break};}}
+\L{\LB{__\}_\C{}\1\* end of loop over the data \*\1\CE{}}}
+\L{\LB{__}}
+\L{\LB{__\V{printf}(\S{}\"Node_\%d_on_machine_\%s:_received_a_shutdown_message\2n\"\SE{},}}
+\L{\LB{}\Tab{8}{_\V{myid},\V{processor\_name});}}
+\L{\LB{__\V{fflush}(\V{stdout});}}
+\L{\LB{__\K{return};}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{}}
+\L{\LB{}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* This routine exports environment variables to the nodes \*\1\CE{}}}
+\L{\LB{\K{void}_\V{export\_environment}(\K{int}_\V{node\_number},\V{const}_\K{char}_\*\V{name})_\{}}
+\L{\LB{__\K{char}_\*\V{environment},\*\V{var}=\V{NULL};}}
+\L{\LB{__\K{int}_\V{length};}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* if this is the master, get enviroment variable \*\1\CE{}}}
+\L{\LB{__\K{if}_(\V{node\_number}==0)_\{}}
+\L{\LB{____\K{if}_(\V{name}==\V{NULL})_\{}}
+\L{\LB{______\V{fprintf}(\V{stderr},\S{}\"Argument_to_export\_environment()_can\'t_be_null!\2n\"\SE{});}}
+\L{\LB{______\V{fflush}(\V{stderr});}}
+\L{\LB{______\V{MPI\_Abort}(\V{MPI\_COMM\_WORLD},2);______}}
+\L{\LB{____\}}}
+\L{\LB{____\V{var}=\V{getenv}(\V{name});}}
+\L{\LB{____\K{if}_(\V{var}==\V{NULL})_\{}}
+\L{\LB{______\V{fprintf}(\V{stderr},\S{}\"Environment_variable_\%s_MUST_be_set!\2n\"\SE{},\V{name});}}
+\L{\LB{______\V{fflush}(\V{stderr});}}
+\L{\LB{______\V{MPI\_Abort}(\V{MPI\_COMM\_WORLD},3);}}
+\L{\LB{____\}}}
+\L{\LB{____\C{}\1\* calculate the length of the string to pass \*\1\CE{}}}
+\L{\LB{____\V{length}=\V{strlen}(\V{name})+\V{strlen}(\V{var})+2;}}
+\L{\LB{__\}}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* broadcast the length of the string \*\1\CE{}}}
+\L{\LB{__\V{MPI\_Bcast}(\&\V{length},1,\V{MPI\_INT},0,\V{MPI\_COMM\_WORLD});}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* allocate storage for the string \*\1\CE{}}}
+\L{\LB{__\K{if}_(\V{NULL}==(\V{environment}=(\K{char}_\*)\V{malloc}(\V{length})))_\{}}
+\L{\LB{____\V{fprintf}(\V{stderr},\S{}\"Export\_environment()_node_\%d_couldn\'t_allocate_memory!\2n\"\SE{},}}
+\L{\LB{}\Tab{8}{____\V{node\_number});}}
+\L{\LB{____\V{fflush}(\V{stderr});}}
+\L{\LB{____\V{MPI\_Abort}(\V{MPI\_COMM\_WORLD},4);}}
+\L{\LB{__\}}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\*  print environment variable into string \*\1\CE{}}}
+\L{\LB{__\K{if}_(\V{node\_number}==0)_\{}}
+\L{\LB{____\V{sprintf}(\V{environment},\S{}\"\%s=\%s\"\SE{},\V{name},\V{var});}}
+\L{\LB{____\V{fprintf}(\V{stderr},\S{}\"Exporting_environment_variable_\%s\2n\"\SE{},\V{environment});}}
+\L{\LB{____\V{fflush}(\V{stderr});}}
+\L{\LB{__\}}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* then broadcast it to the other processes \*\1\CE{}}}
+\L{\LB{__\V{MPI\_Bcast}(\V{environment},\V{length},\V{MPI\_CHAR},0,\V{MPI\_COMM\_WORLD});}}
+\L{\LB{__}}
+\L{\LB{__\C{}\1\* and put it into the local environment \*\1\CE{}}}
+\L{\LB{__\K{if}_(\V{node\_number})_\{}}
+\L{\LB{____\V{putenv}(\V{environment});}}
+\L{\LB{____\V{fprintf}(\V{stderr},\S{}\"Node_\%d_receiving_environment_variable_\%s\2n\"\SE{},}}
+\L{\LB{}\Tab{8}{____\V{node\_number},\V{environment});}}
+\L{\LB{____\V{fflush}(\V{stderr});}}
+\L{\LB{__\}}}
+\L{\LB{__\K{return};}}
+\L{\LB{\}}}

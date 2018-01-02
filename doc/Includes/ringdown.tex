@@ -1,0 +1,33 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_ringdown\1ringdown.c},{11:59},{Jan 23 1998}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{}}
+\L{\LB{\K{\#define}_\V{IOTA}_0.0_______\C{}\1\* inclination (radians) \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{BETA}_0.0_______\C{}\1\* azimuth (radians) \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{EPS}_0.03_______\C{}\1\* fractional mass loss \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{MASS}_50.0______\C{}\1\* mass (solar masses) \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{SPIN}_0.98______\C{}\1\* specific angular momentum \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{MODE\_L}_2_______\C{}\1\* mode integer l \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{MODE\_M}_2_______\C{}\1\* mode integer m \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{SRATE}_16000.0__\C{}\1\* sampling rate (Hz) \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{ATTEN}_20.0_____\C{}\1\* attenuation leven (dB) \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{MAX}_1024_______\C{}\1\* max number of points in waveform \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}()}}
+\L{\LB{\{}}
+\L{\LB{__\K{float}_\*\V{plus},\*\V{cross},\V{t},\V{dt}=1\1\V{SRATE};}}
+\L{\LB{__\K{int}_\V{i},\V{n};}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* set arrays to NULL so that memory is allocated in called routines \*\1\CE{}}}
+\L{\LB{__\V{plus}_=_\V{cross}_=_\V{NULL};}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* generate the waveform function data \*\1\CE{}}}
+\L{\LB{__\V{n}_=_\V{qn\_ring}(\V{IOTA},\V{BETA},\V{EPS},\V{MASS},\V{SPIN},\V{MODE\_L},\V{MODE\_M},\V{dt},\V{ATTEN},\V{MAX},\&\V{plus},\&\V{cross});}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* output the data \*\1\CE{}}}
+\L{\LB{__\K{for}_(\V{i}=0,\V{t}=0;\V{i}\<\V{n};\V{i}++,\V{t}+=\V{dt})_\V{printf}(\S{}\"\%e\2t\%e\2t\%e\2n\"\SE{},\V{t},\V{plus}[\V{i}],\V{cross}[\V{i}]);}}
+\L{\LB{}}
+\L{\LB{__\K{return}_0;}}
+\L{\LB{\}}}

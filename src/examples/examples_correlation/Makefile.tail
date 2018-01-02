@@ -1,0 +1,28 @@
+#############################################################################
+#  THE REGION ABOVE THIS SPACE IS FILLED IN BY InstallGRASP                 #
+#############################################################################
+
+INCLUDES= -I$(GRASP_I) -I$(FRAME_DIR)/include/
+
+CLIBS= $(OPTIMIZED_OBJECTS) -L$(GRASP_HOME)/lib -lgrasp -L$(FRAME_DIR)/lib -lFrame \
+        -L$(RECIPES_LIB) -l$(LRECIPES) $(CLAPACK_LIBS) $(OPTIMIZED_LIBS) -lm
+
+LIBS= $(OPTIMIZED_OBJECTS) -L$(GRASP_HOME)/lib -lgrasp -L$(FRAME_DIR)/lib -lFrame \
+        -L$(RECIPES_LIB) -l$(LRECIPES) $(OPTIMIZED_LIBS) -lm
+
+all: corr_init env_corr
+
+env_corr: env_corr.c $(GRASP_I)/grasp.h $(GRASP_HOME)/lib/libgrasp.a
+	if [ '$(BUILD_FRAME)' = 'true' ]; then \
+	if [ '$(WITH_CLAPACK)' = 'true' ]; then \
+	$(CC) -DCLAPACK $(CFLAGS) -I$(F2C_INC) $(INCLUDES) env_corr.c -o env_corr $(CLIBS) ; \
+	else  \
+	$(CC) $(CFLAGS) $(INCLUDES) env_corr.c -o env_corr $(LIBS) ; \
+	fi ; \
+        fi
+
+corr_init: corr_init.c $(GRASP_I)/grasp.h $(GRASP_HOME)/lib/libgrasp.a
+	if [ '$(BUILD_FRAME)' = 'true' ]; then \
+	$(CC) $(CFLAGS) $(INCLUDES) -I$(FRAME_DIR)/include corr_init.c \
+	-o corr_init $(LIBS) ;\
+        fi

@@ -1,0 +1,31 @@
+# These are the "generic" locations: you may have to modify them.
+
+# Numerical Recipes Library
+NR_LIB = -L/usr/local/recipes/lib -lrecipes_c
+
+# FFTW include/ and lib/
+FFTW_INCLUDE = -I/usr/local/fftw-2.1.1/include
+FFTW_LIB = -L/usr/local/fftw-2.1.1/lib -lfftw
+
+# GRASP include/ and lib/
+GRASP_INCLUDE = -I/usr/local/GRASP/include
+GRASP_LIB = -L/usr/local/GRASP/lib -lgrasp
+
+CC = cc
+CFLAGS = -fast -xO5
+
+all: realft_fftw_test1 realft_fftw_test2
+
+realft_fftw_test1: realft_fftw_test.c printvec.o
+	$(CC) $(CFLAGS) -o realft_fftw_test1 realft_fftw_test.c printvec.o \
+              $(NR_LIB) -lm
+
+realft_fftw_test2: realft_fftw_test.c realft_fftw.o printvec.o
+	$(CC) $(CFLAGS) -o realft_fftw_test2 realft_fftw_test.c printvec.o \
+              realft_fftw.o $(FFTW_LIB) $(NR_LIB) $(GRASP_LIB) -lm
+
+realft_fftw.o: realft_fftw.c
+	$(CC) $(CFLAGS) $(GRASP_INCLUDE) $(FFTW_INCLUDE) -c realft_fftw.c
+
+printvec.o: printvec.c
+	$(CC) $(CFLAGS) -c printvec.c

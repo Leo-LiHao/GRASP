@@ -1,0 +1,21 @@
+#!/bin/tcsh
+
+unsetenv GRASP_DATAPATH
+setenv GRASP_FRAMEPATH /data/frames
+set rundir=`pwd`/frameoutput
+if ( ! -d $rundir ) then
+        mkdir $rundir
+endif
+
+setenv GRASP_MFPATH $rundir
+touch $GRASP_MFPATH/run_output
+setenv GRASP_INSERT $rundir
+setenv GRASP_STARTSEGMENT 0
+
+setenv GRASP_TEMPLATE `pwd`
+setenv GRASP_KILLSCRIPT $rundir
+touch $rundir/environment_values
+setenv | grep GRASP >! $rundir/environment_values
+echo Starting Frame Run at time `date` | mail ballen@dirac.phys.uwm.edu
+mpirun -np 48 -machinefile ./machines ./examples_binary-search/binary_search >&! $rundir/run_output
+

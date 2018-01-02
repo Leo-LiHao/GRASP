@@ -1,0 +1,139 @@
+#
+## This is the SITE_SPECIFIC file
+##
+## This is the only file that you should need to edit to set up
+## your own working copy of GRASP.  Directions for editing this
+## file may be found in the GRASP USERS MANUAL.  A postscript version
+## of the manual may be found in the doc/ subdirectory of this file,
+## in manual.ps
+##
+## First, edit this file.
+## Second, run the shell script called InstallGRASP
+##
+##
+## ------------------------------------------------------------##
+## START EDITING HERE.  PLEASE SAVE A COPY OF THIS ORIGINAL FILE
+##
+##
+## edit to point to the home directory of the GRASP package.  This
+## is where GRASP is installed and where it must be built.
+## If the directory structure is already where you want it, just set
+## GRASP_HOME to the current directory!
+
+GRASP_HOME=/home/sampson/ballen/GRASP_SP2
+RECIPES_LIB=/home/cacr/staff/roy/recipes
+LRECIPES=recipes.RS6K
+CC = cc
+MPICC = /usr/local/MPI/mpich-1.1.0/lib/rs6000/ch_p4/mpicc -g
+MPI_LIBS = -L/usr/local/MPI/mpich/lib/rs6000/ch_p4 -lmpi -lmpe 
+MPI_INCLUDES=-I/usr/local/MPI/mpich-1.1.0/include
+FRAME_DIR=/home/sampson/ballen/FRAME
+## ----------------------------------------------------------##
+##  THIS SECTION DEFINES YOUR CHOICE OF COMPILER AND OPTIONS ##
+
+# edit to the name of your C compiler:
+
+# edit to include compilation flags that you desire:
+# debugging and developement
+# profiling
+# CFLAGS=-fast -xO4 -xpg
+# speed and optimization
+# CFLAGS=-fast -xO4
+CFLAGS=-g
+
+## ---------------------------------------------------------##
+##  THIS SECTION REFERENCES THE NUMERICAL RECIPES LIBRARIES ##
+
+# edit to point to directory containing the Numerical Recipes library
+
+# edit to give the name of the numerical recipes library you wish to use:
+# debugging and developement
+# profiling
+# LRECIPES=recipes_cp
+# speed and optimization
+# LRECIPES=recipes_c
+
+## -----------------------------------------------------------##
+##  THIS IS THE SECTION THAT REFERENCES THE MPI/MPE LIBRARIES ##
+
+# If you want to build the MPI code, set this variable to true, else to false
+# If it is set to false, all the MPI defines below are ignored.
+# BUILD_MPI = false
+BUILD_MPI = true 
+
+# edit to give the name of your local MPI C compiler (and any flags)
+# edit to give the names/paths of the MPI/MPE libraries you wish to use:
+# if you do not want MPI/MPE, values are irrelevant (set to blank):
+# You MAY need to include paths as well
+# -L/usr/local/mpi/lib/solaris/ch_p4 -lmpi -lmpe
+# edit to point to the MPI/MPE include directory
+# if you do not want MPI, set to /dev/null
+
+## -----------------------------------------------------------##
+##  THIS IS THE SECTION THAT REFERENCES THE FRAME LIBRARIES   ##
+
+# If you want to build code that depends upon the FRAME libraries,
+# set this variable to true, else to false
+# If it is set to false, the FRAME define is ignored
+# BUILD_FRAME = false
+BUILD_FRAME = true
+
+# edit to point to the directory containing the FRAME directories
+# include and lib.  The required files are include/FrameL.h and
+# lib/libFrame.a 
+# If you don't need the FRAME libraries, just leave this entry
+# blank.
+
+## -----------------------------------------------------------##
+##  THIS IS THE SECTION THAT REFERENCES THE GRTOOLBOX WHICH
+##  PROVIDES A MATLAB INTERFACE TO GRASP AND THE FRAME
+##  LIBRARY.
+##
+##  NOTE: IF YOU SET BUILD_GRTOOLBOX TO TRUE YOU MUST ALSO
+##        HAVE SET BUILD_FRAME TO TRUE.
+##
+
+
+# If you want to build code that depends upon the GRtoolbox,
+# set this variable to true, else to false
+# If it is set to false, the varriables MEX, MEXFLAGS, and
+# EXT varriables are ignored.
+# 
+BUILD_GRTOOLBOX = false
+#BUILD_GRTOOLBOX = true
+
+# edit to the name of your mex compiler:
+#MEX = mex
+
+# edit to include compilation flags that you desire:
+# debugging and developement
+#MEXFLAGS=-g
+# speed and optimization
+#MEXFLAGS=-O
+
+# Set the EXT varriable to indicate your platform. 
+# Mex-files have different filenames for different 
+# platforms.
+# 
+# Alpha
+#EXT = axp
+# HP9000 series 700
+#EXT = mexhp7
+# IBM RS6000
+#EXT = mexrs6
+# Linux
+#EXT = lx
+# SGI
+#EXT = sg
+# SGI 6.4
+#EXT = sg64
+# Solaris
+#EXT = sol
+# SunOS4x
+#EXT = 4
+
+## -----------------------------------------------------------##
+## NO EDITING SHOULD BE NEEDED BELOW THIS POINT
+## -----------------------------------------------------------##
+
+GRASP_I=$(GRASP_HOME)/include

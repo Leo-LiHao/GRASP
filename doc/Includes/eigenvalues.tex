@@ -1,0 +1,36 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_ringdown\1eigenvalues.c},{11:59},{Jan 23 1998}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}(\K{int}_\V{argc},\V{const}_\K{char}_\*\V{argv}[\,])}}
+\L{\LB{\{}}
+\L{\LB{__\K{float}_\V{a},\V{da}=0.1,\V{eigen}[4];}}
+\L{\LB{__\K{int}_\V{s},\V{l},\V{m};}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* process the command line arguments \*\1\CE{}}}
+\L{\LB{__\K{if}_(\V{argc}==4)_\{_\C{}\1\* correct number of arguments \*\1\CE{}}}
+\L{\LB{____\V{s}_=_\V{atoi}(\V{argv}[1]);}}
+\L{\LB{____\V{l}_=_\V{atoi}(\V{argv}[2]);}}
+\L{\LB{____\V{m}_=_\V{atoi}(\V{argv}[3]);}}
+\L{\LB{__\}_\K{else}_\{_\C{}\1\* incorrect number of arguments \*\1\CE{}}}
+\L{\LB{____\V{fprintf}(\V{stderr},\S{}\"usage:_qn\_eigen\_values_s_l_m\2n\"\SE{});}}
+\L{\LB{____\K{return}_1;}}
+\L{\LB{__\}}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* scan through the range of a \*\1\CE{}}}
+\L{\LB{__\K{for}_(\V{a}=1\-\V{da};\V{a}\>\-1;\V{a}\-=\V{da})_\{}}
+\L{\LB{____\C{}\1\* compute the eigenvalues \*\1\CE{}}}
+\L{\LB{____\K{if}_(\V{a}\<0)_\{}}
+\L{\LB{______\K{if}_(\V{m}==0)_\K{break};}}
+\L{\LB{______\V{qn\_eigenvalues}(\V{eigen},\V{a},\V{s},\V{l},\-\V{m});}}
+\L{\LB{____\}_\K{else}_\{}}
+\L{\LB{______\V{qn\_eigenvalues}(\V{eigen},\V{a},\V{s},\V{l},\V{m});}}
+\L{\LB{____\}}}
+\L{\LB{____\C{}\1\* print the eigenvalues \*\1\CE{}}}
+\L{\LB{____\V{printf}(\S{}\"\%f\2t\%f\2t\%f\2t\%f\2t\%f\2n\"\SE{},\V{a},\V{eigen}[0],\V{eigen}[1],\V{eigen}[2],\V{eigen}[3]);}}
+\L{\LB{__\}}}
+\L{\LB{}}
+\L{\LB{__\K{return}_0;}}
+\L{\LB{\}}}

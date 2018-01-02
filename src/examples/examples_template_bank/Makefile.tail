@@ -1,0 +1,58 @@
+#############################################################################
+#  THE REGION ABOVE THIS SPACE IS FILLED IN BY InstallGRASP                 #
+#############################################################################
+
+INCLUDES= -I$(GRASP_I) 
+
+LIBS= $(OPTIMIZED_OBJECTS) -L$(GRASP_HOME)/lib -lgrasp -L$(RECIPES_LIB) -l$(LRECIPES) $(OPTIMIZED_LIBS) -lm
+
+all:  match_fit area template predict multifilter multifilterF\
+      make_grid make_mesh read_grid
+
+make_mesh: make_mesh.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) make_mesh.c -o make_mesh $(LIBS) 
+
+make_grid: make_grid.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS)  $(INCLUDES) make_grid.c -o make_grid $(LIBS) 
+
+read_grid: read_grid.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS)  $(INCLUDES) read_grid.c -o read_grid $(LIBS) 
+
+match_fit: match_fit.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) match_fit.c -o match_fit $(LIBS) 
+
+area: area.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS) $(INCLUDES) area.c -o area $(LIBS) 
+
+template: template.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS)  $(INCLUDES) template.c -o template $(LIBS) 
+
+predict: predict.c $(GRASP_HOME)/lib/libgrasp.a $(GRASP_I)/grasp.h
+	$(CC) $(CFLAGS)  $(INCLUDES) predict.c -o predict $(LIBS) 
+
+# Note that MPI code should always be compiled and linked in separate stages
+multifilter.o: multifilter.c $(GRASP_I)/grasp.h
+	if [ '$(BUILD_MPI)' = 'true' ]; \
+	then \
+	$(MPICC) $(CFLAGS) -c $(INCLUDES) $(MPI_INCLUDES) multifilter.c ; \
+	fi
+
+multifilter: multifilter.o $(GRASP_HOME)/lib/libgrasp.a
+	if [ '$(BUILD_MPI)' = 'true' ]; \
+	then \
+	$(MPICC) $(CFLAGS) multifilter.o $(LIBS) $(MPI_LIBS) -o multifilter ; \
+	fi
+
+# Note that MPI code should always be compiled and linked in separate stages
+multifilterF.o: multifilterF.c $(GRASP_I)/grasp.h
+	if [ \( '$(BUILD_MPI)' = 'true' \) -a \( '$(BUILD_FRAME)' = 'true' \) ]; \
+	then \
+	$(MPICC) $(CFLAGS) -c $(INCLUDES) $(MPI_INCLUDES) -I$(FRAME_DIR)/include multifilterF.c ; \
+	fi
+
+multifilterF: multifilterF.o $(GRASP_HOME)/lib/libgrasp.a
+	if [ \( '$(BUILD_MPI)' = 'true' \) -a \( '$(BUILD_FRAME)' = 'true' \) ]; \
+	then \
+	$(MPICC) $(CFLAGS) multifilterF.o $(LIBS) $(MPI_LIBS) \
+	-L$(FRAME_DIR)/lib -lFrame  -o multifilterF ; \
+	fi

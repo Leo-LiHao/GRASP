@@ -1,0 +1,75 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_frame\1gwoutputF.c},{11:59},{Jan 23 1998}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}()_\{}}
+\L{\LB{___\K{float}_\V{tstart},\V{time},\V{srate};}}
+\L{\LB{___\K{int}_\V{i},\V{npoint},\V{code};}}
+\L{\LB{___\K{short}_\*\V{data};}}
+\L{\LB{___\K{struct}_\V{fgetinput}_\V{fgetinput};}}
+\L{\LB{___\K{struct}_\V{fgetoutput}_\V{fgetoutput};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* specify the number of points of output \& allocate array \*\1\CE{}}}
+\L{\LB{___\V{npoint}=100;}}
+\L{\LB{___\V{data}=(\K{short}_\*)\V{malloc}(\K{sizeof}(\K{short})\*\V{npoint});}}
+\L{\LB{___\V{fgetinput}.\V{npoint}=\V{npoint};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* we only want one channel of data \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{nchan}=1;}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* use the framefiles() function to find it \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{files}=\V{framefiles};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* allocate space to store channel names \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{chnames}=(\K{char}_\*\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{char}_\*));}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* allocate space for data storage location addresses \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{locations}=(\K{short}_\*\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{short}_\*));}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* allocate space for numbers of points returned in each channel \*\1\CE{}}}
+\L{\LB{___\V{fgetoutput}.\V{npoint}=(\K{int}_\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{int}));}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* allocate space for ratios of channel sample rates \*\1\CE{}}}
+\L{\LB{___\V{fgetoutput}.\V{ratios}=(\K{int}_\*)\V{malloc}(\V{fgetinput}.\V{nchan}\*\K{sizeof}(\K{int}));}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* channel name \*\1\CE{}}}
+\L{\LB{___\V{fgetinput}.\V{chnames}[0]=\S{}\"IFO\_DMRO\"\SE{};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* set up different cases \*\1\CE{}}}
+\L{\LB{___\K{if}_(\V{NULL}!=\V{getenv}(\S{}\"GRASP\_REALTIME\"\SE{}))_\{}}
+\L{\LB{______\C{}\1\* don\'t care if locked \*\1\CE{}}}
+\L{\LB{______\V{fgetinput}.\V{inlock}=0;}}
+\L{\LB{___\}}}
+\L{\LB{___\K{else}_\{}}
+\L{\LB{______\C{}\1\* only locked  \*\1\CE{}}}
+\L{\LB{______\V{fgetinput}.\V{inlock}=1;}}
+\L{\LB{___\}}}
+\L{\LB{}}
+\L{\LB{___\V{fgetinput}.\V{seek}=0;}}
+\L{\LB{___\V{fgetinput}.\V{calibrate}=0;}}
+\L{\LB{___\V{fgetinput}.\V{locations}[0]=\V{data};}}
+\L{\LB{}}
+\L{\LB{___\K{while}_(1)_\{}}
+\L{\LB{______\C{}\1\* get npoint points of data \*\1\CE{}}}
+\L{\LB{______\V{code}=\V{fget\_ch}(\&\V{fgetoutput},\&\V{fgetinput});}}
+\L{\LB{______\V{tstart}=\V{fgetoutput}.\V{dt};}}
+\L{\LB{______\V{srate}=\V{fgetoutput}.\V{srate};}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* if no data remains, exit loop \*\1\CE{}}}
+\L{\LB{______\K{if}_(\V{code}==0)_\K{break};}}
+\L{\LB{______\C{}\1\* if starting a new locked segment, print banner \*\1\CE{}}}
+\L{\LB{______\K{if}_(\V{code}==1)_\{}}
+\L{\LB{_________\V{printf}(\S{}\"\_\_\_\_\_\_\_\_\_\_\_\__NEW_LOCKED_SEGMENT_\_\_\_\_\_\_\_\_\_\_\_\_\2n\2n\"\SE{});}}
+\L{\LB{_________\V{printf}(\S{}\"__Time_(sec)\2t___IFO_output\2n\"\SE{});}}
+\L{\LB{______\}}}
+\L{\LB{______\C{}\1\* now output the data \*\1\CE{}}}
+\L{\LB{______\K{for}_(\V{i}=0;\V{i}\<\V{npoint};\V{i}++)_\{}}
+\L{\LB{_________\V{time}=\V{tstart}+\V{i}\1\V{srate};}}
+\L{\LB{_________\V{printf}(\S{}\"\%f\2t\%d\2n\"\SE{},\V{time},(\K{int})\V{data}[\V{i}]);}}
+\L{\LB{______\}}}
+\L{\LB{___\}}}
+\L{\LB{___\C{}\1\* close the data files, and return \*\1\CE{}}}
+\L{\LB{___\K{return}_0;}}
+\L{\LB{\}}}

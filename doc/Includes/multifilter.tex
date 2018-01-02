@@ -1,0 +1,453 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_template\_bank\1multifilter.c},{13:54},{Jul  7 1999}
+\L{\LB{\C{}\1\* GRASP: Copyright 1997,1998  Bruce Allen \*\1\CE{}}}
+\L{\LB{\C{}\1\* multifilter.c}}
+\L{\LB{This code is intended for machines where computation is cheap,}}
+\L{\LB{and communication is expensive.  The processsing is organized as}}
+\L{\LB{master\1slaves (or manager\1workers!).  The master process sends out data}}
+\L{\LB{chunks to individual slave processes.  These slave processes analyze}}
+\L{\LB{the data against all templates, then return the largest signal values}}
+\L{\LB{obtained for each template, along with other parameters like the time of}}
+\L{\LB{coalescense and the phase of coalescence.  They then get a new data chunk.}}
+\L{\LB{If STORE\_TEMPLATES is set to 1, then the filters are computed once,}}
+\L{\LB{then stored internally by each slave.  This is the correct choice if each}}
+\L{\LB{slave has lots of fast memory available to it.  If STORE\_TEMPLATES is set}}
+\L{\LB{to 0, then the slaves recompute the templates each time they use them.}}
+\L{\LB{This is the correct choice if each slave has only small amounts of fast}}
+\L{\LB{memory available.}}
+\L{\LB{\*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\K{\#include}_\S{}\"mpi.h\"\SE{}}}
+\L{\LB{\K{\#include}_\S{}\"mpe.h\"\SE{}}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{}}
+\L{\LB{\K{\#define}_\V{NPOINT}_65536_____\C{}\1\* The size of our segments of data (26.2 secs)              \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{FLO}_120.0__________\C{}\1\* The low frequency cutoff for filtering                   \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{HSCALE}_1.e21_______\C{}\1\* A convenient scaling factor; results independent of it   \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{MIN\_INTO\_LOCK}_3.0__\C{}\1\* Number of minutes to skip into each locked section       \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{SAFETY}_200_________\C{}\1\* Padding safety factor to avoid wraparound errors         \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{CHIRPLEN}_18000_____\C{}\1\* length of longest allowed chirp                          \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{MMIN}_1.2___________\C{}\1\* min mass object, solar masses                            \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{MMAX}_1.6___________\C{}\1\* max mass object, solar masses                            \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{DATA\_SEGMENTS}_25___\C{}\1\* largest number of data segments to process               \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{NSIGNALS}_11________\C{}\1\* number of signal values computed for each template       \*\1\CE{}}}
+\L{\LB{\K{\#define}_\V{STORE\_TEMPLATES}_0__\C{}\1\* 0: slaves recompute templates. 1: slaves save templates. \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\K{void}_\V{shiftdata}();__________}}
+\L{\LB{\K{void}_\V{realft}(\K{float}\*,\K{unsigned}_\K{long},\K{int});}}
+\L{\LB{\K{int}_\V{get\_calibrated\_data}();}}
+\L{\LB{}}
+\L{\LB{\K{struct}_\V{Saved}_\{}}
+\L{\LB{___\K{float}_\V{tstart};}}
+\L{\LB{___\K{int}_\V{gauss};}}
+\L{\LB{\};}}
+\L{\LB{}}
+\L{\LB{\K{short}_\*\V{datas};}}
+\L{\LB{\K{int}_\V{npoint},\V{remain}=0,\V{needed},\V{diff},\V{gauss\_test},\V{num\_sent}=0,\V{fill\_buffer}();}}
+\L{\LB{\K{float}_\*\V{twice\_inv\_noise},\*\V{htilde},\*\V{data},\*\V{mean\_pow\_spec},\V{tstart};}}
+\L{\LB{\K{float}_\V{srate}=9868.4208984375,\V{decaytime},\V{datastart},\*\V{response};}}
+\L{\LB{\K{double}_\V{norm},\V{decay};}}
+\L{\LB{\V{FILE}_\*\V{fpifo},\*\V{fpss},\*\V{fplock};}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}(\K{int}_\V{argc},\K{char}_\*\V{argv}[\,])_}}
+\L{\LB{\{}}
+\L{\LB{}}
+\L{\LB{\K{int}_\*\V{lchirppoints},\V{num\_stored};}}
+\L{\LB{\K{float}_\*\V{ltc},\*\V{lch0tilde},\*\V{lch90tilde};}}
+\L{\LB{\K{int}_\V{myid},\V{numprocs},\V{i},\V{j},\V{maxi},\V{impulseoff},\*\V{chirppoints},\V{indices}[8],\V{num\_templates};}}
+\L{\LB{\K{int}_\V{slave},\V{more\_data},\V{temp\_no},\V{num\_recv}=0,\V{namelen},\V{completed}=0,\V{longest\_template}=0;}}
+\L{\LB{\K{float}_\*\V{tc},\V{m1},\V{m2},\*\V{template\_list},\*\V{sig\_buffer},\V{distance},\V{snr\_max},\V{var},\V{timeoff},\V{timestart};}}
+\L{\LB{\K{float}_\V{n0},\V{n90},\V{inverse\_distance\_scale},\*\V{output90},\*\V{output0},\*\V{ch0tilde},\*\V{ch90tilde};}}
+\L{\LB{\K{float}_\V{lin0},\V{lin90},\V{varsplit},\V{stats}[8],\V{gammq}(\K{float},\K{float});}}
+\L{\LB{\K{double}_\V{prob};}}
+\L{\LB{\V{FILE}_\*\V{fpout};}}
+\L{\LB{\V{MPI\_Status}_\V{status};}}
+\L{\LB{\K{char}_\V{processor\_name}[\V{MPI\_MAX\_PROCESSOR\_NAME}],\V{logfile\_name}[64],\V{name}[64];}}
+\L{\LB{\K{struct}_\V{Scope}_\V{Grid};}}
+\L{\LB{\K{struct}_\V{Saved}_\*\V{saveme};}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* start MPI, find number of processes, find process number \*\1\CE{}}}
+\L{\LB{\V{MPI\_Init}(\&\V{argc},\&\V{argv});}}
+\L{\LB{\V{MPI\_Comm\_size}(\V{MPI\_COMM\_WORLD},\&\V{numprocs});}}
+\L{\LB{\V{MPI\_Comm\_rank}(\V{MPI\_COMM\_WORLD},\&\V{myid});}}
+\L{\LB{\V{MPI\_Get\_processor\_name}(\V{processor\_name},\&\V{namelen});}}
+\L{\LB{\V{MPE\_Init\_log}();}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* number of points to sample and fft (power of 2) \*\1\CE{}}}
+\L{\LB{\V{needed}=\V{npoint}=\V{NPOINT};}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* Gravity wave signal (frequency domain) \& twice inverse noise power \*\1\CE{}}}
+\L{\LB{\V{htilde}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{npoint}+\K{sizeof}(\K{float})\*(\V{npoint}\12+1));}}
+\L{\LB{\V{twice\_inv\_noise}=\V{htilde}+\V{npoint};}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* Structure for saving information about data sent to slaves \*\1\CE{}}}
+\L{\LB{\V{saveme}=(\K{struct}_\V{Saved}_\*)\V{malloc}(\K{sizeof}(\K{struct}_\V{Saved})\*\V{numprocs});}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* MASTER \*\1\CE{}}}
+\L{\LB{\K{if}_(\V{myid}==0)_\{}}
+\L{\LB{___\V{MPE\_Describe\_state}(1,2,\S{}\"Templates\-\!\>Slaves\"\SE{},\S{}\"red:vlines3\"\SE{});}}
+\L{\LB{___\V{MPE\_Describe\_state}(3,4,\S{}\"Data\-\!\>Slaves\"\SE{},\S{}\"blue:gray3\"\SE{});}}
+\L{\LB{___\V{MPE\_Describe\_state}(5,6,\S{}\"Master_Receive\"\SE{},\S{}\"brown:light\_gray\"\SE{});}}
+\L{\LB{___\V{MPE\_Describe\_state}(7,8,\S{}\"Data\-\!\>Master\"\SE{},\S{}\"yellow:dark\_gray\"\SE{});}}
+\L{\LB{___\V{MPE\_Describe\_state}(9,10,\S{}\"Slave_Receive\"\SE{},\S{}\"orange:white\"\SE{});}}
+\L{\LB{___\V{MPE\_Describe\_state}(13,14,\S{}\"Slaves\<\!\-templates\"\SE{},\S{}\"gray:black\"\SE{});}}
+\L{\LB{___\V{MPE\_Describe\_state}(15,16,\S{}\"compute_template\"\SE{},\S{}\"lavender:black\"\SE{});}}
+\L{\LB{___\V{MPE\_Describe\_state}(17,18,\S{}\"real_fft\"\SE{},\S{}\"lawn_green:black\"\SE{});}}
+\L{\LB{___\V{MPE\_Describe\_state}(19,20,\S{}\"correlate\"\SE{},\S{}\"purple:black\"\SE{});}}
+\L{\LB{___\V{MPE\_Describe\_state}(21,22,\S{}\"orthonormalize\"\SE{},\S{}\"wheat:black\"\SE{});}}
+\L{\LB{___\V{MPE\_Describe\_state}(23,24,\S{}\"likelyhood_test\"\SE{},\S{}\"light_sky_blue:black\"\SE{});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* Set parameters for the inspiral search  \*\1\CE{}}}
+\L{\LB{___\V{Grid}.\V{m\_mn}=\V{MMIN};}}
+\L{\LB{___\V{Grid}.\V{m\_mx}=\V{MMAX};}}
+\L{\LB{___\V{Grid}.\V{theta}=0.964;}}
+\L{\LB{___\V{Grid}.\V{dp}=2\*0.00213;}}
+\L{\LB{___\V{Grid}.\V{dq}=2\*0.0320;}}
+\L{\LB{___\V{Grid}.\V{f\_start}=140.0;}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* construct template set covering parameter space, m1 m2 storage \*\1\CE{}}}
+\L{\LB{___\V{template\_grid}(\&\V{Grid});}}
+\L{\LB{___\V{num\_templates}=\V{Grid}.\V{n\_tmplt};}}
+\L{\LB{___\V{printf}(\S{}\"The_number_of_templates_being_used_is_\%d\2n\"\SE{},\V{num\_templates});}}
+\L{\LB{___\V{template\_list}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*2\*\V{num\_templates});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* put mass values into an array \*\1\CE{}}}
+\L{\LB{____\K{for}_(\V{i}=0;\V{i}\<\V{Grid}.\V{n\_tmplt};\V{i}++)_\{}}
+\L{\LB{______\V{template\_list}[2\*\V{i}]=\V{Grid}.\V{templates}[\V{i}].\V{m1};}}
+\L{\LB{______\V{template\_list}[2\*\V{i}+1]=\V{Grid}.\V{templates}[\V{i}].\V{m2};}}
+\L{\LB{______\V{printf}(\S{}\"Mass_values_are_m1_=_\%f__m2_=_\%f\2n\"\SE{},\V{Grid}.\V{templates}[\V{i}].\V{m1},\V{Grid}.\V{templates}[\V{i}].\V{m2});}}
+\L{\LB{___\}}}
+\L{\LB{___\V{fflush}(\V{stdout});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* storage for returned signals (NSIGNALS per template) \*\1\CE{}}}
+\L{\LB{___\V{sig\_buffer}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{num\_templates}\*\V{NSIGNALS});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* broadcast templates \*\1\CE{}}}
+\L{\LB{___\V{MPE\_Log\_event}(1,\V{myid},\S{}\"send\"\SE{});}}
+\L{\LB{___\V{MPI\_Bcast}(\&\V{num\_templates},1,\V{MPI\_INT},0,\V{MPI\_COMM\_WORLD});}}
+\L{\LB{___\V{MPI\_Bcast}(\V{template\_list},2\*\V{num\_templates},\V{MPI\_FLOAT},0,\V{MPI\_COMM\_WORLD});}}
+\L{\LB{___\V{MPE\_Log\_event}(2,\V{myid},\S{}\"sent\"\SE{});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* number of points to sample and fft (power of 2) \*\1\CE{}}}
+\L{\LB{___\V{needed}=\V{npoint}=\V{NPOINT};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* stores ADC data as short integers \*\1\CE{}}}
+\L{\LB{___\V{datas}=(\K{short}\*)\V{malloc}(\K{sizeof}(\K{short})\*\V{npoint});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* stores ADC data in time \& freq domain, as floats \*\1\CE{}}}
+\L{\LB{___\V{data}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{npoint});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* The response function (transfer function) of the interferometer \*\1\CE{}}}
+\L{\LB{___\V{response}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*(\V{npoint}+2));}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* The autoregressive-mean averaged noise power spectrum \*\1\CE{}}}
+\L{\LB{___\V{mean\_pow\_spec}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*(\V{npoint}\12+1));}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* Set up noise power spectrum and decay time \*\1\CE{}}}
+\L{\LB{___\V{norm}=0.0;}}
+\L{\LB{___\V{clear}(\V{mean\_pow\_spec},\V{npoint}\12+1,1);}}
+\L{\LB{___\V{decaytime}=10.0\*\V{npoint}\1\V{srate};}}
+\L{\LB{___\V{decay}=\V{exp}(\-1.0\*\V{npoint}\1(\V{srate}\*\V{decaytime}));}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* open the IFO output file, lock file, and swept-sine file \*\1\CE{}}}
+\L{\LB{___\V{fpifo}=\V{grasp\_open}(\S{}\"GRASP\_DATAPATH\"\SE{},\S{}\"channel.0\"\SE{},\S{}\"r\"\SE{});}}
+\L{\LB{___\V{fplock}=\V{grasp\_open}(\S{}\"GRASP\_DATAPATH\"\SE{},\S{}\"channel.10\"\SE{},\S{}\"r\"\SE{});}}
+\L{\LB{___\V{fpss}=\V{grasp\_open}(\S{}\"GRASP\_DATAPATH\"\SE{},\S{}\"swept\-sine.ascii\"\SE{},\S{}\"r\"\SE{});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* get the response function, and put in scaling factor \*\1\CE{}}}
+\L{\LB{___\V{normalize\_gw}(\V{fpss},\V{npoint},\V{srate},\V{response});}}
+\L{\LB{___\K{for}_(\V{i}=0;\V{i}\<\V{npoint}+2;\V{i}++)}}
+\L{\LB{______\V{response}[\V{i}]\*=\V{HSCALE}\1\V{ARMLENGTH\_1994};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* while not finished, loop over slaves \*\1\CE{}}}
+\L{\LB{___\K{for}_(\V{slave}=1;\V{slave}\<\V{numprocs};\V{slave}++)_\{}}
+\L{\LB{______\K{if}_(\V{get\_calibrated\_data}())_\{}}
+\L{\LB{_________\C{}\1\* if new data exists, then send it (nonblocking?) \*\1\CE{}}}
+\L{\LB{_________\V{fprintf}(\V{stderr},\S{}\"Master_broadcasting_data_segment_\%d\2n\"\SE{},\V{num\_sent}+1);}}
+\L{\LB{_________\V{MPE\_Log\_event}(3,\V{myid},\S{}\"send\"\SE{});}}
+\L{\LB{_________\V{MPI\_Send}(\V{htilde},\V{NPOINT}+\V{NPOINT}\12+1,\V{MPI\_FLOAT},\V{slave},++\V{num\_sent},\V{MPI\_COMM\_WORLD});}}
+\L{\LB{_________\V{MPE\_Log\_event}(4,\V{myid},\S{}\"sent\"\SE{});}}
+\L{\LB{_________\V{saveme}[\V{slave}\-1].\V{gauss}=\V{gauss\_test};}}
+\L{\LB{_________\V{saveme}[\V{slave}\-1].\V{tstart}=\V{datastart};}}
+\L{\LB{_________\V{shiftdata}();}}
+\L{\LB{______\}}}
+\L{\LB{______\K{else}_\{}}
+\L{\LB{_________\C{}\1\* tell remaining processes to exit \*\1\CE{}}}
+\L{\LB{_________\V{MPE\_Log\_event}(3,\V{myid},\S{}\"send\"\SE{});}}
+\L{\LB{_________\V{MPI\_Send}(\V{htilde},\V{NPOINT}+\V{NPOINT}\12+1,\V{MPI\_FLOAT},\V{slave},0,\V{MPI\_COMM\_WORLD});}}
+\L{\LB{_________\V{MPE\_Log\_event}(4,\V{myid},\S{}\"sent\"\SE{});}}
+\L{\LB{______\}}}
+\L{\LB{___\}}}
+\L{\LB{______}}
+\L{\LB{___\C{}\1\* now loop, gathering answers, sending out more data \*\1\CE{}}}
+\L{\LB{___\K{while}_(\V{num\_sent}!=\V{num\_recv})_\{}}
+\L{\LB{______\V{more\_data}=\V{get\_calibrated\_data}();}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\*  listen for answer \*\1\CE{}}}
+\L{\LB{______\V{MPE\_Log\_event}(5,\V{myid},\S{}\"receiving.\,.\,.\"\SE{});}}
+\L{\LB{______\V{MPI\_Recv}(\V{sig\_buffer},\V{NSIGNALS}\*\V{num\_templates},\V{MPI\_FLOAT},\V{MPI\_ANY\_SOURCE},}}
+\L{\LB{_________\V{MPI\_ANY\_TAG},\V{MPI\_COMM\_WORLD},\&\V{status});}}
+\L{\LB{______\V{MPE\_Log\_event}(6,\V{myid},\S{}\"received\"\SE{});}}
+\L{\LB{______\V{num\_recv}++;}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* store the answers.\,.\,. \*\1\CE{}}}
+\L{\LB{______\V{sprintf}(\V{name},\S{}\"signals.\%05d\"\SE{},\V{status}.\V{MPI\_TAG}\-1);}}
+\L{\LB{______\V{fpout}=\V{fopen}(\V{name},\S{}\"w\"\SE{});}}
+\L{\LB{______\K{if}_(\V{fpout}==\V{NULL})_\{}}
+\L{\LB{_________\V{fprintf}(\V{stderr},\S{}\"Multifilter:_can\'t_open_output_file_\%s\2n\"\SE{},\V{name});}}
+\L{\LB{_________\V{MPI\_Finalize}();}}
+\L{\LB{_________\K{return}_1;}}
+\L{\LB{______\}}}
+\L{\LB{______\V{fprintf}(\V{fpout},\S{}\"\#_Gaussian_\%d\2n\"\SE{},\V{saveme}[\V{status}.\V{MPI\_SOURCE}\-1].\V{gauss});}}
+\L{\LB{______\V{fprintf}(\V{fpout},\S{}\"\#_tstart_\%f\2n\"\SE{},\V{saveme}[\V{status}.\V{MPI\_SOURCE}\-1].\V{tstart});}}
+\L{\LB{______\V{fprintf}(\V{fpout},\S{}\"\#_snr___distance____phase0_____phase90_____maxi\2}}
+\L{\LB{______impulseoff_impulsetime__startinspiral_coalesce____variance___prob\2n\"\SE{});}}
+\L{\LB{______\K{for}_(\V{i}=0;\V{i}\<\V{num\_templates};\V{i}++)_\{}}
+\L{\LB{_________\K{for}_(\V{j}=0;\V{j}\<\V{NSIGNALS}\-1;\V{j}++)}}
+\L{\LB{____________\V{fprintf}(\V{fpout},\S{}\"\%g\2t\"\SE{},\V{sig\_buffer}[\V{i}\*\V{NSIGNALS}+\V{j}]);}}
+\L{\LB{_________\V{fprintf}(\V{fpout},\S{}\"\%f\2n\"\SE{},\V{sig\_buffer}[\V{i}\*\V{NSIGNALS}+\V{j}]);}}
+\L{\LB{}}
+\L{\LB{_________\C{}\1\* if data stream has no obvious outliers, and chirp prob is high, print \*\1\CE{}}}
+\L{\LB{_________\K{if}_(\V{sig\_buffer}[\V{i}\*\V{NSIGNALS}+10]\>0.03_\&\&_\V{saveme}[\V{status}.\V{MPI\_SOURCE}\-1].\V{gauss})_\{}}
+\L{\LB{____________\V{printf}(\S{}\"POSSIBLE_CHIRP:_signal_file_\%d,_template_\%d,_SNR_=_\%f,_prob_=_\%f\2n\"\SE{},}}
+\L{\LB{___________________\V{status}.\V{MPI\_TAG}\-1,\V{i},\V{sig\_buffer}[\V{i}\*\V{NSIGNALS}],\V{sig\_buffer}[\V{i}\*\V{NSIGNALS}+10]);}}
+\L{\LB{____________\V{fflush}(\V{stdout});}}
+\L{\LB{_________\}}}
+\L{\LB{}}
+\L{\LB{______\}}}
+\L{\LB{______\V{fclose}(\V{fpout});}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* if there is more data, send it off \*\1\CE{}}}
+\L{\LB{______\K{if}_(\V{more\_data})_\{}}
+\L{\LB{_________\V{fprintf}(\V{stderr},\S{}\"Master_broadcasting_data_segment_\%d\2n\"\SE{},\V{num\_sent}+1);}}
+\L{\LB{_________\V{MPE\_Log\_event}(3,\V{myid},\S{}\"send\"\SE{});}}
+\L{\LB{_________\V{MPI\_Send}(\V{htilde},\V{NPOINT}+\V{NPOINT}\12+1,\V{MPI\_FLOAT},\V{status}.\V{MPI\_SOURCE},++\V{num\_sent},\V{MPI\_COMM\_WORLD});}}
+\L{\LB{_________\V{MPE\_Log\_event}(4,\V{myid},\S{}\"sent\"\SE{});}}
+\L{\LB{_________\V{saveme}[\V{status}.\V{MPI\_SOURCE}\-1].\V{gauss}=\V{gauss\_test};}}
+\L{\LB{_________\V{saveme}[\V{status}.\V{MPI\_SOURCE}\-1].\V{tstart}=\V{datastart};}}
+\L{\LB{_________\V{shiftdata}();}}
+\L{\LB{______\}}}
+\L{\LB{______\C{}\1\* or else tell the process that it can pack up and go home \*\1\CE{}}}
+\L{\LB{______\K{else}_\{}}
+\L{\LB{_________\V{printf}(\S{}\"Shutting_down_slave_process_\%d\2n\"\SE{},\V{status}.\V{MPI\_SOURCE});}}
+\L{\LB{_________\V{MPE\_Log\_event}(3,\V{myid},\S{}\"send\"\SE{});}}
+\L{\LB{_________\V{MPI\_Send}(\V{htilde},\V{NPOINT}+\V{NPOINT}\12+1,\V{MPI\_FLOAT},\V{status}.\V{MPI\_SOURCE},0,\V{MPI\_COMM\_WORLD});}}
+\L{\LB{_________\V{MPE\_Log\_event}(4,\V{myid},\S{}\"sent\"\SE{});}}
+\L{\LB{______\}}}
+\L{\LB{___\}}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* when all the answers are in, print results \*\1\CE{}}}
+\L{\LB{___\V{printf}(\S{}\"This_is_the_master_\-_all_answers_are_in!\2n\"\SE{});}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* SLAVES \*\1\CE{}}}
+\L{\LB{\K{else}_\{}}
+\L{\LB{___\V{printf}(\S{}\"Slave_\%d_(\%s)_just_got_started.\,.\,.\2n\"\SE{},\V{myid},\V{processor\_name});}}
+\L{\LB{___\V{fflush}(\V{stdout});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* allocate storage space \*\1\CE{}}}
+\L{\LB{___\C{}\1\* Ouput of matched filters for phase0 and phase pi\12, in time domain, and temp storage \*\1\CE{}}}
+\L{\LB{___\V{output0}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{npoint});}}
+\L{\LB{___\V{output90}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{npoint});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* get the list of templates to use \*\1\CE{}}}
+\L{\LB{___\V{MPE\_Log\_event}(13,\V{myid},\S{}\"receiving.\,.\,.\"\SE{});}}
+\L{\LB{___\V{MPI\_Bcast}(\&\V{num\_templates},1,\V{MPI\_INT},0,\V{MPI\_COMM\_WORLD});}}
+\L{\LB{___\V{sig\_buffer}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{num\_templates}\*\V{NSIGNALS});}}
+\L{\LB{___\V{template\_list}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*2\*\V{num\_templates});}}
+\L{\LB{___\V{MPI\_Bcast}(\V{template\_list},2\*\V{num\_templates},\V{MPI\_FLOAT},0,\V{MPI\_COMM\_WORLD});}}
+\L{\LB{___\V{MPE\_Log\_event}(14,\V{myid},\S{}\"received\"\SE{});}}
+\L{\LB{___\V{printf}(\S{}\"Slave_\%d_(\%s)_just_got_template_list.\,.\,.\2n\"\SE{},\V{myid},\V{processor\_name});}}
+\L{\LB{___\V{fflush}(\V{stdout});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* Orthogonalized phase 0 and phase pi\12 chirps, in frequency domain \*\1\CE{}}}
+\L{\LB{___\V{num\_stored}=\V{STORE\_TEMPLATES}\*(\V{num\_templates}\-1)+1;}}
+\L{\LB{___\V{lch0tilde}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{npoint}\*\V{num\_stored});}}
+\L{\LB{___\V{lch90tilde}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{npoint}\*\V{num\_stored});}}
+\L{\LB{___\V{lchirppoints}=(\K{int}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{num\_stored});}}
+\L{\LB{___\V{ltc}=(\K{float}_\*)\V{malloc}(\K{sizeof}(\K{float})\*\V{num\_stored});}}
+\L{\LB{}}
+\L{\LB{___\K{if}_(\V{lch0tilde}==\V{NULL}_\|\,\|_\V{lch90tilde}==\V{NULL}_\|\,\|_\V{lchirppoints}==\V{NULL}_\|\,\|_\V{ltc}==\V{NULL})_\{}}
+\L{\LB{______\V{fprintf}(\V{stderr},\S{}\"Node_\%d_on_machine_\%s:_could_not_malloc()_memory!\2n\"\SE{},}}
+\L{\LB{______________\V{myid},\V{processor\_name});}}
+\L{\LB{______\V{MPI\_Abort}(\V{MPI\_COMM\_WORLD},1);}}
+\L{\LB{___\}}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* now enter an infinite loop, waiting for new inputs \*\1\CE{}}}
+\L{\LB{___\K{while}_(1)_\{}}
+\L{\LB{______\C{}\1\* listen for data, parameters from master \*\1\CE{}}}
+\L{\LB{______\V{MPE\_Log\_event}(9,\V{myid},\S{}\"receiving.\,.\,.\"\SE{});}}
+\L{\LB{______\V{MPI\_Recv}(\V{htilde},\V{NPOINT}+\V{NPOINT}\12+1,\V{MPI\_FLOAT},0,\V{MPI\_ANY\_TAG},\V{MPI\_COMM\_WORLD},\&\V{status});}}
+\L{\LB{______\V{MPE\_Log\_event}(10,\V{myid},\S{}\"received\"\SE{});}}
+\L{\LB{______\V{printf}(\S{}\"Slave_\%d_(\%s)_got_htilde_(and_noise_spectrum)_for_segment_\%d_\2n\"\SE{},}}
+\L{\LB{_____________\V{myid},\V{processor\_name},\V{status}.\V{MPI\_TAG});}}
+\L{\LB{______\V{fflush}(\V{stdout});}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* if this is a termination message, we are done! \*\1\CE{}}}
+\L{\LB{______\K{if}_(\V{status}.\V{MPI\_TAG}==0)_\K{break};}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* compute signals \*\1\CE{}}}
+\L{\LB{______\K{for}_(\V{temp\_no}=0;\V{temp\_no}\<\V{num\_templates};\V{temp\_no}++)_\{}}
+\L{\LB{}}
+\L{\LB{_________\V{ch0tilde}=\V{lch0tilde}+\V{npoint}\*\V{temp\_no}\*\V{STORE\_TEMPLATES};}}
+\L{\LB{_________\V{ch90tilde}=\V{lch90tilde}+\V{npoint}\*\V{temp\_no}\*\V{STORE\_TEMPLATES};}}
+\L{\LB{_________\V{chirppoints}=\V{lchirppoints}+\V{temp\_no}\*\V{STORE\_TEMPLATES};}}
+\L{\LB{_________\V{tc}=\V{ltc}+\V{temp\_no}\*\V{STORE\_TEMPLATES};}}
+\L{\LB{}}
+\L{\LB{_________\C{}\1\* Compute the template, and store it internally, if desired \*\1\CE{}}}
+\L{\LB{_________\K{if}_(\V{completed}!=\V{num\_templates})_\{}}
+\L{\LB{____________\C{}\1\* manufacture two chirps (dimensionless strain at 1 Mpc distance) \*\1\CE{}}}
+\L{\LB{____________\V{m1}=\V{template\_list}[2\*\V{temp\_no}];}}
+\L{\LB{____________\V{m2}=\V{template\_list}[2\*\V{temp\_no}+1];}}
+\L{\LB{}}
+\L{\LB{____________\V{MPE\_Log\_event}(15,\V{myid},\S{}\"computing\"\SE{});}}
+\L{\LB{____________\V{make\_filters}(\V{m1},\V{m2},\V{ch0tilde},\V{ch90tilde},\V{FLO},\V{npoint},\V{srate},\V{chirppoints},\V{tc},4000,4);}}
+\L{\LB{____________\V{MPE\_Log\_event}(16,\V{myid},\S{}\"computed\"\SE{});}}
+\L{\LB{}}
+\L{\LB{____________\K{if}_(\*\V{chirppoints}\>\V{longest\_template})_\V{longest\_template}=\*\V{chirppoints};}}
+\L{\LB{}}
+\L{\LB{____________\K{if}_(\*\V{chirppoints}\>\V{CHIRPLEN})_\{}}
+\L{\LB{_______________\V{fprintf}(\V{stderr},\S{}\"Chirp_m1=\%f_m2=\%f_length_\%d_too_long!\2n\"\SE{},\V{m1},\V{m2},}}
+\L{\LB{__________________\*\V{chirppoints});}}
+\L{\LB{_______________\V{fprintf}(\V{stderr},\S{}\"Maximum_allowed_length_is_\%d\2n\"\SE{},\V{CHIRPLEN});}}
+\L{\LB{_______________\V{fprintf}(\V{stderr},\S{}\"Please_recompile_with_larger_CHIRPLEN_value\2n\"\SE{});}}
+\L{\LB{_______________\V{fflush}(\V{stderr});}}
+\L{\LB{_______________\V{MPI\_Abort}(\V{MPI\_COMM\_WORLD},1);}}
+\L{\LB{____________\}}}
+\L{\LB{}}
+\L{\LB{____________\C{}\1\* normalize the chirp template \*\1\CE{}}}
+\L{\LB{____________\C{}\1\* normalization of next line comes from GRASP (5.6.3) and (5.6.4) \*\1\CE{}}}
+\L{\LB{____________\V{inverse\_distance\_scale}=2.0\*\V{HSCALE}\*(\V{TSOLAR}\*\V{C\_LIGHT}\1\V{MPC});}}
+\L{\LB{____________\K{for}_(\V{i}=0;\V{i}\<\*\V{chirppoints};\V{i}++)\{}}
+\L{\LB{_______________\V{ch0tilde}[\V{i}]\*=\V{inverse\_distance\_scale};}}
+\L{\LB{_______________\V{ch90tilde}[\V{i}]\*=\V{inverse\_distance\_scale};}}
+\L{\LB{____________\}}}
+\L{\LB{}}
+\L{\LB{____________\C{}\1\* and FFT the chirps \*\1\CE{}}}
+\L{\LB{____________\V{MPE\_Log\_event}(17,\V{myid},\S{}\"starting_fft\"\SE{});}}
+\L{\LB{____________\V{realft}(\V{ch0tilde}\-1,\V{npoint},1);}}
+\L{\LB{____________\V{MPE\_Log\_event}(18,\V{myid},\S{}\"ending_fft\"\SE{});}}
+\L{\LB{____________\V{MPE\_Log\_event}(17,\V{myid},\S{}\"starting_fft\"\SE{});}}
+\L{\LB{____________\V{realft}(\V{ch90tilde}\-1,\V{npoint},1);}}
+\L{\LB{____________\V{MPE\_Log\_event}(18,\V{myid},\S{}\"ending_fft\"\SE{});}}
+\L{\LB{}}
+\L{\LB{____________\K{if}_(\V{STORE\_TEMPLATES})_\V{completed}++;}}
+\L{\LB{}}
+\L{\LB{____________\C{}\1\* print out the length of the longest template \*\1\CE{}}}
+\L{\LB{____________\K{if}_(\V{completed}==\V{num\_templates})}}
+\L{\LB{_______________\V{printf}(\S{}\"Slave_\%d:_templates_completed.__Longest_is_\%d_points\2n\"\SE{},}}
+\L{\LB{______________________\V{myid},\V{longest\_template});}}
+\L{\LB{____________\V{fflush}(\V{stdout});}}
+\L{\LB{_________\}__\C{}\1\* done computing the template \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{_________\C{}\1\* orthogonalize the chirps: we never modify ch0tilde, only ch90tilde \*\1\CE{}}}
+\L{\LB{_________\V{MPE\_Log\_event}(21,\V{myid},\S{}\"starting\"\SE{});}}
+\L{\LB{_________\V{orthonormalize}(\V{ch0tilde},\V{ch90tilde},\V{twice\_inv\_noise},\V{npoint},\&\V{n0},\&\V{n90});}}
+\L{\LB{_________\V{MPE\_Log\_event}(22,\V{myid},\S{}\"done\"\SE{});}}
+\L{\LB{}}
+\L{\LB{_________\C{}\1\* distance scale Mpc for SNR=1 \*\1\CE{}}}
+\L{\LB{_________\V{distance}=\V{sqrt}(1.0\1(\V{n0}\*\V{n0})+1.0\1(\V{n90}\*\V{n90}));}}
+\L{\LB{}}
+\L{\LB{_________\C{}\1\* find the moment at which SNR is a maximum \*\1\CE{}___}}
+\L{\LB{_________\V{MPE\_Log\_event}(19,\V{myid},\S{}\"searching\"\SE{});}}
+\L{\LB{_________\V{find\_chirp}(\V{htilde},\V{ch0tilde},\V{ch90tilde},\V{twice\_inv\_noise},\V{n0},\V{n90},\V{output0},\V{output90},}}
+\L{\LB{_______________________\V{npoint},\V{CHIRPLEN},\&\V{maxi},\&\V{snr\_max},\&\V{lin0},\&\V{lin90},\&\V{var});}}
+\L{\LB{_________\V{MPE\_Log\_event}(20,\V{myid},\S{}\"done\"\SE{});}}
+\L{\LB{}}
+\L{\LB{_________\C{}\1\* identify when an impulse would have caused observed filter output \*\1\CE{}}}
+\L{\LB{_________\V{impulseoff}=(\V{maxi}+\*\V{chirppoints})\%\V{npoint};}}
+\L{\LB{_________\V{timeoff}=\V{impulseoff}\1\V{srate};}}
+\L{\LB{_________\V{timestart}=\V{maxi}\1\V{srate};}}
+\L{\LB{}}
+\L{\LB{_________\C{}\1\* collect interesting signals to return \*\1\CE{}}}
+\L{\LB{_________\V{sig\_buffer}[\V{temp\_no}\*\V{NSIGNALS}]=\V{snr\_max};}}
+\L{\LB{_________\V{sig\_buffer}[\V{temp\_no}\*\V{NSIGNALS}+1]=\V{distance};}}
+\L{\LB{_________\V{sig\_buffer}[\V{temp\_no}\*\V{NSIGNALS}+2]=\V{lin0};}}
+\L{\LB{_________\V{sig\_buffer}[\V{temp\_no}\*\V{NSIGNALS}+3]=\V{lin90};}}
+\L{\LB{_________\V{sig\_buffer}[\V{temp\_no}\*\V{NSIGNALS}+4]=\V{maxi};}}
+\L{\LB{_________\V{sig\_buffer}[\V{temp\_no}\*\V{NSIGNALS}+5]=\V{impulseoff};}}
+\L{\LB{_________\V{sig\_buffer}[\V{temp\_no}\*\V{NSIGNALS}+6]=\V{timeoff};}}
+\L{\LB{_________\V{sig\_buffer}[\V{temp\_no}\*\V{NSIGNALS}+7]=\V{timestart};}}
+\L{\LB{_________\V{sig\_buffer}[\V{temp\_no}\*\V{NSIGNALS}+8]=\V{timestart}+\*\V{tc};}}
+\L{\LB{_________\V{sig\_buffer}[\V{temp\_no}\*\V{NSIGNALS}+9]=\V{var};}}
+\L{\LB{}}
+\L{\LB{_________\V{prob}=0.0;}}
+\L{\LB{_________\K{if}_(\V{snr\_max}\>5.0)_\{}}
+\L{\LB{____________\V{MPE\_Log\_event}(23,\V{myid},\S{}\"testing\"\SE{});}}
+\L{\LB{____________\V{varsplit}=\V{splitup\_freq2}(\V{lin0}\*\V{n0}\1\V{sqrt}(2.0),\V{lin90}\*\V{n90}\1\V{sqrt}(2.0),\V{ch0tilde},}}
+\L{\LB{_____________________________\V{ch90tilde},2.0\1(\V{n0}\*\V{n0}),\V{twice\_inv\_noise},\V{npoint},\V{maxi},8,}}
+\L{\LB{_____________________________\V{indices},\V{stats},\V{output0},\V{htilde});}}
+\L{\LB{____________\V{prob}=\V{gammq}(4.0,4.0\*\V{varsplit});}}
+\L{\LB{____________\V{MPE\_Log\_event}(24,\V{myid},\S{}\"done\"\SE{});}}
+\L{\LB{_________\}}}
+\L{\LB{_________\V{sig\_buffer}[\V{temp\_no}\*\V{NSIGNALS}+10]=\V{prob};}}
+\L{\LB{}}
+\L{\LB{______\}__\C{}\1\* end of loop over the templates \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{______\C{}\1\* return signals to master \*\1\CE{}}}
+\L{\LB{______\V{MPE\_Log\_event}(7,\V{myid},\S{}\"send\"\SE{});}}
+\L{\LB{______\V{MPI\_Send}(\V{sig\_buffer},\V{NSIGNALS}\*\V{num\_templates},\V{MPI\_FLOAT},0,\V{status}.\V{MPI\_TAG},\V{MPI\_COMM\_WORLD});}}
+\L{\LB{______\V{MPE\_Log\_event}(8,\V{myid},\S{}\"sent\"\SE{});}}
+\L{\LB{}}
+\L{\LB{___\}_\C{}\1\* end of loop over the data \*\1\CE{}}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* both slaves and master exit here \*\1\CE{}}}
+\L{\LB{\V{printf}(\S{}\"\%s_preparing_to_shut_down_(process_\%d)\2n\"\SE{},\V{processor\_name},\V{myid});}}
+\L{\LB{\V{sprintf}(\V{logfile\_name},\S{}\"multifilter.\%d.\%d.log\"\SE{},\V{numprocs},\V{DATA\_SEGMENTS});}}
+\L{\LB{\V{MPE\_Finish\_log}(\V{logfile\_name});}}
+\L{\LB{\V{MPI\_Finalize}();}}
+\L{\LB{\V{printf}(\S{}\"\%s_shutting_down_(process_\%d)\2n\"\SE{},\V{processor\_name},\V{myid});}}
+\L{\LB{\K{return}_0;}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* This routine gets the data set, overlapping the data buffer as needed \*\1\CE{}}}
+\L{\LB{\K{int}_\V{get\_calibrated\_data}()_\{}}
+\L{\LB{___\K{int}_\V{i},\V{code};}}
+\L{\LB{}}
+\L{\LB{___\K{if}_(\V{num\_sent}\>=\V{DATA\_SEGMENTS})}}
+\L{\LB{______\K{return}_0;}}
+\L{\LB{}}
+\L{\LB{___\K{while}_(\V{remain}\<\V{needed})_\{}}
+\L{\LB{______\V{code}=\V{get\_data}(\V{fpifo},\V{fplock},\&\V{tstart},\V{MIN\_INTO\_LOCK}\*60\*\V{srate},}}
+\L{\LB{____________________\V{datas},\&\V{remain},\&\V{srate},1);___}}
+\L{\LB{______\K{if}_(\V{code}==0)_\K{return}_0;}}
+\L{\LB{___\}}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* Get the next needed samples of data \*\1\CE{}}}
+\L{\LB{___\V{diff}=\V{npoint}\-\V{needed};}}
+\L{\LB{___\V{code}=\V{get\_data}(\V{fpifo},\V{fplock},\&\V{tstart},\V{needed},\V{datas}+\V{diff},\&\V{remain},\&\V{srate},0);}}
+\L{\LB{___\V{datastart}=\V{tstart}\-\V{diff}\1\V{srate};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* copy integer data into floats \*\1\CE{}}}
+\L{\LB{___\K{for}_(\V{i}=0;\V{i}\<\V{npoint};\V{i}++)_\V{data}[\V{i}]=\V{datas}[\V{i}];}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* find the FFT of data\*\1\CE{}}}
+\L{\LB{___\V{realft}(\V{data}\-1,\V{npoint},1);}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* normalized delta-L\1L tilde \*\1\CE{}}}
+\L{\LB{___\V{product}(\V{htilde},\V{data},\V{response},\V{npoint}\12);}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* update the inverse of the auto-regressive-mean power-spectrum \*\1\CE{}}}
+\L{\LB{___\V{avg\_inv\_spec}(\V{FLO},\V{srate},\V{npoint},\V{decay},\&\V{norm},\V{htilde},\V{mean\_pow\_spec},\V{twice\_inv\_noise});}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* see if the data has any obvious outliers \*\1\CE{}}}
+\L{\LB{___\V{gauss\_test}=\V{is\_gaussian}(\V{datas},\V{npoint},\-2048,2047,0);}}
+\L{\LB{}}
+\L{\LB{___\K{return}_1;}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* this function shifts data by CHIRPLEN points in buffer \*\1\CE{}}}
+\L{\LB{\K{void}_\V{shiftdata}()_\{}}
+\L{\LB{___\K{int}_\V{i};}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* shift ends of buffer to the start \*\1\CE{}}}
+\L{\LB{___\V{needed}=\V{npoint}\-\V{CHIRPLEN}+1;}}
+\L{\LB{___\K{for}_(\V{i}=0;\V{i}\<\V{CHIRPLEN}\-1;\V{i}++)_\V{datas}[\V{i}]=\V{datas}[\V{i}+\V{needed}];}}
+\L{\LB{}}
+\L{\LB{___\C{}\1\* reset if not enough points remain to fill the buffer \*\1\CE{}}}
+\L{\LB{___\K{if}_(\V{remain}\<\V{needed})_\V{needed}=\V{npoint};}}
+\L{\LB{}}
+\L{\LB{___\K{return};}}
+\L{\LB{\}}}

@@ -1,0 +1,350 @@
+% Remember to use the lgrind style
+
+\File{.\,.\1src\1examples\1examples\_ringdown\1ring\-corr.c},{10:01},{Oct  3 1999}
+\L{\LB{\K{\#include}_\<\V{assert}.\V{h}\>}}
+\L{\LB{\K{\#include}_\<\V{stdlib}.\V{h}\>}}
+\L{\LB{\K{\#include}_\<\V{string}.\V{h}\>}}
+\L{\LB{\K{\#include}_\<\V{stdio}.\V{h}\>}}
+\L{\LB{\K{\#include}_\<\V{math}.\V{h}\>}}
+\L{\LB{}}
+\L{\LB{\K{\#include}_\S{}\"grasp.h\"\SE{}}}
+\L{\LB{}}
+\L{\LB{\K{extern}_\K{char}_\*\V{optarg};}}
+\L{\LB{\K{extern}_\K{int}___\V{optind};}}
+\L{\LB{\K{int}_\V{getopt}(\K{int},_\K{char}_\*_\V{const}_[\,],_\V{const}_\K{char}_\*);}}
+\L{\LB{}}
+\L{\LB{\K{int}_\V{main}(\K{int}_\V{argc},_\K{char}_\*\V{argv}[\,])}}
+\L{\LB{\{}}
+\L{\LB{__\K{void}_\V{usage}(\K{char}_\*);}}
+\L{\LB{__\K{void}_\V{realft}(\K{float}_[\,],_\K{unsigned}_\K{long},_\K{int});}}
+\L{\LB{__\K{void}_\V{readNoisePower}(\V{FILE}_\*,_\K{double}_[\,],_\K{int},_\K{float});}}
+\L{\LB{__\K{void}_\V{readCloseLimitData}(\V{FILE}_\*,_\K{float}_[\,],_\K{int},_\K{float},_\K{float});}}
+\L{\LB{__\K{void}_\V{makeQuasiNormalRing}(\K{float}_[\,],_\K{int},_\K{float},_\K{float},_\K{float});}}
+\L{\LB{}}
+\L{\LB{__\V{const}_\K{double}_\V{hscale}_=_1e21;_____\C{}\1\* a convenient scale factor            \*\1\CE{}}}
+\L{\LB{__\V{const}_\K{float}__\V{Msun}___=_4.89e\-6;__\C{}\1\* solar mass (s)                       \*\1\CE{}}}
+\L{\LB{__\V{const}_\K{float}__\V{srate}__=_16384;____\C{}\1\* sample rate (Hz)                     \*\1\CE{}}}
+\L{\LB{__\V{const}_\K{int}____\V{npoint}_=_65536;____\C{}\1\* segment length (samples)             \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{__\K{double}__\V{scale};}}
+\L{\LB{__\K{double}_\*\V{power};__________________\C{}\1\* power spectrum {$ S(f) $}          \*\1\CE{}}}
+\L{\LB{__\K{float}__\*\V{weight};_________________\C{}\1\* weigting factor {$ 4/S(f) $}       \*\1\CE{}}}
+\L{\LB{__\K{float}__\*\V{arrayA};_________________\C{}\1\* waveform {$ a(t) $}                \*\1\CE{}}}
+\L{\LB{__\K{float}__\*\V{arrayB};_________________\C{}\1\* waveform {$ b(t) $}                \*\1\CE{}}}
+\L{\LB{__\K{float}__\*\V{crossCorr};______________\C{}\1\* {$ \int df\,e^{2\pi ift}\tilde{a}(f)\tilde{b}^\ast(f)/S(f) $} \*\1\CE{}_}}
+\L{\LB{__\K{float}__\*\V{autoCorrA};______________\C{}\1\* {$ \int df\,e^{2\pi ift}\|\tilde{a}(f)\|^2/S(f) $} \*\1\CE{}}}
+\L{\LB{__\K{float}__\*\V{autoCorrB};______________\C{}\1\* {$ \int df\,e^{2\pi ift}\|\tilde{b}(f)\|^2/S(f) $} \*\1\CE{}}}
+\L{\LB{__\K{float}___\V{spin}_=_0.35;____________\C{}\1\* dimensionless spin of black hole     \*\1\CE{}}}
+\L{\LB{__\K{float}___\V{mass}_=_200;_____________\C{}\1\* mass of black hole (solar masses)    \*\1\CE{}}}
+\L{\LB{__\K{float}___\V{norm};}}
+\L{\LB{__\K{float}___\V{max};}}
+\L{\LB{__\K{char}____\V{powfile}[256]_=_\S{}\"ligo\-0.dat\"\SE{};__\C{}\1\* noise power filename           \*\1\CE{}}}
+\L{\LB{__\V{FILE}___\*\V{fp};}}
+\L{\LB{__\K{int}_____\V{i};}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* allocate memory to arrays \*\1\CE{}}}
+\L{\LB{__\V{assert}(\V{power}_____=_(\K{double}_\*)\V{malloc}((\V{npoint}\12+1)\*\K{sizeof}(\K{double})));}}
+\L{\LB{__\V{assert}(\V{weight}____=_(\K{float}__\*)\V{malloc}((\V{npoint}\12+1)\*\K{sizeof}(\K{float})));}}
+\L{\LB{__\V{assert}(\V{arrayA}____=_(\K{float}__\*)\V{malloc}(\V{npoint}\*\K{sizeof}(\K{float})));}}
+\L{\LB{__\V{assert}(\V{arrayB}____=_(\K{float}__\*)\V{malloc}(\V{npoint}\*\K{sizeof}(\K{float})));}}
+\L{\LB{__\V{assert}(\V{crossCorr}_=_(\K{float}__\*)\V{malloc}(\V{npoint}\*\K{sizeof}(\K{float})));}}
+\L{\LB{__\V{assert}(\V{autoCorrA}_=_(\K{float}__\*)\V{malloc}(\V{npoint}\*\K{sizeof}(\K{float})));}}
+\L{\LB{__\V{assert}(\V{autoCorrB}_=_(\K{float}__\*)\V{malloc}(\V{npoint}\*\K{sizeof}(\K{float})));}}
+\L{\LB{}}
+\L{\LB{__\K{while}_(1)_\{_\C{}\1\* parse command line options \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{____\K{int}_\V{c};}}
+\L{\LB{}}
+\L{\LB{____\C{}\1\* call the standard C library option parser \*\1\CE{}}}
+\L{\LB{____\V{c}_=_\V{getopt}(\V{argc},\V{argv},\S{}\"hs:m:p:\"\SE{});}}
+\L{\LB{____\K{if}_(\V{c}_==_\-1)_\K{break};}}
+\L{\LB{}}
+\L{\LB{____\K{switch}_(\V{c})_\{}}
+\L{\LB{}}
+\L{\LB{____\K{case}_\S{}\'h\'\SE{}:_\C{}\1\* print a simple message and exit \*\1\CE{}}}
+\L{\LB{______\V{usage}(\V{argv}[0]);}}
+\L{\LB{______\V{exit}(0);}}
+\L{\LB{}}
+\L{\LB{____\K{case}_\S{}\'s\'\SE{}:}}
+\L{\LB{______\V{spin}_=_\V{atof}(\V{optarg});}}
+\L{\LB{______\V{assert}(\V{spin}_\>=_0_\&\&_\V{spin}_\<_1);}}
+\L{\LB{______\K{break};}}
+\L{\LB{}}
+\L{\LB{____\K{case}_\S{}\'m\'\SE{}:}}
+\L{\LB{______\V{mass}_=_\V{atof}(\V{optarg});}}
+\L{\LB{______\V{assert}(\V{mass}_\>_0);}}
+\L{\LB{______\K{break};}}
+\L{\LB{}}
+\L{\LB{____\K{case}_\S{}\'p\'\SE{}:}}
+\L{\LB{______\V{strncpy}(\V{powfile},\V{optarg},\K{sizeof}(\V{powfile}));}}
+\L{\LB{______\K{break};}}
+\L{\LB{}}
+\L{\LB{____\K{default}:__\C{}\1\* something went wrong \*\1\CE{}}}
+\L{\LB{______\V{fprintf}(\V{stderr},\S{}\"warning:_getopt_returned_character_code_O\%o\2n\"\SE{},\V{c});}}
+\L{\LB{}}
+\L{\LB{____\}}}
+\L{\LB{}}
+\L{\LB{__\}}}
+\L{\LB{}}
+\L{\LB{__\K{switch}_(\V{argc}_\-_\V{optind})_\{_\C{}\1\* process remaining command line arguments \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{__\K{case}_0:_\C{}\1\* compare a default data file and a computed ringdown \*\1\CE{}}}
+\L{\LB{____\V{fprintf}(\V{stderr},\S{}\"compare_waveform_data_from_file_close\-limit.dat\2n\"\SE{});}}
+\L{\LB{____\V{assert}(\V{fp}_=_\V{fopen}(\S{}\"close\-limit\-insp.dat\"\SE{},\S{}\"r\"\SE{}));}}
+\L{\LB{____\V{readCloseLimitData}(\V{fp},\V{arrayA},\V{npoint},\V{srate},\V{mass}\*\V{Msun});}}
+\L{\LB{____\V{fclose}(\V{fp});}}
+\L{\LB{____\V{fprintf}(\V{stderr},\S{}\"with_a_computed_ringdown_waveform\2n\"\SE{});}}
+\L{\LB{____\V{makeQuasiNormalRing}(\V{arrayB},\V{npoint},\V{srate},\V{mass}\*\V{Msun},\V{spin});}}
+\L{\LB{____\V{fprintf}(\V{stderr},\S{}\"__black_hole_mass:_\%.2f_solar_masses\2n\"\SE{},\V{mass});}}
+\L{\LB{____\V{fprintf}(\V{stderr},\S{}\"__black_hole_spin:_\%05.2f\%\%_of_extreme\2n\"\SE{},\V{spin}\*100);}}
+\L{\LB{____\K{break};}}
+\L{\LB{}}
+\L{\LB{__\K{case}_1:_\C{}\1\* compare a specified data file and a computed ringdown \*\1\CE{}}}
+\L{\LB{____\V{fprintf}(\V{stderr},\S{}\"compare_waveform_data_from_file_\%s\2n\"\SE{},\V{argv}[\V{optind}]);}}
+\L{\LB{____\V{assert}(\V{fp}_=_\V{fopen}(\V{argv}[\V{optind}++],\S{}\"r\"\SE{}));}}
+\L{\LB{____\V{readCloseLimitData}(\V{fp},\V{arrayA},\V{npoint},\V{srate},\V{mass}\*\V{Msun});}}
+\L{\LB{____\V{fclose}(\V{fp});}}
+\L{\LB{____\V{fprintf}(\V{stderr},\S{}\"with_a_computed_ringdown_waveform\2n\"\SE{});}}
+\L{\LB{____\V{makeQuasiNormalRing}(\V{arrayB},\V{npoint},\V{srate},\V{mass}\*\V{Msun},\V{spin});}}
+\L{\LB{____\V{fprintf}(\V{stderr},\S{}\"__black_hole_mass:_\%.2f_solar_masses\2n\"\SE{},\V{mass});}}
+\L{\LB{____\V{fprintf}(\V{stderr},\S{}\"__black_hole_spin:_\%05.2f\%\%_of_extreme\2n\"\SE{},\V{spin}\*100);}}
+\L{\LB{____\K{break};}}
+\L{\LB{}}
+\L{\LB{__\K{case}_2:_\C{}\1\* compare two specified data files \*\1\CE{}}}
+\L{\LB{____\V{fprintf}(\V{stderr},\S{}\"compare_waveform_data_from_file_\%s\2n\"\SE{},\V{argv}[\V{optind}]);}}
+\L{\LB{____\V{assert}(\V{fp}_=_\V{fopen}(\V{argv}[\V{optind}++],\S{}\"r\"\SE{}));}}
+\L{\LB{____\V{readCloseLimitData}(\V{fp},\V{arrayA},\V{npoint},\V{srate},\V{mass}\*\V{Msun});}}
+\L{\LB{____\V{fclose}(\V{fp});}}
+\L{\LB{____\V{fprintf}(\V{stderr},\S{}\"with_waveform_data_from_file_\%s\2n\"\SE{},\V{argv}[\V{optind}]);}}
+\L{\LB{____\V{assert}(\V{fp}_=_\V{fopen}(\V{argv}[\V{optind}++],\S{}\"r\"\SE{}));}}
+\L{\LB{____\V{readCloseLimitData}(\V{fp},\V{arrayB},\V{npoint},\V{srate},\V{mass}\*\V{Msun});}}
+\L{\LB{____\V{fprintf}(\V{stderr},\S{}\"__black_hole_mass:_\%.2f_solar_masses\2n\"\SE{},\V{mass});}}
+\L{\LB{____\V{fclose}(\V{fp});}}
+\L{\LB{____\K{break};}}
+\L{\LB{}}
+\L{\LB{__\K{default}:_\C{}\1\* too many arguments \*\1\CE{}}}
+\L{\LB{____\V{usage}(\V{argv}[0]);}}
+\L{\LB{____\V{exit}(1);}}
+\L{\LB{}}
+\L{\LB{__\}}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* get correlation weighting factor \*\1\CE{}}}
+\L{\LB{__\V{fprintf}(\V{stderr},\S{}\"using_power_spectrum_from_file_\%s\2n\"\SE{},\V{powfile});}}
+\L{\LB{__\V{assert}(\V{fp}_=_\V{grasp\_open}(\S{}\"GRASP\_PARAMETERS\"\SE{},\V{powfile},\S{}\"r\"\SE{}));}}
+\L{\LB{__\V{readNoisePower}(\V{fp},\V{power},\V{npoint}\12,\V{srate});}}
+\L{\LB{__\V{fclose}(\V{fp});}}
+\L{\LB{__\V{scale}_=_4\1(\V{npoint}\*\V{srate}\*\V{hscale}\*\V{hscale});}}
+\L{\LB{__\V{weight}[0]_=_\V{weight}[\V{npoint}\12]_=_0;}}
+\L{\LB{__\K{for}_(\V{i}_=_1;_\V{i}_\<_\V{npoint}\12;_++\V{i})}}
+\L{\LB{____\V{weight}[\V{i}]_=_\V{scale}\1\V{power}[\V{i}];}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* FFT waveform arrays \*\1\CE{}}}
+\L{\LB{__\V{realft}(\V{arrayA}\-1,\V{npoint},1);}}
+\L{\LB{__\V{realft}(\V{arrayB}\-1,\V{npoint},1);}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* compute cross- and auto-correlations \*\1\CE{}}}
+\L{\LB{__\V{autoCorrA}[0]_=_\V{autoCorrA}[1]_=_0;}}
+\L{\LB{__\V{autoCorrB}[0]_=_\V{autoCorrB}[1]_=_0;}}
+\L{\LB{__\V{crossCorr}[0]_=_\V{crossCorr}[1]_=_0;}}
+\L{\LB{__\K{for}_(\V{i}_=_1;_\V{i}_\<_\V{npoint}\12;_++\V{i})_\{}}
+\L{\LB{____\K{int}_\V{ir}_=_\V{i}_+_\V{i};}}
+\L{\LB{____\K{int}_\V{ii}_=_\V{ir}_+_1;}}
+\L{\LB{____\K{float}_\V{ar}_=_\V{arrayA}[\V{ir}];}}
+\L{\LB{____\K{float}_\V{ai}_=_\V{arrayA}[\V{ii}];}}
+\L{\LB{____\K{float}_\V{br}_=_\V{arrayB}[\V{ir}];}}
+\L{\LB{____\K{float}_\V{bi}_=_\V{arrayB}[\V{ii}];}}
+\L{\LB{____\K{float}_\V{fac}_=_\V{weight}[\V{i}];}}
+\L{\LB{____\V{autoCorrA}[\V{ir}]_=_\V{fac}\*(\V{ar}\*\V{ar}_+_\V{ai}\*\V{ai});}}
+\L{\LB{____\V{autoCorrA}[\V{ii}]_=_0;}}
+\L{\LB{____\V{autoCorrB}[\V{ir}]_=_\V{fac}\*(\V{br}\*\V{br}_+_\V{bi}\*\V{bi});}}
+\L{\LB{____\V{autoCorrB}[\V{ii}]_=_0;}}
+\L{\LB{____\V{crossCorr}[\V{ir}]_=_\V{fac}\*(\V{ar}\*\V{br}_+_\V{ai}\*\V{bi});}}
+\L{\LB{____\V{crossCorr}[\V{ii}]_=_\V{fac}\*(\V{ai}\*\V{br}_\-_\V{ar}\*\V{bi});}}
+\L{\LB{__\}}}
+\L{\LB{__\V{realft}(\V{autoCorrA}\-1,\V{npoint},\-1);}}
+\L{\LB{__\V{realft}(\V{autoCorrB}\-1,\V{npoint},\-1);}}
+\L{\LB{__\V{realft}(\V{crossCorr}\-1,\V{npoint},\-1);}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* compute fitting factor normalization \*\1\CE{}}}
+\L{\LB{__\V{assert}(\V{autoCorrA}[0]_\>_0);}}
+\L{\LB{__\V{assert}(\V{autoCorrB}[0]_\>_0);}}
+\L{\LB{__\V{norm}_=_\V{sqrt}(\V{autoCorrA}[0]\*\V{autoCorrB}[0]);}}
+\L{\LB{__\V{assert}(\V{norm}_\>_0);}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* find maximum of cross-correlation and print fitting factor \*\1\CE{}}}
+\L{\LB{__\V{max}_=_0;}}
+\L{\LB{__\K{for}_(\V{i}_=_0;_\V{i}_\<_\V{npoint};_++\V{i})}}
+\L{\LB{____\K{if}_(\V{fabs}(\V{crossCorr}[\V{i}])_\>_\V{fabs}(\V{max}))}}
+\L{\LB{______\V{max}_=_\V{crossCorr}[\V{i}];}}
+\L{\LB{__\V{printf}(\S{}\"fitting_factor:_\%.2f\%\%\2n\"\SE{},100\*\V{max}\1\V{norm});}}
+\L{\LB{}}
+\L{\LB{__\K{return}_0;}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* Print a message describing the usage of this program.}}
+\L{\LB{_\* Arguments:}}
+\L{\LB{_\*   \CE{}_\*\V{program}_\C{} the program name}}
+\L{\LB{_\*\1\CE{}}}
+\L{\LB{\K{void}_\V{usage}(\K{char}_\*\V{program})}}
+\L{\LB{\{}}
+\L{\LB{__\V{fprintf}(\V{stderr},\S{}\"usage:_\%s_[options]_[file1_[file2]]\2n\"\SE{},\V{program});}}
+\L{\LB{__\V{fprintf}(\V{stderr},\S{}\"options:\2n\"\SE{});}}
+\L{\LB{__\V{fprintf}(\V{stderr},\S{}\"__\-h_______prints_this_message\2n\"\SE{});}}
+\L{\LB{__\V{fprintf}(\V{stderr},\S{}\"__\-s_spin__dimensionless_spin_of_the_black_hole_[0,1)\2n\"\SE{});}}
+\L{\LB{__\V{fprintf}(\V{stderr},\S{}\"__\-m_mass__mass_of_the_black_hole_(solar_masses)\2n\"\SE{});}}
+\L{\LB{__\V{fprintf}(\V{stderr},\S{}\"__\-p_file__file_containing_the_noise_power_spectrum\2n\"\SE{});}}
+\L{\LB{__\K{return};}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* Read a data file containing a close-limit waveform.}}
+\L{\LB{_\* Arguments:}}
+\L{\LB{_\*   \CE{}_\*\V{fp}_____\C{} the data file}}
+\L{\LB{_\*   \CE{}_\*\V{arr}____\C{} array to store the data}}
+\L{\LB{_\*   \CE{}__\V{npoint}_\C{} size of array \CE{}\*\V{arr}\C{}}}
+\L{\LB{_\*   \CE{}__\V{srate}__\C{} sample rate for data in \CE{}\*\V{arr}\C{} (in Hz)}}
+\L{\LB{_\*   \CE{}__\V{mass}___\C{} mass of black hole (in seconds)}}
+\L{\LB{_\*\1\CE{}}}
+\L{\LB{\K{void}_\V{readCloseLimitData}(\V{FILE}_\*\V{fp},_\K{float}_\*\V{arr},_\K{int}_\V{npoint},_\K{float}_\V{srate},}}
+\L{\LB{_______________________\K{float}_\V{mass})}}
+\L{\LB{\{}}
+\L{\LB{__\K{void}_\V{spline}(\K{float}_[\,],_\K{float}_[\,],_\K{int},_\K{float},_\K{float},_\K{float}_[\,]);}}
+\L{\LB{__\K{void}_\V{splint}(\K{float}_[\,],_\K{float}_[\,],_\K{float}_[\,],_\K{int},_\K{float},_\K{float}_\*);}}
+\L{\LB{}}
+\L{\LB{__\V{const}_\K{int}___\V{ninc}____=_1024;}}
+\L{\LB{__\V{const}_\K{float}_\V{natural}_=_1e30;}}
+\L{\LB{__\K{float}_\*\V{time},_\*\V{data},_\*\V{datapp};}}
+\L{\LB{__\K{int}_\V{i},_\V{imax},_\V{nmax}_=_\V{ninc},_\V{n}_=_0;}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* alocate memory \*\1\CE{}}}
+\L{\LB{__\V{assert}(\V{data}_=_(\K{float}_\*)\V{malloc}(\V{nmax}\*\K{sizeof}(\K{float})));}}
+\L{\LB{__\V{assert}(\V{time}_=_(\K{float}_\*)\V{malloc}(\V{nmax}\*\K{sizeof}(\K{float})));}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* read waveform data file \*\1\CE{}}}
+\L{\LB{__\K{while}_(\V{EOF}_!=_\V{fscanf}(\V{fp},\S{}\"\%e\2t\%e\2n\"\SE{},\V{time}+\V{n},\V{data}+\V{n}))}}
+\L{\LB{____\K{if}_(++\V{n}_\>=_\V{nmax})_\{}}
+\L{\LB{______\V{nmax}_+=_\V{ninc};}}
+\L{\LB{______\V{assert}(\V{data}_=_(\K{float}_\*)\V{realloc}(\V{data},\V{nmax}\*\K{sizeof}(\K{float})));}}
+\L{\LB{______\V{assert}(\V{time}_=_(\K{float}_\*)\V{realloc}(\V{time},\V{nmax}\*\K{sizeof}(\K{float})));}}
+\L{\LB{____\}}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* use cubic spline interpolation to generate waveform at}}
+\L{\LB{___\* the required sample times}}
+\L{\LB{___\*\1\CE{}}}
+\L{\LB{__\V{assert}(\V{datapp}_=_(\K{float}_\*)\V{malloc}(\V{n}\*\K{sizeof}(\K{float})));}}
+\L{\LB{__\V{spline}(\V{time}\-1,\V{data}\-1,\V{n},\V{natural},\V{natural},\V{datapp}\-1);}}
+\L{\LB{__\V{imax}_=_(\K{int})\V{floor}((\V{time}[\V{n}\-1]_\-_\V{time}[0])\*\V{srate}\*\V{mass});}}
+\L{\LB{__\K{for}_(\V{i}_=_0;_\V{i}_\<_\V{npoint};_++\V{i})}}
+\L{\LB{____\K{if}_(\V{i}_\>_\V{imax})}}
+\L{\LB{______\V{arr}[\V{i}]_=_0;}}
+\L{\LB{____\K{else}}}
+\L{\LB{______\V{splint}(\V{time}\-1,\V{data}\-1,\V{datapp}\-1,\V{n},(\K{float})\V{i}\1(\V{srate}\*\V{mass})+\V{time}[0],\V{arr}+\V{i});}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* free memory and return \*\1\CE{}}}
+\L{\LB{__\V{free}(\V{time});}}
+\L{\LB{__\V{free}(\V{data});}}
+\L{\LB{__\V{free}(\V{datapp});}}
+\L{\LB{__\K{return};}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* Generate a quasinormal ringdown waveform.}}
+\L{\LB{_\* Arguments:}}
+\L{\LB{_\*   \CE{}_\*\V{arr}____\C{} array to store the data}}
+\L{\LB{_\*   \CE{}__\V{npoint}_\C{} size of array \CE{}\*\V{arr}\C{}}}
+\L{\LB{_\*   \CE{}__\V{srate}__\C{} sample rate for data in \CE{}\*\V{arr}\C{} (in Hz)}}
+\L{\LB{_\*   \CE{}__\V{mass}___\C{} mass of black hole (in seconds)}}
+\L{\LB{_\*   \CE{}__\V{spin}___\C{} dimensionless spin of black hole}}
+\L{\LB{_\*\1\CE{}}}
+\L{\LB{\K{void}_\V{makeQuasiNormalRing}(\K{float}_\*\V{arr},_\K{int}_\V{npoint},_\K{float}_\V{srate},}}
+\L{\LB{_________________________\K{float}_\V{mass},_\K{float}_\V{spin})}}
+\L{\LB{\{}}
+\L{\LB{__\V{const}_\K{float}_\V{pi}___=_3.14159265358979;}}
+\L{\LB{__\V{const}_\K{float}_\V{freq}_=_(1_\-_0.63\*\V{pow}(1\-\V{spin},0.3))\1(2\*\V{pi}\*\V{mass});}}
+\L{\LB{__\V{const}_\K{float}_\V{qual}_=_2\*\V{pow}(1\-\V{spin},\-0.45);}}
+\L{\LB{__\C{}\1\* \CE{}\V{freq}\C{} and \CE{}\V{qual}\C{} are computed using the fits by Echeverria \*\1\CE{}}}
+\L{\LB{__\K{int}_\V{i};}}
+\L{\LB{}}
+\L{\LB{__\K{for}_(\V{i}_=_0;_\V{i}_\<_\V{npoint};_++\V{i})_\{}}
+\L{\LB{____\K{float}_\V{time}_=_(\K{float})\V{i}\1\V{srate};}}
+\L{\LB{____\V{arr}[\V{i}]_=_\V{exp}(\-\V{pi}\*\V{time}\*\V{freq}\1\V{qual})\*\V{cos}(2\*\V{pi}\*\V{time}\*\V{freq});}}
+\L{\LB{__\}}}
+\L{\LB{}}
+\L{\LB{__\K{return};}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* Read the noise power spectrum.}}
+\L{\LB{_\* Arguments:}}
+\L{\LB{_\*   \CE{}_\*\V{fp}____\C{} the noise power file}}
+\L{\LB{_\*   \CE{}_\*\V{power}_\C{} array to store the data}}
+\L{\LB{_\*   \CE{}__\V{n}_____\C{} size of array \CE{}\*\V{power}\C{}}}
+\L{\LB{_\*   \CE{}__\V{srate}_\C{} sample rate for data (in Hz)}}
+\L{\LB{_\*\1\CE{}}}
+\L{\LB{\K{void}_\V{readNoisePower}(\V{FILE}_\*\V{fp},_\K{double}_\*\V{power},_\K{int}_\V{n},_\K{float}_\V{srate})}}
+\L{\LB{\{}}
+\L{\LB{__\K{void}_\V{spline}(\K{float}_[\,],_\K{float}_[\,],_\K{int},_\K{float},_\K{float},_\K{float}_[\,]);}}
+\L{\LB{__\K{void}_\V{splint}(\K{float}_[\,],_\K{float}_[\,],_\K{float}_[\,],_\K{int},_\K{float},_\K{float}_\*);}}
+\L{\LB{__\V{const}_\K{int}___\V{nmax}____=_65536;_\C{}\1\* assumed maximum size of data file \*\1\CE{}}}
+\L{\LB{__\V{const}_\K{float}_\V{natural}_=_1e30;}}
+\L{\LB{__\K{float}_\*\V{freq},_\*\V{ampl},_\*\V{amplpp};}}
+\L{\LB{__\K{char}_\V{line}[100];}}
+\L{\LB{__\K{int}_\V{i},_\V{length};}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* allocate memory \*\1\CE{}}}
+\L{\LB{__\V{assert}(\V{freq}___=_(\K{float}_\*)\V{malloc}(\V{nmax}\*\K{sizeof}(\K{float})));}}
+\L{\LB{__\V{assert}(\V{ampl}___=_(\K{float}_\*)\V{malloc}(\V{nmax}\*\K{sizeof}(\K{float})));}}
+\L{\LB{__\V{assert}(\V{amplpp}_=_(\K{float}_\*)\V{malloc}(\V{nmax}\*\K{sizeof}(\K{float})));}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* read power spectrum data file \*\1\CE{}}}
+\L{\LB{__\V{length}_=_0;}}
+\L{\LB{__\K{while}_(1)_\{}}
+\L{\LB{____\K{if}_(\V{fgets}(\V{line},\K{sizeof}(\V{line}),\V{fp})_==_\V{NULL})_\C{}\1\* end of file \*\1\CE{}}}
+\L{\LB{______\K{break};}}
+\L{\LB{____\K{if}_(\V{line}[0]_!=_\S{}\'\#\'\SE{})_\{}}
+\L{\LB{______\V{assert}(\V{length}_\<_\V{nmax});}}
+\L{\LB{______\V{sscanf}(\V{line},\S{}\"\%e\2t\%e\2n\"\SE{},\V{freq}+\V{length},\V{ampl}+\V{length});}}
+\L{\LB{______++\V{length};}}
+\L{\LB{____\}}}
+\L{\LB{__\}}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* use cubic spline interpolation to get the spectrum}}
+\L{\LB{___\* at the required frequencies}}
+\L{\LB{___\*\1\CE{}}}
+\L{\LB{__\V{spline}(\V{freq}\-1,\V{ampl}\-1,\V{length},\V{natural},\V{natural},\V{amplpp}\-1);}}
+\L{\LB{__\K{for}_(\V{i}_=_0;_\V{i}_\<_\V{n};_++\V{i})_\{}}
+\L{\LB{____\K{float}_\V{f}_=_\V{i}\*\V{srate}\1(\K{float})\V{n};}}
+\L{\LB{____\K{float}_\V{value};}}
+\L{\LB{____\K{double}_\V{dvalue};}}
+\L{\LB{____\V{splint}(\V{freq}\-1,\V{ampl}\-1,\V{amplpp}\-1,\V{length},\V{f},\&\V{value});}}
+\L{\LB{____\V{dvalue}_=_(\K{double})\V{value};}}
+\L{\LB{____\V{power}[\V{i}]_=_\V{dvalue}\*\V{dvalue};}}
+\L{\LB{__\}}}
+\L{\LB{}}
+\L{\LB{__\C{}\1\* free memory and return \*\1\CE{}}}
+\L{\LB{__\V{free}(\V{freq});}}
+\L{\LB{__\V{free}(\V{ampl});}}
+\L{\LB{__\V{free}(\V{amplpp});}}
+\L{\LB{__\K{return};}}
+\L{\LB{\}}}
+\L{\LB{}}
+\L{\LB{\C{}\1\* The following routines is to be run to display data during}}
+\L{\LB{___debugging it\'s based on the GRASP graph() routine \*\1\CE{}}}
+\L{\LB{}}
+\L{\LB{\K{void}_\V{graphSpec}(\K{float}_\V{arr}[\,],_\K{int}_\V{n})}}
+\L{\LB{\{}}
+\L{\LB{__\V{FILE}_\*\V{fp};}}
+\L{\LB{__\K{int}_\V{i};}}
+\L{\LB{__\V{fp}_=_\V{fopen}(\S{}\"temp.graph\"\SE{},\S{}\"w\"\SE{});}}
+\L{\LB{__\K{for}_(\V{i}_=_0;_\V{i}_\<_\V{n}\12;_++\V{i})_\{}}
+\L{\LB{____\K{int}_\V{ir}_=_\V{i}_+_\V{i};}}
+\L{\LB{____\K{int}_\V{ii}_=_\V{ir}_+_1;}}
+\L{\LB{____\K{float}_\V{re}_=_\V{arr}[\V{ir}];}}
+\L{\LB{____\K{float}_\V{im}_=_\V{arr}[\V{ii}];}}
+\L{\LB{____\K{float}_\V{pow}_=_\V{re}\*\V{re}_+_\V{im}\*\V{im};}}
+\L{\LB{____\K{float}_\V{arg}_=_\V{atan2}(\V{im},\V{re});}}
+\L{\LB{____\V{fprintf}(\V{fp},\S{}\"\%d\2t\%e\2t\%e\2n\"\SE{},\V{i},\V{pow},\V{arg});}}
+\L{\LB{__\}}}
+\L{\LB{__\V{fclose}(\V{fp});}}
+\L{\LB{__\V{system}(\S{}\"xmgr_\-nxy_temp.graph_1\>\1dev\1null_2\>\&1_\&\"\SE{});}}
+\L{\LB{__\K{return};}}
+\L{\LB{\}}}

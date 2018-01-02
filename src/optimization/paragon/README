@@ -1,0 +1,10 @@
+This contains functions that replace the Numerical Recipes realft()
+function.  One of these replacements is guaranteed, and uses memcpy to
+copy the inputs before doing the FFT.  The other replacement does not
+do this, but rather makes the (risky) assumption that the data segment
+extends 8 bytes below the furthest malloc()'d address, and makes use of
+the extra space.  If the risky version generates segmentation violations,
+use the safe one!
+
+These functions use the optimized FFT's from the paragon CLASSPACK
+library.

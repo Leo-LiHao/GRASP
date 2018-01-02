@@ -1,0 +1,38 @@
+#
+# Make the tex source files from C programs.
+echo "MAKING THE .TEX SOURCE FROM .C SOURCES"
+chmod +x make_tex_from_C
+./make_tex_from_C
+
+# build the tex files
+rm -f *.aux *.toc *.idx *.brf *.out
+echo "RUNNING LATEX 1st TIME OF 3"
+latex manual >&! latex.out
+echo "RUNNING LATEX 2nd TIME OF 3"
+latex manual >&! latex.out
+echo "RUNNING LATEX 3rd TIME OF 3"
+latex manual >&! latex.out
+
+# determine which pages are color ones from the index
+echo "BUILDING THE SEPARATE COLOR UTILITY"
+cc -g separate_color.c -o separate_color
+echo "RUNNING THE SEPARATE COLOR UTILITY"
+./separate_color >! make_postscript
+chmod +x make_postscript
+
+# make the postscript files
+echo "BUILDING THE POSTSCRIPT .PS MANUAL"
+make_postscript
+
+# label some pages OBSOLETE
+echo "LABELING PAGES IN 40-M SECTION OBSOLETE"
+mv manual.ps junk.ps
+chmod +x make_obsolete
+make_obsolete junk.ps > manual.ps
+rm -f junk.ps
+
+# Make the pdf file
+echo "DISTILLING THE .PDF MANUAL"
+distill manual.ps
+
+echo "DONE BUILDING MANUALS/POSTSCRIPT FILES"
